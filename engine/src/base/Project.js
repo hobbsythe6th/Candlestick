@@ -1556,6 +1556,19 @@ orderDynamicFrames() {
      * @param {object} args - Optional arguments
      */
     play(args) {
+        this.root.timeline?.guiElement?.numberLine?.folderStartArray?.forEach(folder => {
+            folder.status = 'open';
+        })
+        this.root.timeline?.layers?.forEach(layer => {
+            layer.frames?.forEach(frame => {
+                frame.clips?.forEach(clip => {
+                    clip.timeline?.guiElement?.numberLine?.folderStartArray?.forEach(folder => {
+                        folder.status = 'open';
+                        console.log('opened')
+                    })
+                })
+            })
+        })
         if (!args) args = {};
         if (!args.onError) args.onError = () => {};
         if (!args.onBeforeTick) args.onBeforeTick = () => {};

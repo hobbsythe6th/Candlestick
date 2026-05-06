@@ -97,7 +97,14 @@ Wick.GUIElement.FramesContainer = class extends Wick.GUIElement {
 
         frames.forEach(frame => {
             if(draggingFrames.indexOf(frame) !== -1) return;
-            this._drawFrame(frame, true);
+            frame.startTranslation = this.model.guiElement.numberLine.currentTranslationAt(frame.start)
+            let endInFolder = false
+            //if(this.model.guiElement.numberLine.findIfPartOfFolder(frame.end)?.bool == true){endInFolder = true}
+            //if((this.model.guiElement.numberLine.findIfPartOfFolder(frame.start)?.bool == false && 
+              //  this.model.guiElement.numberLine.findIfPartOfFolder(frame.end)?.bool == true) || 
+                //this.model.folderStarts[this.model.guiElement.numberLine.findIfPartOfFolder(frame.start).index]?.status == 'open') {
+                this._drawFrame(frame, true , endInFolder);
+            //}
         });
 
         // Make sure to render the frames being dragged last.
@@ -146,12 +153,12 @@ Wick.GUIElement.FramesContainer = class extends Wick.GUIElement {
         ctx.restore();
     }
 
-    _drawFrame (frame, enableCull) {
+    _drawFrame (frame, enableCull , endInFolder) {
         var ctx = this.ctx;
 
         // Optimization: don't render frames that are outside the scroll area
         // This really speeds things up!!
-        var frameStartX = (frame.start - 1) * this.gridCellWidth;
+        var frameStartX = (frame.start/*Translation*/ - 1) * this.gridCellWidth;
         var frameStartY = frame.parentLayer.index * this.gridCellHeight;
         var frameEndX = frameStartX + frame.length * this.gridCellWidth;
         var frameEndY = frameStartY + this.gridCellHeight;
@@ -172,8 +179,20 @@ Wick.GUIElement.FramesContainer = class extends Wick.GUIElement {
         // Draw the frame
         ctx.save();
         ctx.translate(frameStartX, frameStartY);
-            frame.guiElement.draw();
+        frame.guiElement.draw();
         ctx.restore();
+        /*if(endInFolder == true){
+            var tempFrame = frame;
+            ctx.save();
+            ctx.translate(frameStartX + this.gridCellWidth, frameStartY);
+            tempFrame.end = tempFrame.start + 1
+            tempFrame.guiElement.draw();
+            ctx.restore();
+            ctx.save();
+            ctx.translate(frameStartX + this.gridCellWidth * 2, frameStartY);
+            tempFrame.guiElement.draw();
+            ctx.restore();
+        }*/
     }
 
     onMouseDrag () {

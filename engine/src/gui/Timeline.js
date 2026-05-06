@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Wick Engine.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 /**
  * The Timeline is responsible for drawing the following GUI elements:
  * - Breadcrumbs

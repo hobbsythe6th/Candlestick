@@ -34,6 +34,8 @@ Wick.Timeline = class extends Wick.Base {
 
         this._fillGapsMethod = "auto_extend";
         this._frameForced = false;
+        this.folderStarts = []
+        this.folderEnds = []
     }
 
     _serialize(args) {

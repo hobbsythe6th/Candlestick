@@ -32,6 +32,7 @@ import iconShown from 'resources/timeline-icons/shown.png';
 import iconCopyForward from 'resources/timeline-icons/copyForward.png';
 import iconSplit from 'resources/timeline-icons/cut_frame.png';
 import iconLayerTween from 'resources/timeline-icons/layerTween.png';
+import iconFolder from 'resources/timeline-icons/folder.gif';
 import iconDelete from 'resources/timeline-icons/delete.png';
 import iconSmallFrames from 'resources/timeline-icons/framesSmall.png';
 import iconNormalFrames from 'resources/timeline-icons/framesNormal.png';
@@ -69,6 +70,7 @@ class Timeline extends Component {
       Icons.loadIcon('cut_frame', iconSplit);
       Icons.loadIcon('delete_frame', iconDelete);
       Icons.loadIcon('add_tween', iconLayerTween);
+      Icons.loadIcon('add_Folder', iconFolder);
       Icons.loadIcon('small_frames', iconSmallFrames);
       Icons.loadIcon('normal_frames', iconNormalFrames);
       Icons.loadIcon('large_frames', iconLargeFrames);
