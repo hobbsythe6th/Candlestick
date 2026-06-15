@@ -60,6 +60,7 @@ Wick.GUIElement.Layer = class extends Wick.GUIElement {
         super.draw();
 
         var ctx = this.ctx;
+        if(this.project.vCam) {console.log('yah')}
 
         // Save where the mouse is if the user wants to drag the playhead around
         var mouseY = this.localMouse.y + this.model.index * this.gridCellHeight;

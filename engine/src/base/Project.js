@@ -122,6 +122,8 @@ Wick.Project = class extends Wick.Base {
         this.history.project = this;
         this.history.pushState(Wick.History.StateType.ONLY_VISIBLE_OBJECTS);
         this.orderedLayers = [];
+
+        this.vCam = null;
     }
 
     markClipQuadtreeDirty(clip) {
@@ -1858,6 +1860,8 @@ orderDynamicFrames() {
         if(!args.onFinish) args.onFinish = () => {};
         if(!args.width) args.width = this.width;
         if(!args.height) args.height = this.height;
+        if(this.vCam) args.width = this.vCam.width;
+        if(this.vCam) args.height = this.vCam.height;
 
         
 
@@ -1901,16 +1905,18 @@ orderDynamicFrames() {
         // We need full control over when paper.js renders, if we leave autoUpdate on, it's possible to lose frames if paper.js doesnt automatically render as fast as we are generating the images.
         // (See paper.js docs for info about autoUpdate)
         renderCopy.view.paper.view.autoUpdate = false;
-
+        var timeline = renderCopy.focus.timeline;
         var frameImages = [];
         var numMaxFrameImages = renderCopy.focus.timeline.length;
         var renderFrame = () => {
-            var frameImage = new Image();
+            var currentPos = timeline.playheadPosition;
+            var frameImage = new Image(
+            this.getAssetByName(vcam)?.getInstances()[0]?.height || undefined , 
+            this.getAssetByName(vcam)?.getInstances()[0]?.height || undefined);
 
             frameImage.onload = () => {
                 frameImages.push(frameImage);
 
-                var currentPos = renderCopy.focus.timeline.playheadPosition;
                 args.onProgress(currentPos, numMaxFrameImages);
 
                 if (currentPos >= numMaxFrameImages) {
