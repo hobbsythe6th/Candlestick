@@ -106,6 +106,9 @@ Wick.ToolSettings = class {
         }, {
             type: "boolean",
             name: "imageSmoothing",
+            //skip holds the uuid of every asset that has a smoothing setting that's different from the global, meaning that individually modifying
+            //the smoothing setting of an asset will mark it as unaffectable by a settings change.
+            skip: [],
             default: true
         }, {
             type: "choice",
@@ -200,7 +203,9 @@ Wick.ToolSettings = class {
         if (setting.name === "imageSmoothing"){
             this.project.getAssets("Image").forEach(asset => {
                 asset.getInstances().forEach(img => {
-                    img.view.item.smoothing = setting.value
+                    if (!setting.skip?.includes(img.uuid)){
+                        img.view.item.smoothing = setting.value
+                    }
                 })
             })
         }
@@ -217,8 +222,12 @@ Wick.ToolSettings = class {
             console.error("ToolSettings.getSetting: invalid setting: " + name);
             return
         }
-
-        return setting.value;
+        //if(name = "imageSmoothing"){
+          //  return setting.value && setting.skip
+        //}
+        //else{
+            return setting.value;
+        //}
     }
 
     /**

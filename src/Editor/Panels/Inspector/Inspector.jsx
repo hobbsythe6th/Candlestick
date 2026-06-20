@@ -619,6 +619,18 @@ class Inspector extends Component {
     )
   }
 
+    /**
+   * Renders an inspector row allowing viewing and editing of the selection's image smoothing.
+   */
+  renderImageSmoothingEnabled = () => {
+    return (
+      <InspectorCheckbox
+        tooltip="Smoothing"
+        checked={this.getSelectionAttribute('imageSmoothingEnabled')}
+        onChange={(val) => this.setSelectionAttribute('imageSmoothingEnabled', !this.getSelectionAttribute('imageSmoothingEnabled'))}/>
+    )
+  }
+
   /**
    * Renders an inspector row allowing viewing and editing of sound assets attached to the
    * current object.
@@ -911,6 +923,7 @@ class Inspector extends Component {
     return (
       <div className="inspector-content">
         {this.renderSelectionTransformProperties()}
+        {this.renderImageSmoothingEnabled()}
       </div>
     )
   }

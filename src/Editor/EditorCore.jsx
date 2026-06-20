@@ -480,6 +480,13 @@ class EditorCore extends Component {
      */
     setSelectionAttribute = (attribute, newValue) => {
         this.project.selection[attribute] = newValue;
+        if (attribute === "imageSmoothingEnabled"){
+            let selection = this.project.selection
+            let img = selection.getSelectedObject();
+            if (img) img.view.item.smoothing = newValue;
+            if (img) console.log('yup' , img)
+            this.project.toolSettings.getSetting("imageSmoothing").skip.push(selection.getSelectedObjectUUIDs())
+        }
         this.projectDidChange({ actionName: "Set Selection Attribute: " + attribute + ":" + newValue });
     }
 
