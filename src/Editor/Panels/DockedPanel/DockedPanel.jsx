@@ -18,17 +18,49 @@
  */
 
 import React, { PureComponent } from 'react';
+import Draggable from 'react-draggable';
 import './_dockedpanel.scss';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class DockedPanel extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      position: { x: 0, y: 0 },
+    };
+
+    this.panelRef = React.createRef();
+  }
+
+  handleDrag = (event, data) => {
+    this.setState({
+      position: { x: data.x, y: data.y },
+    });
+  };
+
   render() {
-    return(
-      <div className="docked-panel">
+    const panelContent = (
+      <div className="docked-panel" ref={this.panelRef}>
         {this.props.showOverlay && <div className="docked-panel-overlay" />}
         {this.props.children}
       </div>
-    )
+    );
+
+    if (!this.props.draggable) {
+      return panelContent;
+    }
+
+    return (
+      <Draggable
+        bounds={false}
+        position={this.state.position}
+        onDrag={this.handleDrag}
+        onStop={this.handleDrag}
+      >
+        {panelContent}
+      </Draggable>
+    );
   }
 }
 
