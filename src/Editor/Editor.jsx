@@ -1157,7 +1157,7 @@ class Editor extends EditorCore {
                                                 <ReflexContainer windowResizeAware={true} orientation="vertical">
                                                     {/*Canvas*/}
                                                     <ReflexElement {...this.resizeProps}>
-                                                        <DockedPanel draggable={true}>
+                                                        <DockedPanel draggable={true} rightClickDrag={true}>
                                                             <SizeMe>{({ size }) => {
                                                                 this.project.view.render();
                                                                 return (<Canvas

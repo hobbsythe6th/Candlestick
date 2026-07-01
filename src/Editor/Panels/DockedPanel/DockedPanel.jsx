@@ -50,7 +50,7 @@ class DockedPanel extends PureComponent {
     if (!this.props.draggable) {
       return panelContent;
     }
-
+//todo: put all panels on one canvas, make project canvas only draggable with right click while dragging
     return (
       <Draggable
         bounds={false}
