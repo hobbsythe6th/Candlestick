@@ -24,14 +24,15 @@ Wick.Layer = class extends Wick.Base {
     /**
      * Called when creating a Wick Layer.
      * @param {boolean} locked - Is the layer locked?
-     * @param {boolean} hideen - Is the layer hidden?
+     * @param {boolean} hidden - Is the layer hidden?
      */
-    constructor (args) {
+    constructor (args , type = 'classic') { // Type is for if we want to add camera/masking layers, like in Animate
         if(!args) args = {};
         super(args);
 
         this.locked = args.locked === undefined ? false : args.locked;
         this.hidden = args.hidden === undefined ? false : args.hidden;
+        this.type = type
         this.opacity = args.opacity === undefined ? 1 : args.opacity;
         this.name = args.name || null;
     }
