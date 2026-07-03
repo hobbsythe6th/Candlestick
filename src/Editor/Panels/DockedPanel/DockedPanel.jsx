@@ -18,48 +18,17 @@
  */
 
 import React, { PureComponent } from 'react';
-import Draggable from 'react-draggable';
 import './_dockedpanel.scss';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 class DockedPanel extends PureComponent {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      position: { x: 0, y: 0 },
-    };
-
-    this.panelRef = React.createRef();
-  }
-
-  handleDrag = (event, data) => {
-    this.setState({
-      position: { x: data.x, y: data.y },
-    });
-  };
 
   render() {
-    const panelContent = (
-      <div className="docked-panel" ref={this.panelRef}>
+    return (
+      <div className="docked-panel">
         {this.props.showOverlay && <div className="docked-panel-overlay" />}
         {this.props.children}
       </div>
-    );
-
-    if (!this.props.draggable) {
-      return panelContent;
-    }
-//todo: put all panels on one canvas, make project canvas only draggable with right click while dragging
-    return (
-      <Draggable
-        bounds={false}
-        position={this.state.position}
-        onDrag={this.handleDrag}
-        onStop={this.handleDrag}
-      >
-        {panelContent}
-      </Draggable>
     );
   }
 }

@@ -41,6 +41,7 @@ import FontInfoInterface from './fontInfo';
 import EditorCore from './EditorCore';
 
 import DockedPanel from './Panels/DockedPanel/DockedPanel';
+import PanelWrapper from './Panels/PanelWrapper/PanelWrapper';
 import Canvas from './Panels/Canvas/Canvas';
 import Inspector from './Panels/Inspector/Inspector';
 import MenuBar from './Panels/MenuBar/MenuBar';
@@ -1090,10 +1091,10 @@ class Editor extends EditorCore {
             <DndProvider backend={HTML5Backend}>
                 <EditorWrapper editor={this}>
                     {/* Menu Bar */}
-
-                    <div id="menu-bar-container">
+                    <PanelWrapper>
+                    <div id="menu-bar-container" style={{ width: '100vw' }}>
                         {/* Header */}
-                        <DockedPanel showOverlay={this.state.previewPlaying} draggable={true}>
+                        <DockedPanel showOverlay={this.state.previewPlaying}>
                             <MenuBar
                                 renderSize={renderSize}
                                 openModal={this.openModal}
@@ -1109,6 +1110,7 @@ class Editor extends EditorCore {
                             />
                         </DockedPanel>
                     </div>
+                    </PanelWrapper>
 
                     {/* Main Editor Panel */}
 
@@ -1120,7 +1122,7 @@ class Editor extends EditorCore {
                                 <ReflexElement {...this.resizeProps}>
                                     {/*Toolbox*/}
                                     <div className={classNames("toolbox-container", { 'toolbox-container-medium': renderSize === 'medium' }, { 'toolbox-container-small': renderSize === 'small' })}>
-                                        <DockedPanel showOverlay={this.state.previewPlaying} draggable={true}>
+                                        <DockedPanel showOverlay={this.state.previewPlaying}>
                                             <Toolbox
                                                 project={this.state.project}
                                                 getActiveToolName={() => this.getActiveTool().name}
@@ -1157,7 +1159,7 @@ class Editor extends EditorCore {
                                                 <ReflexContainer windowResizeAware={true} orientation="vertical">
                                                     {/*Canvas*/}
                                                     <ReflexElement {...this.resizeProps}>
-                                                        <DockedPanel draggable={true} rightClickDrag={true}>
+                                                        <DockedPanel>
                                                             <SizeMe>{({ size }) => {
                                                                 this.project.view.render();
                                                                 return (<Canvas
@@ -1239,7 +1241,7 @@ class Editor extends EditorCore {
                                                 size={this.state.timelineSize}
                                                 onResize={this.resizeProps.onResize}
                                                 onStopResize={this.resizeProps.onStopTimelineResize}>
-                                                <DockedPanel showOverlay={this.state.previewPlaying} draggable={true}>
+                                                <DockedPanel showOverlay={this.state.previewPlaying}>
                                                     {renderSize === "small"
                                                         && <MobileContainer
                                                             project={this.project}
@@ -1317,7 +1319,7 @@ class Editor extends EditorCore {
                                         <ReflexContainer windowResizeAware={true} orientation="horizontal">
                                             {/* Inspector */}
                                             <ReflexElement {...this.resizeProps}>
-                                                <DockedPanel showOverlay={false /*this.state.previewPlaying*/} draggable={true}>
+                                                <DockedPanel showOverlay={false /*this.state.previewPlaying*/}>
                                                     <Inspector
                                                         getToolSetting={this.getToolSetting}
                                                         setToolSetting={this.setToolSetting}
@@ -1374,7 +1376,7 @@ class Editor extends EditorCore {
                                                     size={300}
                                                     onResize={this.resizeProps.onResize}
                                                     onStopResize={this.resizeProps.onStopAssetLibraryResize}>
-                                                    <DockedPanel showOverlay={this.state.previewPlaying} draggable={true}>
+                                                    <DockedPanel showOverlay={this.state.previewPlaying}>
                                                         <AssetLibrary
                                                             projectData={this.state.project}
                                                             assets={this.project.getAssets()}
