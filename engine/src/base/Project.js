@@ -124,8 +124,6 @@ Wick.Project = class extends Wick.Base {
         this.history.project = this;
         this.history.pushState(Wick.History.StateType.ONLY_VISIBLE_OBJECTS);
         this.orderedLayers = [];
-
-        this.vCam = null;
     }
 
     markClipQuadtreeDirty(clip) {
@@ -1872,10 +1870,8 @@ orderDynamicFrames() {
         if(!args.imageType) args.imageType = 'image/png';
         if(!args.onProgress) args.onProgress = () => {};
         if(!args.onFinish) args.onFinish = () => {};
-        if(!args.width) args.width = this.width;
-        if(!args.height) args.height = this.height;
-        if(this.vCam) args.width = this.vCam.width;
-        if(this.vCam) args.height = this.vCam.height;
+        args.width = this.vCam.width;
+        args.height = this.vCam.height;
 
         
 
@@ -1925,7 +1921,7 @@ orderDynamicFrames() {
         var renderFrame = () => {
             var currentPos = timeline.playheadPosition;
             var frameImage = new Image(
-            this.getAssetByName(vcam)?.getInstances()[0]?.height || undefined , 
+            this.getAssetByName(vcam)?.getInstances()[0]?.width || undefined , 
             this.getAssetByName(vcam)?.getInstances()[0]?.height || undefined);
 
             frameImage.onload = () => {
