@@ -57,6 +57,8 @@ Wick.Project = class extends Wick.Base {
 
         this.focus = this.root;
 
+        this._vCam = this.root;
+
         this._mousePosition = { x: 0, y: 0 };
         this._lastMousePosition = { x: 0, y: 0 };
         this._isMouseDown = false;
@@ -627,6 +629,18 @@ orderDynamicFrames() {
                 subclip.applySingleFramePosition();
             });
         }
+    }
+
+    /**
+     * The current vcam, defaults to the root clip if no custom vcam is set.
+     * @type {Wick.Clip}
+     */
+    get vCam(){
+        return this._vCam;
+    }
+
+    set vCam(vcam){
+        this._vCam = vcam
     }
 
     /**
