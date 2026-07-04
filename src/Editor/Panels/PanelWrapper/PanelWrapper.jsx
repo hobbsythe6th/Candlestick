@@ -68,12 +68,13 @@ class PanelWrapper extends Component {
 
   get snapZones(){
     let _snapZones = []
-    if (this.childPanelData.classname == 'menu-bar-container'){
+    if (this.childPanelData.classname === "menu-bar-container"){
       _snapZones = ['top-default' , 'bottom']
     }
     else {
       _snapZones = ['top-default' , 'bottom']
     }
+    return _snapZones;
   }
 
   // Capture-phase mousedown to beat other listeners (React-DnD etc.)
