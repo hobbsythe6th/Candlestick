@@ -1091,7 +1091,7 @@ class Editor extends EditorCore {
             <DndProvider backend={HTML5Backend}>
                 <EditorWrapper editor={this}>
                     {/* Menu Bar */}
-                    <PanelWrapper>
+                    <PanelWrapper x={0} y={-24} yOffset={24}>
                     <div id="menu-bar-container" style={{ width: '100vw' }}>
                         {/* Header */}
                         <DockedPanel showOverlay={this.state.previewPlaying}>
