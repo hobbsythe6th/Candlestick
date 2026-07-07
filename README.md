@@ -19,7 +19,7 @@ Newer instructions are provided below, with a focus on Mac development. If you'r
 
 ### 1. Homebrew
 This is optional as you can download things without, but Homebrew is a simple set of command line tools that make the process easier. We recommend downloading it if you haven't already. 
-Quick Homebrew check—
+Quick Homebrew check:—
 ```
 brew --version
 ```
