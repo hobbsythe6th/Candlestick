@@ -20,14 +20,63 @@
 import React, { Component, useRef, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import DragDropTypes from 'Editor/DragDropTypes.js';
+import { ContextMenuContext } from 'Editor/Util/ContextMenu/ContextMenuProvider';
 
 import './_canvas.scss';
 
 class Canvas extends Component {
+  static contextType = ContextMenuContext;
+
   constructor (props) {
     super(props);
 
     this.canvasContainer = React.createRef();
+  }
+
+  _onContextMenu = (e) => {
+    const editor = this.props.editor;
+    const actions = editor.actionMapInterface.editorActions;
+    const hasSelection = editor.project.selection.numObjects > 0;
+
+    if (!hasSelection) {
+      this.context.openContextMenu(e, [
+        { ...actions.paste },
+      ]);
+      return;
+    }
+
+    this.context.openContextMenu(e, [
+      { ...actions.copy },
+      { ...actions.paste },
+      { ...actions.delete },
+      { divider: true },
+      { ...actions.flipHorizontal },
+      { ...actions.flipVertical },
+      { divider: true },
+      { ...actions.sendToFront },
+      { ...actions.sendForward },
+      { ...actions.sendBackward },
+      { ...actions.sendToBack },
+      { divider: true },
+      { ...actions.alignLeft },
+      { ...actions.alignRight },
+      { ...actions.alignTop },
+      { ...actions.alignBottom },
+      { ...actions.alignX },
+      { ...actions.alignY },
+      { divider: true },
+      { ...actions.booleanUnite },
+      { ...actions.booleanSubtract },
+      { ...actions.booleanIntersect },
+      { divider: true },
+      { ...actions.breakApart },
+      { ...actions.convertSelectionToClip },
+      { ...actions.convertSelectionToButton },
+      { ...actions.editTimeline },
+      { ...actions.editCode },
+      { ...actions.makeAnimated },
+      { ...actions.makeInteractive },
+    ]);
   }
 
   componentDidMount() {
@@ -86,7 +135,7 @@ class Canvas extends Component {
     const { dropRef, isOver } = this.props;
 
     return (
-      <div id="canvas-container-wrapper" style={{width:"100%", height:"100%"}} aria-label="Canvas" ref={dropRef}>
+      <div id="canvas-container-wrapper" style={{width:"100%", height:"100%"}} aria-label="Canvas" ref={dropRef} onContextMenu={this._onContextMenu}>
         { isOver && <div className="drag-drop-overlay" /> }
         <div id="wick-canvas-container" ref={this.canvasContainer}></div>
       </div>

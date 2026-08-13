@@ -24,6 +24,7 @@ import { ToastContainer } from 'react-toastify';
 import { GlobalHotKeys } from 'react-hotkeys';
 import ErrorPage from './Util/ErrorPage';
 import ModalHandler from './Modals/ModalHandler/ModalHandler';
+import ContextMenuProvider from './Util/ContextMenu/ContextMenuProvider';
 import { Hook, Unhook } from 'console-feed';
 
 /**
@@ -46,6 +47,7 @@ export default function EditorWrapper(props) {
             fallback={ErrorPage}
             processError={(error, errorInfo) => { props.editor.autoSaveProject(() => { "Project Autosaved" }) }}
         >
+            <ContextMenuProvider>
             <ToastContainer
                 transition={Slide}
                 position="top-right"
@@ -116,6 +118,7 @@ export default function EditorWrapper(props) {
                 />
                 {props.children}
             </div>
+            </ContextMenuProvider>
         </ErrorBoundary>
     )
 }

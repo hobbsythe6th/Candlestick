@@ -23,6 +23,7 @@ import './_asset.scss';
 import DragDropTypes from 'Editor/DragDropTypes.js';
 import ToolIcon from 'Editor/Util/ToolIcon/ToolIcon';
 import ActionButton from 'Editor/Util/ActionButton/ActionButton';
+import { useContextMenu } from 'Editor/Util/ContextMenu/ContextMenuProvider';
 
 import classNames from 'classnames';
 
@@ -32,6 +33,27 @@ function Asset(props) {
     type: assetType,
     item: () => ({ uuid: props.asset.uuid }),
   }), [assetType, props.asset.uuid]);
+
+  const { openContextMenu } = useContextMenu();
+
+  function deleteAsset() {
+    props.clearSelection();
+    props.selectObjects([props.asset]);
+    props.deleteSelectedObjects();
+  }
+
+  function onContextMenu(e) {
+    const isSound = props.asset.classname === 'SoundAsset';
+    openContextMenu(e, [
+      {
+        icon: isSound ? 'sound' : 'add',
+        tooltip: isSound ? 'Add to Frame' : 'Add to Canvas',
+        action: isSound ? () => props.addSoundToActiveFrame(props.asset) : addToCanvas,
+      },
+      { divider: true },
+      { icon: 'delete', tooltip: 'Delete', action: deleteAsset },
+    ]);
+  }
 
   function getIcon(classname) {
     if (classname === "ImageAsset") return "image";
@@ -72,7 +94,7 @@ function Asset(props) {
   let icon = getIcon(props.asset.classname);
 
   return (
-    <div ref={drag} className={classNames("asset-item", {"asset-selected": props.isSelected})}>
+    <div ref={drag} className={classNames("asset-item", {"asset-selected": props.isSelected})} onContextMenu={onContextMenu}>
       <button
         className="select"
         onClick={props.onClick}>
@@ -89,11 +111,7 @@ function Asset(props) {
             classsName="delete"
             color="red"
             icon="delete-black"
-            action={() => {
-              props.clearSelection();
-              props.selectObjects([props.asset]);
-              props.deleteSelectedObjects();
-            }}/>
+            action={deleteAsset}/>
         </span>
       </div>}
     </div>
