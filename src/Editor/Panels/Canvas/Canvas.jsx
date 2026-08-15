@@ -33,74 +33,6 @@ class Canvas extends Component {
     this.canvasContainer = React.createRef();
   }
 
-  _onContextMenu = (e) => {
-    const editor = this.props.editor;
-    const actions = editor.actionMapInterface.editorActions;
-    const selectionType = editor.project.selection.selectionType;
-    const hasSelection = editor.project.selection.numObjects > 0;
-
-    if (!hasSelection) {
-      this.context.openContextMenu(e, [
-        { ...actions.paste }
-      ]);
-      return;
-    }
-
-    let essentialContextOptions = [
-      { ...actions.copy },
-      { ...actions.paste },
-      { ...actions.delete },
-      { divider: true },
-      { ...actions.flipHorizontal },
-      { ...actions.flipVertical },
-      { divider: true },
-      { ...actions.sendToFront },
-      { ...actions.sendForward },
-      { ...actions.sendBackward },
-      { ...actions.sendToBack },
-      { divider: true },
-      { ...actions.alignLeft },
-      { ...actions.alignRight },
-      { ...actions.alignTop },
-      { ...actions.alignBottom },
-      { ...actions.alignX },
-      { ...actions.alignY },
-      { divider: true }
-    ]
-
-    let contextOptions = [
-      { ...actions.booleanUnite },
-      { ...actions.booleanSubtract },
-      { ...actions.booleanIntersect },
-      { divider: true },
-      { ...actions.breakApart },
-      { ...actions.convertSelectionToClip },
-      { ...actions.convertSelectionToButton },
-      { ...actions.editTimeline },
-      { ...actions.editCode },
-      { ...actions.makeAnimated },
-      { ...actions.makeInteractive }
-    ]
-
-    if(selectionType == 'path'){
-      contextOptions.map((option => {
-        if(option == {...actions.breakApart} ||
-          option == {...actions.editTimeline} ||
-          option == {...actions.editCode}) 
-          {contextOptions[option] = null;}
-      }))
-    }
-    else if (selectionType == 'clip' || selectionType == 'button'){
-      contextOptions.map((option => {
-        if(option == {...actions.makeAnimated} ||
-          option == {...actions.makeInteractive} ||
-          option == {...actions.editCode}) 
-          {contextOptions[option] = null;}
-      }))
-    }
-    this.context.openContextMenu(e, essentialContextOptions.concat(contextOptions));
-  }
-
   componentDidMount() {
     this.attachProjectToComponent(this.props.project);
 
@@ -162,6 +94,76 @@ class Canvas extends Component {
         <div id="wick-canvas-container" ref={this.canvasContainer}></div>
       </div>
     );
+  }
+
+  _onContextMenu = (e) => {
+    const editor = this.props.editor;
+    const actions = editor.actionMapInterface.editorActions;
+    const selectionType = editor.project.selection.selectionType;
+    const hasSelection = editor.project.selection.numObjects > 0;
+
+    if (!hasSelection) {
+      this.context.openContextMenu(e, [
+        { ...actions.paste }
+      ]);
+      return;
+    }
+
+    let contextOptions = [
+      { ...actions.copy },
+      { ...actions.paste },
+      { ...actions.delete },
+      { divider: true },
+      { ...actions.flipHorizontal },
+      { ...actions.flipVertical },
+      { divider: true },
+      { ...actions.sendToFront },
+      { ...actions.sendForward },
+      { ...actions.sendBackward },
+      { ...actions.sendToBack },
+      { divider: true },
+      { ...actions.alignLeft },
+      { ...actions.alignRight },
+      { ...actions.alignTop },
+      { ...actions.alignBottom },
+      { ...actions.alignX },
+      { ...actions.alignY },
+      { divider: true }
+    ]
+
+    if(selectionType == 'multipath'){
+      contextOptions.push(
+      { ...actions.booleanUnite },
+      { ...actions.booleanSubtract },
+      { ...actions.booleanIntersect },
+      { divider: true },
+      { ...actions.convertSelectionToClip },
+      { ...actions.convertSelectionToButton },
+      { ...actions.makeAnimated },
+      { ...actions.makeInteractive })
+    }
+    else if(selectionType == 'path'){
+      contextOptions.push(
+      { ...actions.convertSelectionToClip },
+      { ...actions.convertSelectionToButton },
+      { ...actions.makeAnimated },
+      { ...actions.makeInteractive })
+    }
+    else if(selectionType == 'multiclip'){
+      contextOptions.push(
+      { ...actions.convertSelectionToClip },
+      { ...actions.convertSelectionToButton },
+      { ...actions.makeAnimated },
+      { ...actions.makeInteractive })
+    }
+    else if (selectionType == 'clip' || selectionType == 'button'){
+      contextOptions.push(
+      { ...actions.breakApart },
+      { ...actions.editTimeline },
+      { ...actions.editCode })
+    }
+    
+    this.context.openContextMenu(e, contextOptions);
   }
 }
 
