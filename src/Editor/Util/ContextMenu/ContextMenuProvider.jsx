@@ -1,20 +1,20 @@
 /*
- * Copyright 2020 WICKLETS LLC
+ * Copyright 2026 Candlestickers
  *
- * This file is part of Wick Editor.
+ * This file is part of Candlestick.
  *
- * Wick Editor is free software: you can redistribute it and/or modify
+ * Candlestick is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Wick Editor is distributed in the hope that it will be useful,
+ * Candlestick is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Wick Editor.  If not, see <https://www.gnu.org/licenses/>.
+ * along with Candlestick.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
@@ -79,7 +79,7 @@ export default function ContextMenuProvider(props) {
         { divider: true },
         {
           icon: 'moreactions',
-          tooltip: 'Show Default Context Menu (right-click again)',
+          tooltip: 'Click this and then right-click again to show default context menu',
           action: showDefaultContextMenu,
         },
       ],

@@ -36,16 +36,17 @@ class Canvas extends Component {
   _onContextMenu = (e) => {
     const editor = this.props.editor;
     const actions = editor.actionMapInterface.editorActions;
+    const selectionType = editor.project.selection.selectionType;
     const hasSelection = editor.project.selection.numObjects > 0;
 
     if (!hasSelection) {
       this.context.openContextMenu(e, [
-        { ...actions.paste },
+        { ...actions.paste }
       ]);
       return;
     }
 
-    this.context.openContextMenu(e, [
+    let essentialContextOptions = [
       { ...actions.copy },
       { ...actions.paste },
       { ...actions.delete },
@@ -64,7 +65,10 @@ class Canvas extends Component {
       { ...actions.alignBottom },
       { ...actions.alignX },
       { ...actions.alignY },
-      { divider: true },
+      { divider: true }
+    ]
+
+    let contextOptions = [
       { ...actions.booleanUnite },
       { ...actions.booleanSubtract },
       { ...actions.booleanIntersect },
@@ -75,8 +79,26 @@ class Canvas extends Component {
       { ...actions.editTimeline },
       { ...actions.editCode },
       { ...actions.makeAnimated },
-      { ...actions.makeInteractive },
-    ]);
+      { ...actions.makeInteractive }
+    ]
+
+    if(selectionType == 'path'){
+      contextOptions.map((option => {
+        if(option == {...actions.breakApart} ||
+          option == {...actions.editTimeline} ||
+          option == {...actions.editCode}) 
+          {contextOptions[option] = null;}
+      }))
+    }
+    else if (selectionType == 'clip' || selectionType == 'button'){
+      contextOptions.map((option => {
+        if(option == {...actions.makeAnimated} ||
+          option == {...actions.makeInteractive} ||
+          option == {...actions.editCode}) 
+          {contextOptions[option] = null;}
+      }))
+    }
+    this.context.openContextMenu(e, essentialContextOptions.concat(contextOptions));
   }
 
   componentDidMount() {
