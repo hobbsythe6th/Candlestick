@@ -24,6 +24,7 @@ import Asset from './Asset/Asset';
 import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 import WickInput from 'Editor/Util/WickInput/WickInput';
 import ToolIcon from 'Editor/Util/ToolIcon/ToolIcon';
+import { ContextMenuContext } from 'Editor/Util/ContextMenu/ContextMenuProvider';
 
 import './_assetlibrary.scss';
 
@@ -144,6 +145,50 @@ class AssetLibrary extends Component {
         </div>
       </div>
     )
+  }
+
+  _onContextMenu = (e) => {
+    const editor = this.props.editor;
+    const actions = editor.actionMapInterface.editorActions;
+    const selectionType = editor.project.selection.selectionType;
+    const hasSelection = editor.project.selection.numObjects > 0;
+
+    if (!hasSelection) {
+      this.context.openContextMenu(e, [
+        { ...actions.paste }
+      ]);
+      return;
+    }
+
+    let contextOptions = [
+      { ...actions.copy },
+      { divider: true }
+    ]
+
+    if(selectionType == 'imageasset'){
+      contextOptions.push(
+      { divider: true },
+      { ...actions.makeInteractive })
+    }
+    else if(selectionType == 'path'){
+      contextOptions.push(
+      { ...actions.makeInteractive })
+    }
+    else if(selectionType == 'multiclip'){
+      contextOptions.push(
+      { ...actions.convertSelectionToClip },
+      { ...actions.convertSelectionToButton },
+      { ...actions.makeAnimated },
+      { ...actions.makeInteractive })
+    }
+    else if (selectionType == 'clip' || selectionType == 'button'){
+      contextOptions.push(
+      { ...actions.breakApart },
+      { ...actions.editTimeline },
+      { ...actions.editCode })
+    }
+    
+    this.context.openContextMenu(e, contextOptions);
   }
 }
 
