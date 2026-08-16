@@ -91,6 +91,7 @@ class Inspector extends Component {
       'convertSelectionToButton': ["path", "text", "image", "multipath", "multiclip", "multicanvas"],
       'convertSelectionToClip': ["path", "text", "image", "multipath", "multiclip", "multicanvas"],
       'exportSelectionAsWickobj': ["clip", "button"],
+      'addToAssetLibraryAsWickobj': ["clip", "button"],
       'editTimeline': ["clip", "button"],
       'addAssetToCanvas': ["imageasset", "clipasset"],
       // 'alignX': [ "multipath"] // H.A.
