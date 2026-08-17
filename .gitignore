@@ -23,6 +23,7 @@ package-lock.json*
 .env.test.local
 .env.production.local
 .env
+.vscode/settings.json
 CLAUDE.md
 AGENTS.md
 /.claude
