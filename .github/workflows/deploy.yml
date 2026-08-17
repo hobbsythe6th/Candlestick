@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install engine dependencies
-        run: cd engine && npm ci
-
       - name: Build engine
         run: npm run build-engine
 
