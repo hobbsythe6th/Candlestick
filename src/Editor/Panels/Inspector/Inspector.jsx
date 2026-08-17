@@ -55,6 +55,7 @@ class Inspector extends Component {
       }));
     };
 
+    
     /**
      * Which render function should be used for each selection type?
      */
@@ -194,7 +195,8 @@ class Inspector extends Component {
       this.setSelectionAttribute('fillColor', color);
     }
   }
-
+componentDidMount() { this._mounted = true; }
+componentWillUnmount() { this._mounted = false; }
   /**
    * Updates the value of a selection attribute for the selected item in the editor.
    * @param {string} attribute Name of the attribute to update.
@@ -977,7 +979,7 @@ class Inspector extends Component {
   renderUnknown = () => {
     // if(!window.project.playing)
       // this.state.logs = []; // <-- note: mutate state directly, DO NOT USE setState()
-    const logsForRender = window.project.playing ? this.state.logs : [];
+    const logsForRender = window.project?.playing ? this.state.logs : [];
     // scroll reference
     this.consoleEndRef = React.createRef();
 
@@ -985,7 +987,7 @@ class Inspector extends Component {
       <div>
         <div className="inspector-content">
           {/* Code for displaying console - H.A. */}
-          {window.project.playing && (
+          {window.project?.playing && (
         <div style={{ width: '110%', height: 'auto', overflowY: 'scroll', backgroundColor: '#242424' }}>
           <Console logs={logsForRender} variant="dark" />
           <div ref={this.consoleEndRef} />
@@ -1100,5 +1102,13 @@ class Inspector extends Component {
     )
   }
 }
+const origSetState = Inspector.prototype.setState;
+Inspector.prototype.setState = function(...args) {
+  if (!this._mounted) {
+    console.warn('setState after unmount', args);
+    console.trace();
+  }
+  return origSetState.apply(this, args);
+};
 
 export default Inspector
