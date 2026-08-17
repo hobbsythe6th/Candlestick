@@ -473,13 +473,15 @@
 					var self = this || Howler;
 					self.state = self.ctx ? self.ctx.state || "suspended" : "suspended";
 					self._autoSuspend();
-					if (!self.usingWebAudio) if (typeof Audio !== "undefined") try {
-						var test = new Audio();
-						if (typeof test.oncanplaythrough === "undefined") self._canPlayEvent = "canplay";
-					} catch (e) {
-						self.noAudio = true;
+					if (!self.usingWebAudio) {
+						if (typeof Audio !== "undefined") try {
+							var test = new Audio();
+							if (typeof test.oncanplaythrough === "undefined") self._canPlayEvent = "canplay";
+						} catch (e) {
+							self.noAudio = true;
+						}
+						else self.noAudio = true;
 					}
-					else self.noAudio = true;
 					try {
 						var test = new Audio();
 						if (test.muted) self.noAudio = true;
@@ -1023,8 +1025,10 @@
 						});
 						return self;
 					}
-					if (typeof id === "undefined") if (typeof muted === "boolean") self._muted = muted;
-					else return self._muted;
+					if (typeof id === "undefined") {
+						if (typeof muted === "boolean") self._muted = muted;
+						else return self._muted;
+					}
 					var ids = self._getSoundIds(id);
 					for (var i = 0; i < ids.length; i++) {
 						var sound = self._soundById(ids[i]);
@@ -1051,9 +1055,10 @@
 					var args = arguments;
 					var vol, id;
 					if (args.length === 0) return self._volume;
-					else if (args.length === 1 || args.length === 2 && typeof args[1] === "undefined") if (self._getSoundIds().indexOf(args[0]) >= 0) id = parseInt(args[0], 10);
-					else vol = parseFloat(args[0]);
-					else if (args.length >= 2) {
+					else if (args.length === 1 || args.length === 2 && typeof args[1] === "undefined") {
+						if (self._getSoundIds().indexOf(args[0]) >= 0) id = parseInt(args[0], 10);
+						else vol = parseFloat(args[0]);
+					} else if (args.length >= 2) {
 						vol = parseFloat(args[0]);
 						id = parseInt(args[1], 10);
 					}
@@ -1194,14 +1199,15 @@
 					var args = arguments;
 					var loop, id, sound;
 					if (args.length === 0) return self._loop;
-					else if (args.length === 1) if (typeof args[0] === "boolean") {
-						loop = args[0];
-						self._loop = loop;
-					} else {
-						sound = self._soundById(parseInt(args[0], 10));
-						return sound ? sound._loop : false;
-					}
-					else if (args.length === 2) {
+					else if (args.length === 1) {
+						if (typeof args[0] === "boolean") {
+							loop = args[0];
+							self._loop = loop;
+						} else {
+							sound = self._soundById(parseInt(args[0], 10));
+							return sound ? sound._loop : false;
+						}
+					} else if (args.length === 2) {
 						loop = args[0];
 						id = parseInt(args[1], 10);
 					}
@@ -1238,9 +1244,10 @@
 					var args = arguments;
 					var rate, id;
 					if (args.length === 0) id = self._sounds[0]._id;
-					else if (args.length === 1) if (self._getSoundIds().indexOf(args[0]) >= 0) id = parseInt(args[0], 10);
-					else rate = parseFloat(args[0]);
-					else if (args.length === 2) {
+					else if (args.length === 1) {
+						if (self._getSoundIds().indexOf(args[0]) >= 0) id = parseInt(args[0], 10);
+						else rate = parseFloat(args[0]);
+					} else if (args.length === 2) {
 						rate = parseFloat(args[0]);
 						id = parseInt(args[1], 10);
 					}
@@ -1317,29 +1324,31 @@
 						return self;
 					}
 					var sound = self._soundById(id);
-					if (sound) if (typeof seek === "number" && seek >= 0) {
-						var playing = self.playing(id);
-						if (playing) self.pause(id, true);
-						sound._seek = seek;
-						sound._ended = false;
-						self._clearTimer(id);
-						if (!self._webAudio && sound._node && !isNaN(sound._node.duration)) sound._node.currentTime = seek;
-						var seekAndEmit = function() {
-							if (playing) self.play(id, true);
-							self._emit("seek", id);
-						};
-						if (playing && !self._webAudio) {
-							var emitSeek = function() {
-								if (!self._playLock) seekAndEmit();
-								else setTimeout(emitSeek, 0);
+					if (sound) {
+						if (typeof seek === "number" && seek >= 0) {
+							var playing = self.playing(id);
+							if (playing) self.pause(id, true);
+							sound._seek = seek;
+							sound._ended = false;
+							self._clearTimer(id);
+							if (!self._webAudio && sound._node && !isNaN(sound._node.duration)) sound._node.currentTime = seek;
+							var seekAndEmit = function() {
+								if (playing) self.play(id, true);
+								self._emit("seek", id);
 							};
-							setTimeout(emitSeek, 0);
-						} else seekAndEmit();
-					} else if (self._webAudio) {
-						var realTime = self.playing(id) ? Howler.ctx.currentTime - sound._playStart : 0;
-						var rateSeek = sound._rateSeek ? sound._rateSeek - sound._seek : 0;
-						return sound._seek + (rateSeek + realTime * Math.abs(sound._rate));
-					} else return sound._node.currentTime;
+							if (playing && !self._webAudio) {
+								var emitSeek = function() {
+									if (!self._playLock) seekAndEmit();
+									else setTimeout(emitSeek, 0);
+								};
+								setTimeout(emitSeek, 0);
+							} else seekAndEmit();
+						} else if (self._webAudio) {
+							var realTime = self.playing(id) ? Howler.ctx.currentTime - sound._playStart : 0;
+							var rateSeek = sound._rateSeek ? sound._rateSeek - sound._seek : 0;
+							return sound._seek + (rateSeek + realTime * Math.abs(sound._rate));
+						} else return sound._node.currentTime;
+					}
 					return self;
 				},
 				/**
@@ -2069,36 +2078,41 @@
 					return self;
 				}
 				var pannerType = typeof Howler.ctx.createStereoPanner === "undefined" ? "spatial" : "stereo";
-				if (typeof id === "undefined") if (typeof pan === "number") {
-					self._stereo = pan;
-					self._pos = [
-						pan,
-						0,
-						0
-					];
-				} else return self._stereo;
-				var ids = self._getSoundIds(id);
-				for (var i = 0; i < ids.length; i++) {
-					var sound = self._soundById(ids[i]);
-					if (sound) if (typeof pan === "number") {
-						sound._stereo = pan;
-						sound._pos = [
+				if (typeof id === "undefined") {
+					if (typeof pan === "number") {
+						self._stereo = pan;
+						self._pos = [
 							pan,
 							0,
 							0
 						];
-						if (sound._node) {
-							sound._pannerAttr.panningModel = "equalpower";
-							if (!sound._panner || !sound._panner.pan) setupPanner(sound, pannerType);
-							if (pannerType === "spatial") if (typeof sound._panner.positionX !== "undefined") {
-								sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
-								sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
-								sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
-							} else sound._panner.setPosition(pan, 0, 0);
-							else sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
-						}
-						self._emit("stereo", sound._id);
-					} else return sound._stereo;
+					} else return self._stereo;
+				}
+				var ids = self._getSoundIds(id);
+				for (var i = 0; i < ids.length; i++) {
+					var sound = self._soundById(ids[i]);
+					if (sound) {
+						if (typeof pan === "number") {
+							sound._stereo = pan;
+							sound._pos = [
+								pan,
+								0,
+								0
+							];
+							if (sound._node) {
+								sound._pannerAttr.panningModel = "equalpower";
+								if (!sound._panner || !sound._panner.pan) setupPanner(sound, pannerType);
+								if (pannerType === "spatial") {
+									if (typeof sound._panner.positionX !== "undefined") {
+										sound._panner.positionX.setValueAtTime(pan, Howler.ctx.currentTime);
+										sound._panner.positionY.setValueAtTime(0, Howler.ctx.currentTime);
+										sound._panner.positionZ.setValueAtTime(0, Howler.ctx.currentTime);
+									} else sound._panner.setPosition(pan, 0, 0);
+								} else sound._panner.pan.setValueAtTime(pan, Howler.ctx.currentTime);
+							}
+							self._emit("stereo", sound._id);
+						} else return sound._stereo;
+					}
 				}
 				return self;
 			};
@@ -2124,31 +2138,35 @@
 				}
 				y = typeof y !== "number" ? 0 : y;
 				z = typeof z !== "number" ? -.5 : z;
-				if (typeof id === "undefined") if (typeof x === "number") self._pos = [
-					x,
-					y,
-					z
-				];
-				else return self._pos;
+				if (typeof id === "undefined") {
+					if (typeof x === "number") self._pos = [
+						x,
+						y,
+						z
+					];
+					else return self._pos;
+				}
 				var ids = self._getSoundIds(id);
 				for (var i = 0; i < ids.length; i++) {
 					var sound = self._soundById(ids[i]);
-					if (sound) if (typeof x === "number") {
-						sound._pos = [
-							x,
-							y,
-							z
-						];
-						if (sound._node) {
-							if (!sound._panner || sound._panner.pan) setupPanner(sound, "spatial");
-							if (typeof sound._panner.positionX !== "undefined") {
-								sound._panner.positionX.setValueAtTime(x, Howler.ctx.currentTime);
-								sound._panner.positionY.setValueAtTime(y, Howler.ctx.currentTime);
-								sound._panner.positionZ.setValueAtTime(z, Howler.ctx.currentTime);
-							} else sound._panner.setPosition(x, y, z);
-						}
-						self._emit("pos", sound._id);
-					} else return sound._pos;
+					if (sound) {
+						if (typeof x === "number") {
+							sound._pos = [
+								x,
+								y,
+								z
+							];
+							if (sound._node) {
+								if (!sound._panner || sound._panner.pan) setupPanner(sound, "spatial");
+								if (typeof sound._panner.positionX !== "undefined") {
+									sound._panner.positionX.setValueAtTime(x, Howler.ctx.currentTime);
+									sound._panner.positionY.setValueAtTime(y, Howler.ctx.currentTime);
+									sound._panner.positionZ.setValueAtTime(z, Howler.ctx.currentTime);
+								} else sound._panner.setPosition(x, y, z);
+							}
+							self._emit("pos", sound._id);
+						} else return sound._pos;
+					}
 				}
 				return self;
 			};
@@ -2176,38 +2194,42 @@
 				}
 				y = typeof y !== "number" ? self._orientation[1] : y;
 				z = typeof z !== "number" ? self._orientation[2] : z;
-				if (typeof id === "undefined") if (typeof x === "number") self._orientation = [
-					x,
-					y,
-					z
-				];
-				else return self._orientation;
+				if (typeof id === "undefined") {
+					if (typeof x === "number") self._orientation = [
+						x,
+						y,
+						z
+					];
+					else return self._orientation;
+				}
 				var ids = self._getSoundIds(id);
 				for (var i = 0; i < ids.length; i++) {
 					var sound = self._soundById(ids[i]);
-					if (sound) if (typeof x === "number") {
-						sound._orientation = [
-							x,
-							y,
-							z
-						];
-						if (sound._node) {
-							if (!sound._panner) {
-								if (!sound._pos) sound._pos = self._pos || [
-									0,
-									0,
-									-.5
-								];
-								setupPanner(sound, "spatial");
+					if (sound) {
+						if (typeof x === "number") {
+							sound._orientation = [
+								x,
+								y,
+								z
+							];
+							if (sound._node) {
+								if (!sound._panner) {
+									if (!sound._pos) sound._pos = self._pos || [
+										0,
+										0,
+										-.5
+									];
+									setupPanner(sound, "spatial");
+								}
+								if (typeof sound._panner.orientationX !== "undefined") {
+									sound._panner.orientationX.setValueAtTime(x, Howler.ctx.currentTime);
+									sound._panner.orientationY.setValueAtTime(y, Howler.ctx.currentTime);
+									sound._panner.orientationZ.setValueAtTime(z, Howler.ctx.currentTime);
+								} else sound._panner.setOrientation(x, y, z);
 							}
-							if (typeof sound._panner.orientationX !== "undefined") {
-								sound._panner.orientationX.setValueAtTime(x, Howler.ctx.currentTime);
-								sound._panner.orientationY.setValueAtTime(y, Howler.ctx.currentTime);
-								sound._panner.orientationZ.setValueAtTime(z, Howler.ctx.currentTime);
-							} else sound._panner.setOrientation(x, y, z);
-						}
-						self._emit("orientation", sound._id);
-					} else return sound._orientation;
+							self._emit("orientation", sound._id);
+						} else return sound._orientation;
+					}
 				}
 				return self;
 			};
@@ -2247,35 +2269,36 @@
 				var o, id, sound;
 				if (!self._webAudio) return self;
 				if (args.length === 0) return self._pannerAttr;
-				else if (args.length === 1) if (typeof args[0] === "object") {
-					o = args[0];
-					if (typeof id === "undefined") {
-						if (!o.pannerAttr) o.pannerAttr = {
-							coneInnerAngle: o.coneInnerAngle,
-							coneOuterAngle: o.coneOuterAngle,
-							coneOuterGain: o.coneOuterGain,
-							distanceModel: o.distanceModel,
-							maxDistance: o.maxDistance,
-							refDistance: o.refDistance,
-							rolloffFactor: o.rolloffFactor,
-							panningModel: o.panningModel
-						};
-						self._pannerAttr = {
-							coneInnerAngle: typeof o.pannerAttr.coneInnerAngle !== "undefined" ? o.pannerAttr.coneInnerAngle : self._coneInnerAngle,
-							coneOuterAngle: typeof o.pannerAttr.coneOuterAngle !== "undefined" ? o.pannerAttr.coneOuterAngle : self._coneOuterAngle,
-							coneOuterGain: typeof o.pannerAttr.coneOuterGain !== "undefined" ? o.pannerAttr.coneOuterGain : self._coneOuterGain,
-							distanceModel: typeof o.pannerAttr.distanceModel !== "undefined" ? o.pannerAttr.distanceModel : self._distanceModel,
-							maxDistance: typeof o.pannerAttr.maxDistance !== "undefined" ? o.pannerAttr.maxDistance : self._maxDistance,
-							refDistance: typeof o.pannerAttr.refDistance !== "undefined" ? o.pannerAttr.refDistance : self._refDistance,
-							rolloffFactor: typeof o.pannerAttr.rolloffFactor !== "undefined" ? o.pannerAttr.rolloffFactor : self._rolloffFactor,
-							panningModel: typeof o.pannerAttr.panningModel !== "undefined" ? o.pannerAttr.panningModel : self._panningModel
-						};
+				else if (args.length === 1) {
+					if (typeof args[0] === "object") {
+						o = args[0];
+						if (typeof id === "undefined") {
+							if (!o.pannerAttr) o.pannerAttr = {
+								coneInnerAngle: o.coneInnerAngle,
+								coneOuterAngle: o.coneOuterAngle,
+								coneOuterGain: o.coneOuterGain,
+								distanceModel: o.distanceModel,
+								maxDistance: o.maxDistance,
+								refDistance: o.refDistance,
+								rolloffFactor: o.rolloffFactor,
+								panningModel: o.panningModel
+							};
+							self._pannerAttr = {
+								coneInnerAngle: typeof o.pannerAttr.coneInnerAngle !== "undefined" ? o.pannerAttr.coneInnerAngle : self._coneInnerAngle,
+								coneOuterAngle: typeof o.pannerAttr.coneOuterAngle !== "undefined" ? o.pannerAttr.coneOuterAngle : self._coneOuterAngle,
+								coneOuterGain: typeof o.pannerAttr.coneOuterGain !== "undefined" ? o.pannerAttr.coneOuterGain : self._coneOuterGain,
+								distanceModel: typeof o.pannerAttr.distanceModel !== "undefined" ? o.pannerAttr.distanceModel : self._distanceModel,
+								maxDistance: typeof o.pannerAttr.maxDistance !== "undefined" ? o.pannerAttr.maxDistance : self._maxDistance,
+								refDistance: typeof o.pannerAttr.refDistance !== "undefined" ? o.pannerAttr.refDistance : self._refDistance,
+								rolloffFactor: typeof o.pannerAttr.rolloffFactor !== "undefined" ? o.pannerAttr.rolloffFactor : self._rolloffFactor,
+								panningModel: typeof o.pannerAttr.panningModel !== "undefined" ? o.pannerAttr.panningModel : self._panningModel
+							};
+						}
+					} else {
+						sound = self._soundById(parseInt(args[0], 10));
+						return sound ? sound._pannerAttr : self._pannerAttr;
 					}
-				} else {
-					sound = self._soundById(parseInt(args[0], 10));
-					return sound ? sound._pannerAttr : self._pannerAttr;
-				}
-				else if (args.length === 2) {
+				} else if (args.length === 2) {
 					o = args[0];
 					id = parseInt(args[1], 10);
 				}
@@ -5719,32 +5742,36 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					var end = this._valuesEnd[property];
 					if (end instanceof Array) this._object[property] = this._interpolationFunction(end, value);
 					else {
-						if (typeof end === "string") if (end.charAt(0) === "+" || end.charAt(0) === "-") end = start + parseFloat(end);
-						else end = parseFloat(end);
+						if (typeof end === "string") {
+							if (end.charAt(0) === "+" || end.charAt(0) === "-") end = start + parseFloat(end);
+							else end = parseFloat(end);
+						}
 						if (typeof end === "number") this._object[property] = start + (end - start) * value;
 					}
 				}
 				if (this._onUpdateCallback !== null) this._onUpdateCallback(this._object, elapsed);
-				if (elapsed === 1) if (this._repeat > 0) {
-					if (isFinite(this._repeat)) this._repeat--;
-					for (property in this._valuesStartRepeat) {
-						if (typeof this._valuesEnd[property] === "string") this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property]);
-						if (this._yoyo) {
-							var tmp = this._valuesStartRepeat[property];
-							this._valuesStartRepeat[property] = this._valuesEnd[property];
-							this._valuesEnd[property] = tmp;
+				if (elapsed === 1) {
+					if (this._repeat > 0) {
+						if (isFinite(this._repeat)) this._repeat--;
+						for (property in this._valuesStartRepeat) {
+							if (typeof this._valuesEnd[property] === "string") this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property]);
+							if (this._yoyo) {
+								var tmp = this._valuesStartRepeat[property];
+								this._valuesStartRepeat[property] = this._valuesEnd[property];
+								this._valuesEnd[property] = tmp;
+							}
+							this._valuesStart[property] = this._valuesStartRepeat[property];
 						}
-						this._valuesStart[property] = this._valuesStartRepeat[property];
+						if (this._yoyo) this._reversed = !this._reversed;
+						if (this._repeatDelayTime !== void 0) this._startTime = time + this._repeatDelayTime;
+						else this._startTime = time + this._delayTime;
+						if (this._onRepeatCallback !== null) this._onRepeatCallback(this._object);
+						return true;
+					} else {
+						if (this._onCompleteCallback !== null) this._onCompleteCallback(this._object);
+						for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) this._chainedTweens[i].start(this._startTime + this._duration);
+						return false;
 					}
-					if (this._yoyo) this._reversed = !this._reversed;
-					if (this._repeatDelayTime !== void 0) this._startTime = time + this._repeatDelayTime;
-					else this._startTime = time + this._delayTime;
-					if (this._onRepeatCallback !== null) this._onRepeatCallback(this._object);
-					return true;
-				} else {
-					if (this._onCompleteCallback !== null) this._onCompleteCallback(this._object);
-					for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) this._chainedTweens[i].start(this._startTime + this._duration);
-					return false;
 				}
 				return true;
 			}
@@ -6350,11 +6377,13 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				var r = (a[0] - c[0]) * (b[1] - c[1]);
 				var det = l - r;
 				var s;
-				if (l > 0) if (r <= 0) return det;
-				else s = l + r;
-				else if (l < 0) if (r >= 0) return det;
-				else s = -(l + r);
-				else return det;
+				if (l > 0) {
+					if (r <= 0) return det;
+					else s = l + r;
+				} else if (l < 0) {
+					if (r >= 0) return det;
+					else s = -(l + r);
+				} else return det;
 				var tol = ERRBOUND3 * s;
 				if (det >= tol || det <= -tol) return det;
 				return orientation3Exact(a, b, c);
@@ -7116,10 +7145,12 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					function _getConnection(dbInfo, upgradeNeeded) {
 						return new Promise$1(function(resolve, reject) {
 							dbContexts[dbInfo.name] = dbContexts[dbInfo.name] || createDbContext();
-							if (dbInfo.db) if (upgradeNeeded) {
-								_deferReadiness(dbInfo);
-								dbInfo.db.close();
-							} else return resolve(dbInfo.db);
+							if (dbInfo.db) {
+								if (upgradeNeeded) {
+									_deferReadiness(dbInfo);
+									dbInfo.db.close();
+								} else return resolve(dbInfo.db);
+							}
 							var dbArgs = [dbInfo.name];
 							if (upgradeNeeded) dbArgs.push(dbInfo.version);
 							var openreq = idb.open.apply(idb, dbArgs);
@@ -8298,8 +8329,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 						for (var i = 1; i < arguments.length; i++) {
 							var arg = arguments[i];
 							if (arg) {
-								for (var _key in arg) if (arg.hasOwnProperty(_key)) if (isArray(arg[_key])) arguments[0][_key] = arg[_key].slice();
-								else arguments[0][_key] = arg[_key];
+								for (var _key in arg) if (arg.hasOwnProperty(_key)) {
+									if (isArray(arg[_key])) arguments[0][_key] = arg[_key].slice();
+									else arguments[0][_key] = arg[_key];
+								}
 							}
 						}
 						return arguments[0];
@@ -8372,9 +8405,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 										DriverSupport[driverName] = support;
 										resolve();
 									};
-									if ("_support" in driverObject) if (driverObject._support && typeof driverObject._support === "function") driverObject._support().then(setDriverSupport, reject);
-									else setDriverSupport(!!driverObject._support);
-									else setDriverSupport(true);
+									if ("_support" in driverObject) {
+										if (driverObject._support && typeof driverObject._support === "function") driverObject._support().then(setDriverSupport, reject);
+										else setDriverSupport(!!driverObject._support);
+									} else setDriverSupport(true);
 								} catch (e) {
 									reject(e);
 								}
@@ -12330,10 +12364,12 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 							}
 							var init = null;
 							if (kind === "const") {
-								if (!this.matchKeyword("in") && !this.matchContextualKeyword("of")) if (this.match("=")) {
-									this.nextToken();
-									init = this.isolateCoverGrammar(this.parseAssignmentExpression);
-								} else this.throwError(messages_1.Messages.DeclarationMissingInitializer, "const");
+								if (!this.matchKeyword("in") && !this.matchContextualKeyword("of")) {
+									if (this.match("=")) {
+										this.nextToken();
+										init = this.isolateCoverGrammar(this.parseAssignmentExpression);
+									} else this.throwError(messages_1.Messages.DeclarationMissingInitializer, "const");
+								}
 							} else if (!options.inFor && id.type !== syntax_1.Syntax.Identifier || this.match("=")) {
 								this.expect("=");
 								init = this.isolateCoverGrammar(this.parseAssignmentExpression);
@@ -13819,17 +13855,19 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 										var comment = this.skipMultiLineComment();
 										if (this.trackComment) comments = comments.concat(comment);
 									} else break;
-								} else if (start && ch === 45) if (this.source.charCodeAt(this.index + 1) === 45 && this.source.charCodeAt(this.index + 2) === 62) {
-									this.index += 3;
-									var comment = this.skipSingleLineComment(3);
-									if (this.trackComment) comments = comments.concat(comment);
+								} else if (start && ch === 45) {
+									if (this.source.charCodeAt(this.index + 1) === 45 && this.source.charCodeAt(this.index + 2) === 62) {
+										this.index += 3;
+										var comment = this.skipSingleLineComment(3);
+										if (this.trackComment) comments = comments.concat(comment);
+									} else break;
+								} else if (ch === 60 && !this.isModule) {
+									if (this.source.slice(this.index + 1, this.index + 4) === "!--") {
+										this.index += 4;
+										var comment = this.skipSingleLineComment(4);
+										if (this.trackComment) comments = comments.concat(comment);
+									} else break;
 								} else break;
-								else if (ch === 60 && !this.isModule) if (this.source.slice(this.index + 1, this.index + 4) === "!--") {
-									this.index += 4;
-									var comment = this.skipSingleLineComment(4);
-									if (this.trackComment) comments = comments.concat(comment);
-								} else break;
-								else break;
 							}
 							return comments;
 						};
@@ -16360,12 +16398,14 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					width: 0,
 					height: 0
 				};
-				if (scale > 0) if (rotateToDirection || normalSpread !== 0 || tangentSpread !== 0) reserved = {
-					x,
-					y,
-					scale
-				};
-				else drawTo(x, y, scale);
+				if (scale > 0) {
+					if (rotateToDirection || normalSpread !== 0 || tangentSpread !== 0) reserved = {
+						x,
+						y,
+						scale
+					};
+					else drawTo(x, y, scale);
+				}
 				delta = 0;
 				lastX = prevX = x;
 				lastY = prevY = y;
@@ -16467,221 +16507,222 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 	/**
 	* extend CanvasRenderingContext2D.prototype by current transformation matrix access.
 	*/
-	if (!("currentTransform" in CanvasRenderingContext2D.prototype))
- /**
-	* define property 'currentTransform'
-	*/
-	if ("mozCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
-		get: function() {
-			var m = this.mozCurrentTransform;
-			return {
-				a: m[0],
-				b: m[1],
-				c: m[2],
-				d: m[3],
-				e: m[4],
-				f: m[5]
-			};
-		},
-		set: function(x) {
-			this.mozCurrentTransform = [
-				x.a,
-				x.b,
-				x.c,
-				x.d,
-				x.e,
-				x.f
-			];
-		},
-		enumerable: true,
-		configurable: false
-	});
-	else if ("webkitCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
-		get: function() {
-			return this.webkitCurrentTransform;
-		},
-		set: function(x) {
-			this.webkitCurrentTransform = x;
-		},
-		enumerable: true,
-		configurable: false
-	});
-	else {
-		Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+	if (!("currentTransform" in CanvasRenderingContext2D.prototype)) {
+		/**
+		* define property 'currentTransform'
+		*/
+		if ("mozCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
 			get: function() {
-				return this._t2stack && this._t2stack[this._t2stack.length - 1] || {
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
+				var m = this.mozCurrentTransform;
+				return {
+					a: m[0],
+					b: m[1],
+					c: m[2],
+					d: m[3],
+					e: m[4],
+					f: m[5]
 				};
 			},
 			set: function(x) {
-				if (!this._t2stack) this._t2stack = [{}];
-				this._t2stack[this._t2stack.length - 1] = {
-					a: x.a,
-					b: x.b,
-					c: x.c,
-					d: x.d,
-					e: x.e,
-					f: x.f
-				};
+				this.mozCurrentTransform = [
+					x.a,
+					x.b,
+					x.c,
+					x.d,
+					x.e,
+					x.f
+				];
 			},
 			enumerable: true,
 			configurable: false
 		});
-		CanvasRenderingContext2D.prototype.save = function() {
-			var save = CanvasRenderingContext2D.prototype.save;
-			return function() {
-				if (!this._t2stack) this._t2stack = [{
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
-				}];
-				var t = this._t2stack[this._t2stack.length - 1];
-				this._t2stack.push(t && {
-					a: t.a,
-					b: t.b,
-					c: t.c,
-					d: t.d,
-					e: t.e,
-					f: t.f
-				});
-				save.call(this);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.restore = function() {
-			var restore = CanvasRenderingContext2D.prototype.restore;
-			return function() {
-				if (this._t2stack) this._t2stack.pop();
-				restore.call(this);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.transform = function() {
-			var transform = CanvasRenderingContext2D.prototype.transform;
-			return function(a, b, c, d, e, f) {
-				if (!this._t2stack) this._t2stack = [{
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
-				}];
-				var t = this._t2stack[this._t2stack.length - 1];
-				var na = t.a * a + t.c * b;
-				var nb = t.b * a + t.d * b;
-				var nc = t.a * c + t.c * d;
-				var nd = t.b * c + t.d * d;
-				var ne = t.e + t.a * e + t.c * f;
-				var nf = t.f + t.b * e + t.d * f;
-				t.a = na;
-				t.b = nb;
-				t.c = nc;
-				t.d = nd;
-				t.e = ne;
-				t.f = nf;
-				transform.call(this, a, b, c, d, e, f);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.setTransform = function() {
-			var setTransform = CanvasRenderingContext2D.prototype.setTransform;
-			return function(a, b, c, d, e, f) {
-				if (!this._t2stack) this._t2stack = [{}];
-				this._t2stack[this._t2stack.length - 1] = {
-					a,
-					b,
-					c,
-					d,
-					e,
-					f
+		else if ("webkitCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+			get: function() {
+				return this.webkitCurrentTransform;
+			},
+			set: function(x) {
+				this.webkitCurrentTransform = x;
+			},
+			enumerable: true,
+			configurable: false
+		});
+		else {
+			Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+				get: function() {
+					return this._t2stack && this._t2stack[this._t2stack.length - 1] || {
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					};
+				},
+				set: function(x) {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a: x.a,
+						b: x.b,
+						c: x.c,
+						d: x.d,
+						e: x.e,
+						f: x.f
+					};
+				},
+				enumerable: true,
+				configurable: false
+			});
+			CanvasRenderingContext2D.prototype.save = function() {
+				var save = CanvasRenderingContext2D.prototype.save;
+				return function() {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					this._t2stack.push(t && {
+						a: t.a,
+						b: t.b,
+						c: t.c,
+						d: t.d,
+						e: t.e,
+						f: t.f
+					});
+					save.call(this);
 				};
-				setTransform.call(this, a, b, c, d, e, f);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.resetTransform = function() {
-			var resetTransform = CanvasRenderingContext2D.prototype.resetTransform;
-			return function() {
-				if (!this._t2stack) this._t2stack = [{}];
-				this._t2stack[this._t2stack.length - 1] = {
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
+			}();
+			CanvasRenderingContext2D.prototype.restore = function() {
+				var restore = CanvasRenderingContext2D.prototype.restore;
+				return function() {
+					if (this._t2stack) this._t2stack.pop();
+					restore.call(this);
 				};
-				resetTransform && resetTransform.call(this);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.scale = function() {
-			var scale = CanvasRenderingContext2D.prototype.scale;
-			return function(sx, sy) {
-				if (!this._t2stack) this._t2stack = [{
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
-				}];
-				var t = this._t2stack[this._t2stack.length - 1];
-				sx = sx || 1;
-				sy = sy || sx;
-				t.a *= sx;
-				t.c *= sy;
-				t.b *= sx;
-				t.d *= sy;
-				scale.call(this, sx, sy);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.rotate = function() {
-			var rotate = CanvasRenderingContext2D.prototype.rotate;
-			return function(w) {
-				if (!this._t2stack) this._t2stack = [{
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
-				}];
-				var t = this._t2stack[this._t2stack.length - 1];
-				var cw = Math.cos(-w);
-				var sw = Math.sin(-w);
-				var a = t.a * cw - t.c * sw;
-				var b = t.b * cw - t.d * sw;
-				var c = t.c * cw + t.a * sw;
-				var d = t.d * cw + t.b * sw;
-				t.a = a;
-				t.b = b;
-				t.c = c;
-				t.d = d;
-				return rotate.call(this, w);
-			};
-		}();
-		CanvasRenderingContext2D.prototype.translate = function() {
-			var translate = CanvasRenderingContext2D.prototype.translate;
-			return function(x, y) {
-				if (!this._t2stack) this._t2stack = [{
-					a: 1,
-					b: 0,
-					c: 0,
-					d: 1,
-					e: 0,
-					f: 0
-				}];
-				var t = this._t2stack[this._t2stack.length - 1];
-				t.e += x * t.a + y * t.c;
-				t.f += x * t.b + y * t.d;
-				return translate.call(this, x, y);
-			};
-		}();
+			}();
+			CanvasRenderingContext2D.prototype.transform = function() {
+				var transform = CanvasRenderingContext2D.prototype.transform;
+				return function(a, b, c, d, e, f) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					var na = t.a * a + t.c * b;
+					var nb = t.b * a + t.d * b;
+					var nc = t.a * c + t.c * d;
+					var nd = t.b * c + t.d * d;
+					var ne = t.e + t.a * e + t.c * f;
+					var nf = t.f + t.b * e + t.d * f;
+					t.a = na;
+					t.b = nb;
+					t.c = nc;
+					t.d = nd;
+					t.e = ne;
+					t.f = nf;
+					transform.call(this, a, b, c, d, e, f);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.setTransform = function() {
+				var setTransform = CanvasRenderingContext2D.prototype.setTransform;
+				return function(a, b, c, d, e, f) {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a,
+						b,
+						c,
+						d,
+						e,
+						f
+					};
+					setTransform.call(this, a, b, c, d, e, f);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.resetTransform = function() {
+				var resetTransform = CanvasRenderingContext2D.prototype.resetTransform;
+				return function() {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					};
+					resetTransform && resetTransform.call(this);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.scale = function() {
+				var scale = CanvasRenderingContext2D.prototype.scale;
+				return function(sx, sy) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					sx = sx || 1;
+					sy = sy || sx;
+					t.a *= sx;
+					t.c *= sy;
+					t.b *= sx;
+					t.d *= sy;
+					scale.call(this, sx, sy);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.rotate = function() {
+				var rotate = CanvasRenderingContext2D.prototype.rotate;
+				return function(w) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					var cw = Math.cos(-w);
+					var sw = Math.sin(-w);
+					var a = t.a * cw - t.c * sw;
+					var b = t.b * cw - t.d * sw;
+					var c = t.c * cw + t.a * sw;
+					var d = t.d * cw + t.b * sw;
+					t.a = a;
+					t.b = b;
+					t.c = c;
+					t.d = d;
+					return rotate.call(this, w);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.translate = function() {
+				var translate = CanvasRenderingContext2D.prototype.translate;
+				return function(x, y) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					t.e += x * t.a + y * t.c;
+					t.f += x * t.b + y * t.d;
+					return translate.call(this, x, y);
+				};
+			}();
+		}
 	}
 	/**
 	* @license potrace
@@ -17531,16 +17572,17 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 						if (x === point.x && y === point.y) break;
 						var l = bm.at(x + (dirx + diry - 1) / 2, y + (diry - dirx - 1) / 2);
 						var r = bm.at(x + (dirx - diry - 1) / 2, y + (diry + dirx - 1) / 2);
-						if (r && !l) if (turnPolicy === 0 || turnPolicy === 1 && path.signIsPlus || turnPolicy === 2 && !path.signIsPlus || turnPolicy === 3 && this.majority(x, y) || turnPolicy === 4 && !this.majority(x, y)) {
-							tmp = dirx;
-							dirx = -diry;
-							diry = tmp;
-						} else {
-							tmp = dirx;
-							dirx = diry;
-							diry = -tmp;
-						}
-						else if (r) {
+						if (r && !l) {
+							if (turnPolicy === 0 || turnPolicy === 1 && path.signIsPlus || turnPolicy === 2 && !path.signIsPlus || turnPolicy === 3 && this.majority(x, y) || turnPolicy === 4 && !this.majority(x, y)) {
+								tmp = dirx;
+								dirx = -diry;
+								diry = tmp;
+							} else {
+								tmp = dirx;
+								dirx = diry;
+								diry = -tmp;
+							}
+						} else if (r) {
 							tmp = dirx;
 							dirx = -diry;
 							diry = tmp;
@@ -18299,6 +18341,11 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					default: new Wick.Color("rgba(0, 0, 255, .5)")
 				},
 				{
+					type: "boolean",
+					name: "imageSmoothing",
+					default: true
+				},
+				{
 					type: "choice",
 					name: "brushMode",
 					default: "none",
@@ -18316,6 +18363,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		constructor() {
 			this._settings = {};
 			this._onSettingsChangedCallback = () => {};
+			this.project = null;
 			this.resetAllSettings();
 			this.loadSettingsFromLocalstorage();
 		}
@@ -20624,9 +20672,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this._onscreenLastTick = this._onscreen;
 			this._onscreen = this.onScreen;
 			this._lastMouseState = this._mouseState;
-			if (this.project && this.project.objectIsMouseTarget(this)) if (this.project.isMouseDown) this._mouseState = "down";
-			else this._mouseState = "over";
-			else this._mouseState = "out";
+			if (this.project && this.project.objectIsMouseTarget(this)) {
+				if (this.project.isMouseDown) this._mouseState = "down";
+				else this._mouseState = "over";
+			} else this._mouseState = "out";
 			if (!this._onscreen && !this._onscreenLastTick) this._onInactive();
 			else if (this._onscreen && !this._onscreenLastTick) this._onActivated();
 			else if (this._onscreen && this._onscreenLastTick) this._onActive();
@@ -21202,19 +21251,21 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					result.offsetX = overlap * x;
 					result.offsetY = overlap * y;
 				}
-				if (options.intersections) if (r2 - distance > r1 || r1 - distance > r2 || distance === 0) result.intersections = [];
-				else {
-					let d = (distance * distance + r1 * r1 - r2 * r2) / (2 * distance);
-					let h = Math.sqrt(r1 * r1 - d * d);
-					let x0 = c1.x - d * x;
-					let y0 = c1.y - d * y;
-					result.intersections = [{
-						x: x0 + h * y,
-						y: y0 - h * x
-					}, {
-						x: x0 - h * y,
-						y: y0 + h * x
-					}];
+				if (options.intersections) {
+					if (r2 - distance > r1 || r1 - distance > r2 || distance === 0) result.intersections = [];
+					else {
+						let d = (distance * distance + r1 * r1 - r2 * r2) / (2 * distance);
+						let h = Math.sqrt(r1 * r1 - d * d);
+						let x0 = c1.x - d * x;
+						let y0 = c1.y - d * y;
+						result.intersections = [{
+							x: x0 + h * y,
+							y: y0 - h * x
+						}, {
+							x: x0 - h * y,
+							y: y0 + h * x
+						}];
+					}
 				}
 				return result;
 			}
@@ -21496,9 +21547,11 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				if (options.intersections !== void 0) finalOptions.intersections = Boolean(options.intersections);
 				if (typeof options.radius === "number") finalOptions.radius = options.radius;
 			}
-			if (other) if (finalOptions.mode === "CONVEX") return this.convexHits(other, finalOptions);
-			else if (finalOptions.mode === "RECTANGLE") return this.rectangleHits(other, finalOptions);
-			else return this.circleHits(other, finalOptions);
+			if (other) {
+				if (finalOptions.mode === "CONVEX") return this.convexHits(other, finalOptions);
+				else if (finalOptions.mode === "RECTANGLE") return this.rectangleHits(other, finalOptions);
+				else return this.circleHits(other, finalOptions);
+			}
 			let hits = this.project.quadtreeHit(this);
 			let results = [];
 			for (let h = 0; h < hits.length; h++) {
@@ -21904,8 +21957,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			if (this.isFocus || this.animationType === "loop") this.timeline.advance();
 			else if (this.animationType === "single") this.timeline.playheadPosition = this.singleFrameNumber;
 			else if (this.animationType === "playOnce") {
-				if (!this.playedOnce) if (this.timeline.playheadPosition === this.timeline.length) this.playedOnce = true;
-				else this.timeline.advance();
+				if (!this.playedOnce) {
+					if (this.timeline.playheadPosition === this.timeline.length) this.playedOnce = true;
+					else this.timeline.advance();
+				}
 			}
 			if (this.isSynced && !this.isFocus) this.timeline.playheadPosition = this.syncFrame;
 			this._tickChildren();
@@ -22017,6 +22072,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			for (var toolName in this._tools) this._tools[toolName].project = this;
 			this.activeTool = "cursor";
 			this._toolSettings = new Wick.ToolSettings();
+			this._toolSettings.project = this;
 			this._toolSettings.onSettingsChanged((name, value) => {
 				if (name === "fillColor") this.selection.fillColor = value.rgba;
 				else if (name === "strokeColor") this.selection.strokeColor = value.rgba;
@@ -22024,6 +22080,8 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this._playing = false;
 			this._scriptSchedule = [];
 			this._error = null;
+			this._assetFolders = args.assetFolders || [];
+			this._assetFolderAssignments = args.assetFolderAssignments || {};
 			this.history.project = this;
 			this.history.pushState(Wick.History.StateType.ONLY_VISIBLE_OBJECTS);
 			this.orderedLayers = [];
@@ -22110,6 +22168,8 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this._renderBlackBars = true;
 			this._hitTestOptions = this.getDefaultHitTestOptions();
 			this.rotation = 0;
+			this._assetFolders = data.assetFolders || [];
+			this._assetFolderAssignments = data.assetFolderAssignments || {};
 		}
 		_serialize(args) {
 			var data = super._serialize(args);
@@ -22123,6 +22183,8 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			data.onionSkinSeekBackwards = this.onionSkinSeekBackwards;
 			data.focus = this.focus.uuid;
 			data.metadata = Wick.WickFile.generateMetaData();
+			data.assetFolders = this._assetFolders;
+			data.assetFolderAssignments = this._assetFolderAssignments;
 			return data;
 		}
 		getDefaultHitTestOptions() {
@@ -22317,6 +22379,130 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				"FontAsset",
 				"SVGAsset"
 			]);
+		}
+		/**
+		* The folders in the Asset Library.
+		* @type {object[]}
+		*/
+		get assetFolders() {
+			return this._assetFolders;
+		}
+		set assetFolders(assetFolders) {
+			this._assetFolders = assetFolders;
+		}
+		/**
+		* A map of asset UUID to the id of the Asset Library folder it belongs to.
+		* @type {object}
+		*/
+		get assetFolderAssignments() {
+			return this._assetFolderAssignments;
+		}
+		set assetFolderAssignments(assetFolderAssignments) {
+			this._assetFolderAssignments = assetFolderAssignments;
+		}
+		/**
+		* Creates a new Asset Library folder inside another folder (or at the
+		* root if parentFolderId is null/omitted), with a name that's unique
+		* among its siblings.
+		* @param {string} [name] - Desired name. Defaults to "New Folder"
+		*   (or "New Folder 2", etc. if that name is already taken by a sibling).
+		* @param {string} [parentFolderId] - The folder to nest the new folder
+		*   inside. Defaults to null (the Asset Library root).
+		* @return {object} The newly created folder.
+		*/
+		createAssetFolder(name, parentFolderId) {
+			if (parentFolderId === void 0) parentFolderId = null;
+			let baseName = name || "New Folder";
+			let siblingNames = new Set(this._assetFolders.filter((folder) => folder.parentFolderId === parentFolderId).map((folder) => folder.name));
+			let finalName = baseName;
+			let counter = 2;
+			while (siblingNames.has(finalName)) {
+				finalName = baseName + " " + counter;
+				counter++;
+			}
+			let newFolder = {
+				id: "folder-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+				name: finalName,
+				parentFolderId
+			};
+			this._assetFolders = [...this._assetFolders, newFolder];
+			return newFolder;
+		}
+		/**
+		* Deletes a single Asset Library folder. Its direct contents (both
+		* subfolders and assets) are promoted up to the deleted folder's own
+		* parent, rather than being deleted or bumped all the way to the root.
+		* @param {string} folderId
+		* @return {string} fallbackFolderId - The deleted folder's former
+		*   parent (or null for root), which is now the new home of its
+		*   former contents. Callers can use this to navigate out of the
+		*   deleted folder.
+		*/
+		deleteAssetFolder(folderId) {
+			let deletedFolder = this._assetFolders.find((folder) => folder.id === folderId);
+			let fallbackFolderId = deletedFolder ? deletedFolder.parentFolderId : null;
+			this._assetFolders = this._assetFolders.filter((folder) => folder.id !== folderId).map((folder) => folder.parentFolderId === folderId ? {
+				...folder,
+				parentFolderId: fallbackFolderId
+			} : folder);
+			let assetFolderAssignments = { ...this._assetFolderAssignments };
+			Object.keys(assetFolderAssignments).forEach((assetUuid) => {
+				if (assetFolderAssignments[assetUuid] === folderId) assetFolderAssignments[assetUuid] = fallbackFolderId;
+			});
+			this._assetFolderAssignments = assetFolderAssignments;
+			return fallbackFolderId;
+		}
+		/**
+		* Moves an Asset Library folder to be a child of another folder (or to
+		* the root if targetFolderId is null). No-ops if the move would create
+		* a cycle (e.g. moving a folder into its own descendant).
+		* @param {string} folderId
+		* @param {string} targetFolderId
+		*/
+		moveAssetFolder(folderId, targetFolderId) {
+			if (folderId === targetFolderId) return;
+			let folderById = new Map(this._assetFolders.map((folder) => [folder.id, folder]));
+			let isDescendantOf = (candidateId, ancestorId) => {
+				let current = folderById.get(candidateId);
+				while (current) {
+					if (current.parentFolderId === ancestorId) return true;
+					current = folderById.get(current.parentFolderId);
+				}
+				return false;
+			};
+			if (targetFolderId !== null && isDescendantOf(targetFolderId, folderId)) return;
+			this._assetFolders = this._assetFolders.map((folder) => folder.id === folderId ? {
+				...folder,
+				parentFolderId: targetFolderId
+			} : folder);
+		}
+		/**
+		* Builds a human-readable path for an Asset Library folder from its
+		* ancestor names (e.g. "New Folder / Subfolder").
+		* @param {string} folderId
+		* @return {string}
+		*/
+		getAssetFolderPath(folderId) {
+			let folderById = new Map(this._assetFolders.map((folder) => [folder.id, folder]));
+			let names = [];
+			let current = folderById.get(folderId);
+			while (current) {
+				names.unshift(current.name);
+				current = folderById.get(current.parentFolderId);
+			}
+			return names.join(" / ");
+		}
+		/**
+		* Assigns an asset to an Asset Library folder (or back to the root if
+		* folderId is null).
+		* @param {string} assetUuid
+		* @param {string} folderId
+		*/
+		assignAssetToFolder(assetUuid, folderId) {
+			this._assetFolderAssignments = {
+				...this._assetFolderAssignments,
+				[assetUuid]: folderId
+			};
 		}
 		/**
 		* Adds an asset to the project.
@@ -22746,10 +22932,12 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		*/
 		get canCreateTween() {
 			var selectedFrames = this.selection.getSelectedObjects("Frame");
-			if (selectedFrames.length > 0) if (selectedFrames.find((frame) => {
-				return !frame.contentful;
-			})) return false;
-			else return true;
+			if (selectedFrames.length > 0) {
+				if (selectedFrames.find((frame) => {
+					return !frame.contentful;
+				})) return false;
+				else return true;
+			}
 			var activeFrame = this.activeLayer.activeFrame;
 			if (activeFrame) return activeFrame.contentful;
 			return false;
@@ -23575,6 +23763,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this.hidden = args.hidden === void 0 ? false : args.hidden;
 			this.opacity = args.opacity === void 0 ? 1 : args.opacity;
 			this.name = args.name || null;
+			this._layerColor = args.layerColor || Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR;
 		}
 		_serialize(args) {
 			var data = super._serialize(args);
@@ -23616,6 +23805,16 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		set opacity(opacity) {
 			if (typeof opacity === "number" && !isNaN(opacity)) this._opacity = Math.max(Math.min(opacity, 1), 0);
 			else this._opacity = 1;
+		}
+		/**
+		* The color of the layer on the timeline.
+		* @type {paper.color}
+		*/
+		get layerColor() {
+			return this._layerColor;
+		}
+		set layerColor(color) {
+			this._layerColor = color;
 		}
 		/**
 		* Set this layer to be the active layer in its timeline.
@@ -23828,6 +24027,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			if (!args) args = {};
 			super(args);
 			this._selectedObjectsUUIDs = args.selectedObjects || [];
+			this._selectedFolder = null;
 			this._widgetRotation = args.widgetRotation || 0;
 			this._pivotPoint = {
 				x: 0,
@@ -23888,6 +24088,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				"strokeWidth",
 				"fillColor",
 				"strokeColor",
+				"layerColor",
 				"name",
 				"filename",
 				"fontSize",
@@ -23995,9 +24196,28 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		clear(filter) {
 			if (filter === void 0) {
 				this._selectedObjectsUUIDs = [];
+				this._selectedFolder = null;
 				this._resetPositioningValues();
 				this.view.dirty = true;
 			} else this.deselectMultipleObjects(this.project.selection.getSelectedObjects(filter));
+		}
+		/**
+		* The folder currently selected in the Asset Library, if any.
+		* @type {object}
+		*/
+		get selectedFolder() {
+			return this._selectedFolder;
+		}
+		/**
+		* Selects a folder in the Asset Library. Clears any other selection,
+		* since a folder can't be selected alongside canvas/timeline/asset
+		* objects.
+		* @param {object} folder - The folder to select, as tracked by the
+		*   editor's AssetLibrary UI (folders aren't Wick.Base objects).
+		*/
+		selectFolder(folder) {
+			this.clear();
+			this._selectedFolder = folder;
 		}
 		/**
 		* Checks if a given object is selected.
@@ -24050,6 +24270,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		* @type {string}
 		*/
 		get location() {
+			if (this._selectedFolder) return "AssetLibrary";
 			if (this.numObjects === 0) return null;
 			return this._locationOf(this.getSelectedObjects()[0]);
 		}
@@ -24069,30 +24290,35 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		*/
 		get selectionType() {
 			let selection = this;
-			if (selection.location === "Canvas") if (selection.numObjects === 1) {
-				var selectedObject = selection.getSelectedObject();
-				if (selectedObject instanceof window.Wick.Path) return selectedObject.pathType;
-				else if (selectedObject instanceof window.Wick.Button) return "button";
-				else if (selectedObject instanceof window.Wick.Clip) return "clip";
-			} else if (selection.types.length === 1) if (selection.types[0] === "Path") return "multipath";
-			else return "multiclip";
-			else return "multicanvas";
-			else if (selection.location === "Timeline") if (selection.numObjects === 1) {
-				if (selection.getSelectedObject() instanceof window.Wick.Frame) return "frame";
-				else if (selection.getSelectedObject() instanceof window.Wick.Layer) return "layer";
-				else if (selection.getSelectedObject() instanceof window.Wick.Tween) return "tween";
-			} else if (selection.types.length === 1) {
-				if (selection.getSelectedObjects()[0] instanceof window.Wick.Frame) return "multiframe";
-				else if (selection.getSelectedObjects()[0] instanceof window.Wick.Layer) return "multilayer";
-				else if (selection.getSelectedObjects()[0] instanceof window.Wick.Tween) return "multitween";
-			} else return "multitimeline";
-			else if (selection.location === "AssetLibrary") if (selection.getSelectedObjects()[0] instanceof window.Wick.ImageAsset) return "imageasset";
-			else if (selection.getSelectedObjects()[0] instanceof window.Wick.SoundAsset) return "soundasset";
-			else if (selection.getSelectedObjects()[0] instanceof window.Wick.SVGAsset) return "svgasset";
-			else if (selection.getSelectedObjects()[0] instanceof window.Wick.FontAsset) return "fontasset";
-			else if (selection.getSelectedObjects()[0] instanceof window.Wick.ClipAsset) return "clipasset";
-			else return "unknown";
-			else return "unknown";
+			if (selection.location === "Canvas") {
+				if (selection.numObjects === 1) {
+					var selectedObject = selection.getSelectedObject();
+					if (selectedObject instanceof window.Wick.Path) return selectedObject.pathType;
+					else if (selectedObject instanceof window.Wick.Button) return "button";
+					else if (selectedObject instanceof window.Wick.Clip) return "clip";
+				} else if (selection.types.length === 1) {
+					if (selection.types[0] === "Path") return "multipath";
+					else return "multiclip";
+				} else return "multicanvas";
+			} else if (selection.location === "Timeline") {
+				if (selection.numObjects === 1) {
+					if (selection.getSelectedObject() instanceof window.Wick.Frame) return "frame";
+					else if (selection.getSelectedObject() instanceof window.Wick.Layer) return "layer";
+					else if (selection.getSelectedObject() instanceof window.Wick.Tween) return "tween";
+				} else if (selection.types.length === 1) {
+					if (selection.getSelectedObjects()[0] instanceof window.Wick.Frame) return "multiframe";
+					else if (selection.getSelectedObjects()[0] instanceof window.Wick.Layer) return "multilayer";
+					else if (selection.getSelectedObjects()[0] instanceof window.Wick.Tween) return "multitween";
+				} else return "multitimeline";
+			} else if (selection.location === "AssetLibrary") {
+				if (selection.selectedFolder) return "folder";
+				else if (selection.getSelectedObjects()[0] instanceof window.Wick.ImageAsset) return "imageasset";
+				else if (selection.getSelectedObjects()[0] instanceof window.Wick.SoundAsset) return "soundasset";
+				else if (selection.getSelectedObjects()[0] instanceof window.Wick.SVGAsset) return "svgasset";
+				else if (selection.getSelectedObjects()[0] instanceof window.Wick.FontAsset) return "fontasset";
+				else if (selection.getSelectedObjects()[0] instanceof window.Wick.ClipAsset) return "clipasset";
+				else return "unknown";
+			} else return "unknown";
 		}
 		/**
 		* The number of objects in the selection.
@@ -24340,9 +24566,14 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		* @type {string}
 		*/
 		get name() {
+			if (this._selectedFolder) return this._selectedFolder.name;
 			return this._getSingleAttribute("name");
 		}
 		set name(name) {
+			if (this._selectedFolder) {
+				this._selectedFolder.name = name;
+				return;
+			}
 			this._setSingleAttribute("name", name);
 		}
 		/**
@@ -24374,6 +24605,16 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		}
 		set strokeWidth(strokeWidth) {
 			this._setSingleAttribute("strokeWidth", strokeWidth);
+		}
+		/**
+		* The color of the layer.
+		* @type {paper.color}
+		*/
+		get layerColor() {
+			return this._getSingleAttribute("layerColor");
+		}
+		set layerColor(layerColor) {
+			this._setSingleAttribute("layerColor", layerColor);
 		}
 		/**
 		* The font family of the selected object.
@@ -24805,8 +25046,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		*/
 		addLayer(layer) {
 			this.addChild(layer);
-			if (!layer.name) if (this.layers.length > 1) layer.name = "Layer " + this.layers.length;
-			else layer.name = "Layer";
+			if (!layer.name) {
+				if (this.layers.length > 1) layer.name = "Layer " + this.layers.length;
+				else layer.name = "Layer";
+			}
 		}
 		/**
 		* Adds a tween to a frame on this timeline.
@@ -25284,10 +25527,12 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			data.json = this.json;
 			delete data.json[1].data;
 			if (typeof data.json[0] !== "string") delete data.json[1][1].data;
-			if (data.json[0] === "Raster" && data.json[1].source.startsWith("data:")) if (!this.project) console.warn("Could not replace raster image source with asset UUID, path does not belong to a project.");
-			else this.project.getAssets("Image").forEach((imageAsset) => {
-				if (imageAsset.src === data.json[1].source) data.json[1].source = "asset:" + imageAsset.uuid;
-			});
+			if (data.json[0] === "Raster" && data.json[1].source.startsWith("data:")) {
+				if (!this.project) console.warn("Could not replace raster image source with asset UUID, path does not belong to a project.");
+				else this.project.getAssets("Image").forEach((imageAsset) => {
+					if (imageAsset.src === data.json[1].source) data.json[1].source = "asset:" + imageAsset.uuid;
+				});
+			}
 			data.fontStyle = this._fontStyle;
 			data.fontWeight = this._fontWeight;
 			data.isPlaceholder = this._isPlaceholder;
@@ -28356,6 +28601,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				return;
 			}
 			this.importJSON(this.model.json);
+			if (this.model.pathType == "image") this.item.smoothing = this.model.project.toolSettings.getSetting("imageSmoothing");
 			if (this.model.parentFrame && this.model.parentFrame.onionSkinned) this.applyOnionSkinStyles();
 			else if (this.item.data.originalStyle) {
 				this.item.strokeColor = this.item.data.originalStyle.strokeColor;
@@ -29113,8 +29359,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				var currentPointRelative = e.point.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
 				var initialPointRelative = this.mod.initialPoint.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
 				var scaleFactor = currentPointRelative.divide(initialPointRelative);
-				if (!this.mod.modifiers.freescale) if (Math.abs(scaleFactor.x) < Math.abs(scaleFactor.y)) scaleFactor.x = Math.sign(scaleFactor.x) * Math.abs(scaleFactor.y);
-				else scaleFactor.y = Math.sign(scaleFactor.y) * Math.abs(scaleFactor.x);
+				if (!this.mod.modifiers.freescale) {
+					if (Math.abs(scaleFactor.x) < Math.abs(scaleFactor.y)) scaleFactor.x = Math.sign(scaleFactor.x) * Math.abs(scaleFactor.y);
+					else scaleFactor.y = Math.sign(scaleFactor.y) * Math.abs(scaleFactor.x);
+				}
 				this.mod.scaleFactor = scaleFactor;
 				this._ghost.scale(this.mod.scaleFactor, this.mod.truePivot);
 				this._ghost.rotate(this.boxRotation, this.pivot);
@@ -30278,9 +30526,10 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		* @type {string}
 		*/
 		get mouseState() {
-			if (this === this.project._getTopMouseTarget()) if (this.project._isDragging) return "down";
-			else return "over";
-			else return "out";
+			if (this === this.project._getTopMouseTarget()) {
+				if (this.project._isDragging) return "down";
+				else return "over";
+			} else return "out";
 		}
 		/**
 		* Draw this GUIElement
@@ -30725,8 +30974,49 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			var width = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES * 2;
 			var height = this.gridCellHeight - Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM * 2;
 			if (this.model.hidden) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_HIDDEN_FILL_COLOR;
-			else if (this.model.isActive) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR;
-			else ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_INACTIVE_FILL_COLOR;
+			else if (this.model.isActive) ctx.fillStyle = this.model.layerColor;
+			else {
+				let color = this.model.layerColor;
+				let red, green, blue;
+				if (color.includes("#")) {
+					red = parseRGB(color)[0];
+					green = parseRGB(color)[1];
+					blue = parseRGB(color)[2];
+				} else {
+					color = color.replace(/[^\d.,]/g, "").split(",").map(Number);
+					red = color[0];
+					green = color[1];
+					blue = color[2];
+				}
+				let overlayAlpha = 200 / 255;
+				let overlay = 183;
+				red = Math.round(overlay * overlayAlpha + red * .21568627450980393);
+				green = Math.round(overlay * overlayAlpha + green * .21568627450980393);
+				blue = Math.round(overlay * overlayAlpha + blue * .21568627450980393);
+				ctx.fillStyle = "#" + toHex(red) + toHex(green) + toHex(blue);
+			}
+			function toHex(n) {
+				return n.toString(16).padStart(2, "0");
+			}
+			function parseRGB(color) {
+				let red, green, blue, alpha;
+				if (color.includes("#")) {
+					color = color.replace(/^#/, "");
+					red = parseInt(color.substring(0, 2), 16);
+					green = parseInt(color.substring(2, 4), 16);
+					blue = parseInt(color.substring(4, 6), 16);
+					alpha = parseInt(color.substring(6, 8));
+					return [
+						red,
+						green,
+						blue,
+						alpha
+					];
+				} else {
+					color = color.match(/[\d.]+/g).map(Number);
+					return color;
+				}
+			}
 			if (this.model.isSelected) {
 				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
 				ctx.lineWidth = 3;
@@ -30744,13 +31034,21 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			ctx.fill();
 			ctx.stroke();
 			ctx.restore();
+			let color = this.model.layerColor;
+			let warm = false;
+			let rgb = parseRGB(color);
+			if (rgb[0] - rgb[2] > 0 && rgb[1] < 113) warm = true;
 			var maxWidth = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - 10;
 			ctx.save();
 			ctx.beginPath();
 			ctx.rect(0, 0, maxWidth, this.gridCellHeight);
 			ctx.clip();
 			ctx.font = "16px " + Wick.GUIElement.LAYER_LABEL_FONT_FAMILY;
-			ctx.fillStyle = this.model.isActive ? Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR : Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR;
+			if (this.model.isActive == true) {
+				if (warm == false) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR;
+				else ctx.fillStyle = "#ffffff";
+			} else if (warm == false) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR;
+			else ctx.fillStyle = "#c5c5c5";
 			ctx.fillText(this.model.name, 57, this.gridCellHeight / 2 + 6);
 			ctx.restore();
 			ctx.save();
@@ -33092,7 +33390,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		}
 		/**
 		* Create a wick file from the project.
-		* @param {Wick.Project} clip - the clip to create a wickobject file from
+		* @param {Wick.Clip} clip - the clip to create a wickobject file from
 		* @param {string} format - Can be 'blob' or 'dataurl'.
 		*/
 		static toWickObjectFile(clip, format, callback) {
@@ -35636,17 +35934,19 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		_finishPath() {
 			this.previewStroke.visible = false;
 			this.closeNodeIndicator.remove();
-			if (this.path) if (this.path.segments.length > 1) {
-				this.path.remove();
-				var targetFrame = this._targetFrame || this.project.activeFrame;
-				if (targetFrame) {
-					targetFrame.view.objectsLayer.addChild(this.path);
-					this.fireEvent({
-						eventName: "canvasModified",
-						actionName: "shape"
-					});
-				}
-			} else this.path.remove();
+			if (this.path) {
+				if (this.path.segments.length > 1) {
+					this.path.remove();
+					var targetFrame = this._targetFrame || this.project.activeFrame;
+					if (targetFrame) {
+						targetFrame.view.objectsLayer.addChild(this.path);
+						this.fireEvent({
+							eventName: "canvasModified",
+							actionName: "shape"
+						});
+					}
+				} else this.path.remove();
+			}
 			this.path = null;
 			this.currentSegment = null;
 			this._targetFrame = null;
