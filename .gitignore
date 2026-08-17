@@ -9,7 +9,6 @@
 /coverage
 
 # production
-/build
 /dist
 /public/corelibs/wick-engine/
 /engine/dist/
