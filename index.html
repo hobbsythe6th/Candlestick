@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="shortcut icon" href="/favicon.png">
+    <link rel="shortcut icon" href="%BASE_URL%favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="theme-color" content="#000000">
     <script async defer data-domain="wickeditor.com" src="https://plausible.io/js/plausible.hash.js"></script>
@@ -11,29 +11,29 @@
       manifest.json provides metadata used when your web app is added to the
       homescreen on Android. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="%BASE_URL%manifest.json">
 
     <!-- Wick Editor Dependencies: -->
     <!-- Wick Engine -->
     <script type="module" src="/src/index.jsx"></script>
     <!-- Paper -->
-    <script src="/node_modules/paper/dist/paper-core.min.js"></script>
+    <script src="%BASE_URL%vendor/paper-core.min.js"></script>
     <!-- jQuery -->
-    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="%BASE_URL%vendor/jquery.min.js"></script>
     <!-- jQuery Mousewheel -->
-     <script src="/node_modules/jquery-mousewheel/jquery.mousewheel.min.js"></script>
+     <script src="%BASE_URL%vendor/jquery.mousewheel.min.js"></script>
     <!-- Pressure.js -->
-    <script src="/node_modules/pressure/dist/jquery.pressure.min.js"></script>
-    
-    <script src="/corelibs/wick-engine/wickengine.js"></script>
+    <script src="%BASE_URL%vendor/jquery.pressure.min.js"></script>
+
+    <script src="%BASE_URL%corelibs/wick-engine/wickengine.js"></script>
     <!-- GIF Import/Export -->
-    <script src="/corelibs/gif/gif.js"></script>
+    <script src="%BASE_URL%corelibs/gif/gif.js"></script>
     <!-- preload.js -->
-    <script src="/corelibs/preload/preloadjs.min.js"></script>
+    <script src="%BASE_URL%corelibs/preload/preloadjs.min.js"></script>
     <!-- Preloader animation CSS -->
-    <link href="/preloader-animation.css" rel="stylesheet" type="text/css">
+    <link href="%BASE_URL%preloader-animation.css" rel="stylesheet" type="text/css">
     <!-- Wait overlay CSS -->
-    <link href="/wait-overlay.css" rel="stylesheet" type="text/css">
+    <link href="%BASE_URL%wait-overlay.css" rel="stylesheet" type="text/css">
 
     <title>Candlestick</title>
     <style>
@@ -48,14 +48,14 @@
             font-family: 'Nunito Sans';
             font-style: normal;
             font-weight: 400;
-            src: url('/fonts/Nunito Sans/Nunito Sans_regular.ttf') format('truetype');
+            src: url('%BASE_URL%fonts/Nunito Sans/Nunito Sans_regular.ttf') format('truetype');
         }
 
         @font-face {
             font-family: 'PT Mono';
             font-style: normal;
             font-weight: 400;
-            src: url('/fonts/PT Mono/PTM55FT.ttf') format('truetype');
+            src: url('%BASE_URL%fonts/PT Mono/PTM55FT.ttf') format('truetype');
         }
     </style>
 </head>
