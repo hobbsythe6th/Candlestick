@@ -17,6 +17,7 @@
  * along with Paper.js-drawing-tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const potrace = require('../../../lib/potrace.js')
 /*
     paper-hole.js
     Adds hole() to the paper Layer class which finds the shape of the hole
