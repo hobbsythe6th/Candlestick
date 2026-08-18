@@ -502,7 +502,7 @@ Wick.Project = class extends Wick.Base {
      * @type {object[]}
      */
     get assetFolders() {
-        return this._assetFolders;
+        return this._assetFolders || [];
     }
 
     set assetFolders(assetFolders) {
@@ -514,7 +514,7 @@ Wick.Project = class extends Wick.Base {
      * @type {object}
      */
     get assetFolderAssignments() {
-        return this._assetFolderAssignments;
+        return this._assetFolderAssignments || {};
     }
 
     set assetFolderAssignments(assetFolderAssignments) {

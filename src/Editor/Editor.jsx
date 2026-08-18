@@ -1408,7 +1408,7 @@ class Editor extends EditorCore {
                                                             project={this.project}
                                                             projectDidChange={this.projectDidChange}
                                                             projectData={this.state.project}
-                                                            assets={this.project?.getAssets()}
+                                                            assets={this.project?.getAssets() || []}
                                                             openModal={this.openModal}
                                                             openImportAssetFileDialog={this.openImportAssetFileDialog}
                                                             selectObjects={this.selectObjects}

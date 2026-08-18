@@ -383,7 +383,12 @@ Wick.Base = class {
         // Lazily generate children list from serialized data
         if (this._childrenData) {
             this._childrenData.forEach(uuid => {
-                this.addChild(Wick.ObjectCache.getObjectByUUID(uuid));
+                var child = Wick.ObjectCache.getObjectByUUID(uuid);
+                if (child) {
+                    this.addChild(child);
+                } else {
+                    console.warn('getChildren: could not find child with uuid ' + uuid + ', skipping.');
+                }
             });
             this._childrenData = null;
         }

@@ -16452,265 +16452,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		module.exports = Croquis;
 	}));
 	//#endregion
-	//#region lib/soundcloud-waveform.js
-	var soundcloud_waveform_exports = /* @__PURE__ */ __exportAll({});
-	var init_soundcloud_waveform = __esmMin((() => {
-		require_base64_arraybuffer();
-		window.AudioContext = window.AudioContext || window.webkitAudioContext;
-		Array.prototype.max = function() {
-			return Math.max.apply(null, this);
-		};
-		new AudioContext();
-	}));
-	require_base64_arraybuffer();
-	require_esprima();
-	require_invert_min();
-	require_timestamp();
-	require_convert_range();
-	require_croquis();
-	init_soundcloud_waveform();
-	CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-		if (w < 2 * r) r = w / 2;
-		if (h < 2 * r) r = h / 2;
-		if (r < 0) r = 0;
-		this.beginPath();
-		this.moveTo(x + r, y);
-		this.arcTo(x + w, y, x + w, y + h, r);
-		this.arcTo(x + w, y + h, x, y + h, r);
-		this.arcTo(x, y + h, x, y, r);
-		this.arcTo(x, y, x + w, y, r);
-		this.closePath();
-		return this;
-	};
-	//#endregion
-	//#region lib/currentTransform.js
-	/**
-	* @license
-	* @fileoverview Implement 'currentTransform' of CanvasRenderingContext2D prototype (polyfill)
-	* @author Stefan Goessner (c) 2015
-	*/
-	/**
-	* extend CanvasRenderingContext2D.prototype by current transformation matrix access.
-	*/
-	if (!("currentTransform" in CanvasRenderingContext2D.prototype)) {
-		/**
-		* define property 'currentTransform'
-		*/
-		if ("mozCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
-			get: function() {
-				var m = this.mozCurrentTransform;
-				return {
-					a: m[0],
-					b: m[1],
-					c: m[2],
-					d: m[3],
-					e: m[4],
-					f: m[5]
-				};
-			},
-			set: function(x) {
-				this.mozCurrentTransform = [
-					x.a,
-					x.b,
-					x.c,
-					x.d,
-					x.e,
-					x.f
-				];
-			},
-			enumerable: true,
-			configurable: false
-		});
-		else if ("webkitCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
-			get: function() {
-				return this.webkitCurrentTransform;
-			},
-			set: function(x) {
-				this.webkitCurrentTransform = x;
-			},
-			enumerable: true,
-			configurable: false
-		});
-		else {
-			Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
-				get: function() {
-					return this._t2stack && this._t2stack[this._t2stack.length - 1] || {
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					};
-				},
-				set: function(x) {
-					if (!this._t2stack) this._t2stack = [{}];
-					this._t2stack[this._t2stack.length - 1] = {
-						a: x.a,
-						b: x.b,
-						c: x.c,
-						d: x.d,
-						e: x.e,
-						f: x.f
-					};
-				},
-				enumerable: true,
-				configurable: false
-			});
-			CanvasRenderingContext2D.prototype.save = function() {
-				var save = CanvasRenderingContext2D.prototype.save;
-				return function() {
-					if (!this._t2stack) this._t2stack = [{
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					}];
-					var t = this._t2stack[this._t2stack.length - 1];
-					this._t2stack.push(t && {
-						a: t.a,
-						b: t.b,
-						c: t.c,
-						d: t.d,
-						e: t.e,
-						f: t.f
-					});
-					save.call(this);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.restore = function() {
-				var restore = CanvasRenderingContext2D.prototype.restore;
-				return function() {
-					if (this._t2stack) this._t2stack.pop();
-					restore.call(this);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.transform = function() {
-				var transform = CanvasRenderingContext2D.prototype.transform;
-				return function(a, b, c, d, e, f) {
-					if (!this._t2stack) this._t2stack = [{
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					}];
-					var t = this._t2stack[this._t2stack.length - 1];
-					var na = t.a * a + t.c * b;
-					var nb = t.b * a + t.d * b;
-					var nc = t.a * c + t.c * d;
-					var nd = t.b * c + t.d * d;
-					var ne = t.e + t.a * e + t.c * f;
-					var nf = t.f + t.b * e + t.d * f;
-					t.a = na;
-					t.b = nb;
-					t.c = nc;
-					t.d = nd;
-					t.e = ne;
-					t.f = nf;
-					transform.call(this, a, b, c, d, e, f);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.setTransform = function() {
-				var setTransform = CanvasRenderingContext2D.prototype.setTransform;
-				return function(a, b, c, d, e, f) {
-					if (!this._t2stack) this._t2stack = [{}];
-					this._t2stack[this._t2stack.length - 1] = {
-						a,
-						b,
-						c,
-						d,
-						e,
-						f
-					};
-					setTransform.call(this, a, b, c, d, e, f);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.resetTransform = function() {
-				var resetTransform = CanvasRenderingContext2D.prototype.resetTransform;
-				return function() {
-					if (!this._t2stack) this._t2stack = [{}];
-					this._t2stack[this._t2stack.length - 1] = {
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					};
-					resetTransform && resetTransform.call(this);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.scale = function() {
-				var scale = CanvasRenderingContext2D.prototype.scale;
-				return function(sx, sy) {
-					if (!this._t2stack) this._t2stack = [{
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					}];
-					var t = this._t2stack[this._t2stack.length - 1];
-					sx = sx || 1;
-					sy = sy || sx;
-					t.a *= sx;
-					t.c *= sy;
-					t.b *= sx;
-					t.d *= sy;
-					scale.call(this, sx, sy);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.rotate = function() {
-				var rotate = CanvasRenderingContext2D.prototype.rotate;
-				return function(w) {
-					if (!this._t2stack) this._t2stack = [{
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					}];
-					var t = this._t2stack[this._t2stack.length - 1];
-					var cw = Math.cos(-w);
-					var sw = Math.sin(-w);
-					var a = t.a * cw - t.c * sw;
-					var b = t.b * cw - t.d * sw;
-					var c = t.c * cw + t.a * sw;
-					var d = t.d * cw + t.b * sw;
-					t.a = a;
-					t.b = b;
-					t.c = c;
-					t.d = d;
-					return rotate.call(this, w);
-				};
-			}();
-			CanvasRenderingContext2D.prototype.translate = function() {
-				var translate = CanvasRenderingContext2D.prototype.translate;
-				return function(x, y) {
-					if (!this._t2stack) this._t2stack = [{
-						a: 1,
-						b: 0,
-						c: 0,
-						d: 1,
-						e: 0,
-						f: 0
-					}];
-					var t = this._t2stack[this._t2stack.length - 1];
-					t.e += x * t.a + y * t.c;
-					t.f += x * t.b + y * t.d;
-					return translate.call(this, x, y);
-				};
-			}();
-		}
-	}
-	//#endregion
-	//#region lib/potrace.js
+	//#region lib/potrace.cjs
 	var require_potrace = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		/**
 		* @license potrace
@@ -17684,281 +17426,347 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			}
 			potrace.fromFunction = fromFunction;
 		})(potrace || (potrace = {}));
-		(function(e, t) {
-			"function" == typeof define && define.amd ? define([], t) : "object" == typeof exports && module.exports ? module.exports = t() : e.Quadtree = t();
-		})(exports, function() {
-			return function() {
-				function e(t) {
-					var n, i;
-					if (this.x = t.x, this.y = t.y, this.width = t.width, this.height = t.height, this.maxElements = t.maxElements, null == this.width || null == this.height) throw new Error("Missing quadtree dimensions.");
-					if (this.x ??= 0, this.y ??= 0, this.maxElements ??= 1, this.contents = [], this.oversized = [], this.size = 0, this.width < 1 || this.height < 1) throw new Error("Dimensions must be positive integers.");
-					if (!Number.isInteger(this.x) || !Number.isInteger(this.y)) throw new Error("Coordinates must be integers");
-					if (this.maxElements < 1) throw new Error("The maximum number of elements before a split must be a positive integer.");
-					i = this, this.children = {
-						NW: {
-							create: function() {
-								return new e({
-									x: i.x,
-									y: i.y,
-									width: Math.max(Math.floor(i.width / 2), 1),
-									height: Math.max(Math.floor(i.height / 2), 1),
-									maxElements: i.maxElements
-								});
-							},
-							tree: null
-						},
-						NE: {
-							create: function() {
-								return new e({
-									x: i.x + Math.max(Math.floor(i.width / 2), 1),
-									y: i.y,
-									width: Math.ceil(i.width / 2),
-									height: Math.max(Math.floor(i.height / 2), 1),
-									maxElements: i.maxElements
-								});
-							},
-							tree: null
-						},
-						SW: {
-							create: function() {
-								return new e({
-									x: i.x,
-									y: i.y + Math.max(Math.floor(i.height / 2), 1),
-									width: Math.max(Math.floor(i.width / 2), 1),
-									height: Math.ceil(i.height / 2),
-									maxElements: i.maxElements
-								});
-							},
-							tree: null
-						},
-						SE: {
-							create: function() {
-								return new e({
-									x: i.x + Math.max(Math.floor(i.width / 2), 1),
-									y: i.y + Math.max(Math.floor(i.height / 2), 1),
-									width: Math.ceil(i.width / 2),
-									height: Math.ceil(i.height / 2),
-									maxElements: i.maxElements
-								});
-							},
-							tree: null
-						}
-					};
-					for (n in this.children) this.children[n].get = function() {
-						return null != this.tree ? this.tree : (this.tree = this.create(), this.tree);
-					};
-				}
-				var t, n, i, r, h, l, o, s;
-				return r = function(e) {
-					var t, n;
-					return {
-						x: Math.floor((null != (t = e.width) ? t : 1) / 2) + e.x,
-						y: Math.floor((null != (n = e.height) ? n : 1) / 2) + e.y
-					};
-				}, t = function(e, t) {
-					var n, i, r, h;
-					return !(e.x >= t.x + (null != (n = t.width) ? n : 1) || e.x + (null != (i = e.width) ? i : 1) <= t.x || e.y >= t.y + (null != (r = t.height) ? r : 1) || e.y + (null != (h = e.height) ? h : 1) <= t.y);
-				}, n = function(e, t) {
-					var n;
-					return n = r(t), e.x < n.x ? e.y < n.y ? "NW" : "SW" : e.y < n.y ? "NE" : "SE";
-				}, s = function(e) {
-					if ("object" != typeof e) throw new Error("Element must be an Object.");
-					if (null == e.x || null == e.y) throw new Error("Coordinates properties are missing.");
-					if ((null != e ? e.width : void 0) < 0 || (null != e ? e.height : void 0) < 0) throw new Error("Width and height must be positive integers.");
-				}, l = function(e) {
-					var t, n, i, r;
-					return n = Math.max(Math.floor(e.width / 2), 1), i = Math.ceil(e.width / 2), r = Math.max(Math.floor(e.height / 2), 1), t = Math.ceil(e.height / 2), {
-						NW: {
-							x: e.x,
-							y: e.y,
-							width: n,
-							height: r
-						},
-						NE: {
-							x: e.x + n,
-							y: e.y,
-							width: i,
-							height: r
-						},
-						SW: {
-							x: e.x,
-							y: e.y + r,
-							width: n,
-							height: t
-						},
-						SE: {
-							x: e.x + n,
-							y: e.y + r,
-							width: i,
-							height: t
-						}
-					};
-				}, i = function(e, n) {
-					var i, r, h, o = [];
-					h = l(n);
-					for (r in h) i = h[r], t(e, i) && o.push(r);
-					return o;
-				}, h = function(e, t) {
-					var n;
-					return (n = function(n) {
-						return e["_" + n] = e[n], Object.defineProperty(e, n, {
-							set: function(e) {
-								return t.remove(this, !0), this["_" + n] = e, t.push(this);
-							},
-							get: function() {
-								return this["_" + n];
-							},
-							configurable: !0
-						});
-					})("x"), n("y"), n("width"), n("height");
-				}, o = function(e) {
-					var t;
-					return (t = function(t) {
-						if (null != e["_" + t]) return delete e[t], e[t] = e["_" + t], delete e["_" + t];
-					})("x"), t("y"), t("width"), t("height");
-				}, e.prototype.clear = function() {
-					var e, t;
-					this.contents = [], this.oversized = [], this.size = 0, t = [];
-					for (e in this.children) t.push(this.children[e].tree = null);
-					return t;
-				}, e.prototype.push = function(e, t) {
-					return this.pushAll([e], t);
-				}, e.prototype.pushAll = function(e, t) {
-					var n, r, l, o, u, f, c, d, a, g, p, m, x, y, v, w, E, z, M, b;
-					for (p = 0, y = e.length; p < y; p++) g = e[p], s(g), t && h(g, this);
-					for (c = [{
-						tree: this,
-						elements: e
-					}]; c.length > 0;) {
-						for (b = (E = c.shift()).tree, d = {
-							NW: null,
-							NE: null,
-							SW: null,
-							SE: null
-						}, m = 0, v = (f = E.elements).length; m < v; m++) if (u = f[m], b.size++, 1 !== (a = i(u, b)).length || 1 === b.width || 1 === b.height) b.oversized.push(u);
-						else if (b.size - b.oversized.length <= b.maxElements) b.contents.push(u);
-						else {
-							for (o = a[0], M = b.children[o], d[o] ?? (d[o] = {
-								tree: M.get(),
-								elements: []
-							}), d[o].elements.push(u), x = 0, w = (z = b.contents).length; x < w; x++) r = z[x], d[l = i(r, b)[0]] ?? (d[l] = {
-								tree: b.children[l].get(),
-								elements: []
-							}), d[l].elements.push(r);
-							b.contents = [];
-						}
-						for (o in d) null != (n = d[o]) && c.push(n);
-					}
-					return this;
-				}, e.prototype.remove = function(e, t) {
-					var i, r;
-					return s(e), (i = this.oversized.indexOf(e)) > -1 ? (this.oversized.splice(i, 1), this.size--, t || o(e), !0) : (i = this.contents.indexOf(e)) > -1 ? (this.contents.splice(i, 1), this.size--, t || o(e), !0) : !(null == (r = this.children[n(e, this)]).tree || !r.tree.remove(e, t) || (this.size--, 0 === r.tree.size && (r.tree = null), 0));
-				}, e.prototype.colliding = function(e, n) {
-					var r, h, l, o, u, f, c, d, a, g, p, m, x, y;
-					for (n ??= t, s(e), u = [], l = [this]; l.length > 0;) {
-						for (f = 0, a = (m = (y = l.shift()).oversized).length; f < a; f++) (h = m[f]) !== e && n(e, h) && u.push(h);
-						for (c = 0, g = (x = y.contents).length; c < g; c++) (h = x[c]) !== e && n(e, h) && u.push(h);
-						for (0 === (o = i(e, y)).length && (o = [], e.x >= y.x + y.width && o.push("NE"), e.y >= y.y + y.height && o.push("SW"), o.length > 0 && (1 === o.length ? o.push("SE") : o = ["SE"])), d = 0, p = o.length; d < p; d++) r = o[d], null != y.children[r].tree && l.push(y.children[r].tree);
-					}
-					return u;
-				}, e.prototype.onCollision = function(e, n, r) {
-					var h, l, o, u, f, c, d, a, g, p, m, x, y;
-					for (r ??= t, s(e), o = [this]; o.length > 0;) {
-						for (f = 0, a = (m = (y = o.shift()).oversized).length; f < a; f++) (l = m[f]) !== e && r(e, l) && n(l);
-						for (c = 0, g = (x = y.contents).length; c < g; c++) (l = x[c]) !== e && r(e, l) && n(l);
-						for (0 === (u = i(e, y)).length && (u = [], e.x >= y.x + y.width && u.push("NE"), e.y >= y.y + y.height && u.push("SW"), u.length > 0 && (1 === u.length ? u.push("SE") : u = ["SE"])), d = 0, p = u.length; d < p; d++) h = u[d], null != y.children[h].tree && o.push(y.children[h].tree);
-					}
-					return null;
-				}, e.prototype.get = function(e) {
-					return this.where(e);
-				}, e.prototype.where = function(e) {
-					var t, i, r, h, l, o, u, f, c, d, a, g, p;
-					if ("object" == typeof e && (null == e.x || null == e.y)) return this.find(function(t) {
-						var n = !0, i;
-						for (i in e) e[i] !== t[i] && (n = !1);
-						return n;
-					});
-					for (s(e), h = [], r = [this]; r.length > 0;) {
-						for (l = 0, f = (d = (p = r.shift()).oversized).length; l < f; l++) {
-							i = d[l], t = !0;
-							for (u in e) e[u] !== i[u] && (t = !1);
-							t && h.push(i);
-						}
-						for (o = 0, c = (a = p.contents).length; o < c; o++) {
-							i = a[o], t = !0;
-							for (u in e) e[u] !== i[u] && (t = !1);
-							t && h.push(i);
-						}
-						null != (g = p.children[n(e, p)]).tree && r.push(g.tree);
-					}
-					return h;
-				}, e.prototype.each = function(e) {
-					var t, n, i, r, h, l, o, s, u, f;
-					for (n = [this]; n.length > 0;) {
-						for (r = 0, l = (s = (f = n.shift()).oversized).length; r < l; r++) i = s[r], "function" == typeof e && e(i);
-						for (h = 0, o = (u = f.contents).length; h < o; h++) i = u[h], "function" == typeof e && e(i);
-						for (t in f.children) null != f.children[t].tree && n.push(f.children[t].tree);
-					}
-					return this;
-				}, e.prototype.find = function(e) {
-					var t, n, i, r, h, l, o, s, u, f, c;
-					for (n = [this], r = []; n.length > 0;) {
-						for (h = 0, o = (u = (c = n.shift()).oversized).length; h < o; h++) i = u[h], "function" == typeof e && e(i) && r.push(i);
-						for (l = 0, s = (f = c.contents).length; l < s; l++) i = f[l], "function" == typeof e && e(i) && r.push(i);
-						for (t in c.children) null != c.children[t].tree && n.push(c.children[t].tree);
-					}
-					return r;
-				}, e.prototype.filter = function(t) {
-					var n;
-					return (n = function(i) {
-						var r, h, l, o, s, u, f, c, d, a, g;
-						(h = new e({
-							x: i.x,
-							y: i.y,
-							width: i.width,
-							height: i.height,
-							maxElements: i.maxElements
-						})).size = 0;
-						for (r in i.children) null != i.children[r].tree && (h.children[r].tree = n(i.children[r].tree), h.size += null != (c = null != (d = h.children[r].tree) ? d.size : void 0) ? c : 0);
-						for (o = 0, u = (a = i.oversized).length; o < u; o++) l = a[o], (null == t || "function" == typeof t && t(l)) && h.oversized.push(l);
-						for (s = 0, f = (g = i.contents).length; s < f; s++) l = g[s], (null == t || "function" == typeof t && t(l)) && h.contents.push(l);
-						return h.size += h.oversized.length + h.contents.length, 0 === h.size ? null : h;
-					})(this);
-				}, e.prototype.reject = function(e) {
-					return this.filter(function(t) {
-						return !("function" == typeof e ? e(t) : void 0);
-					});
-				}, e.prototype.visit = function(e) {
-					var t, n, i;
-					for (n = [this]; n.length > 0;) {
-						i = n.shift(), e.bind(i)();
-						for (t in i.children) null != i.children[t].tree && n.push(i.children[t].tree);
-					}
-					return this;
-				}, e.prototype.pretty = function() {
-					var e, t, n, i, r, h, l;
-					for (h = "", n = function(e) {
-						var t, n, i;
-						for (i = "", t = n = e; n <= 0 ? t < 0 : t > 0; n <= 0 ? ++t : --t) i += "   ";
-						return i;
-					}, t = [{
-						label: "ROOT",
-						tree: this,
-						level: 0
-					}]; t.length > 0;) {
-						h += (i = n((l = t.shift()).level)) + "| " + l.label + "\n" + i + "| ------------\n", l.tree.oversized.length > 0 && (h += i + "| * Oversized elements *\n" + i + "|   " + l.tree.oversized + "\n"), l.tree.contents.length > 0 && (h += i + "| * Leaf content *\n" + i + "|   " + l.tree.contents + "\n"), r = !1;
-						for (e in l.tree.children) null != l.tree.children[e].tree && (r = !0, t.unshift({
-							label: e,
-							tree: l.tree.children[e].tree,
-							level: l.level + 1
-						}));
-						r && (h += i + "└──┐\n");
-					}
-					return h;
-				}, e;
-			}();
-		});
+		module.exports = potrace;
 	}));
+	//#endregion
+	//#region lib/soundcloud-waveform.js
+	var require_soundcloud_waveform = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+		const Base64ArrayBuffer = require_base64_arraybuffer();
+		window.AudioContext = window.AudioContext || window.webkitAudioContext;
+		Array.prototype.max = function() {
+			return Math.max.apply(null, this);
+		};
+		var audioContext = new AudioContext();
+		var SCWF = function() {
+			var SoundCloudWaveform = {
+				settings: {
+					canvas_width: 1200,
+					canvas_height: 40,
+					bar_width: 2,
+					bar_gap: 0,
+					wave_color: "#1594FF",
+					download: false,
+					onComplete: function(png, pixels) {}
+				},
+				generate: function(src, options) {
+					this.settings.canvas = document.createElement("canvas");
+					this.settings.context = this.settings.canvas.getContext("2d");
+					this.settings.canvas.width = options.canvas_width !== void 0 ? parseInt(options.canvas_width) : this.settings.canvas_width;
+					this.settings.canvas.height = options.canvas_height !== void 0 ? parseInt(options.canvas_height) : this.settings.canvas_height;
+					this.settings.wave_color = options.wave_color !== void 0 ? options.wave_color : this.settings.wave_color;
+					this.settings.bar_width = options.bar_width !== void 0 ? parseInt(options.bar_width) : this.settings.bar_width;
+					this.settings.bar_gap = options.bar_gap !== void 0 ? parseFloat(options.bar_gap) : this.settings.bar_gap;
+					this.settings.download = options.download !== void 0 ? options.download : this.settings.download;
+					this.settings.onComplete = options.onComplete !== void 0 ? options.onComplete : this.settings.onComplete;
+					var rawData = src.split(",")[1];
+					var rawBuffer = Base64ArrayBuffer.decode(rawData);
+					audioContext.decodeAudioData(rawBuffer, function(buffer) {
+						if (!buffer) {
+							console.error("failed to decode:", "buffer null");
+							return;
+						}
+						SoundCloudWaveform.extractBuffer(buffer);
+					}, function(error) {
+						console.error("failed to decode:", error);
+					});
+				},
+				extractBuffer: function(buffer) {
+					buffer = buffer.getChannelData(0);
+					var sections = this.settings.canvas.width;
+					var len = Math.floor(buffer.length / sections);
+					var maxHeight = this.settings.canvas.height;
+					var vals = [];
+					var lastval = 0;
+					for (var i = 0; i < sections; i += this.settings.bar_width) {
+						var val = this.bufferMeasure(i * len, len, buffer) * 1e4;
+						if (!isNaN(val)) {
+							vals.push(val);
+							lastval = val;
+						} else vals.push(lastval);
+					}
+					for (var j = 0; j < sections; j += this.settings.bar_width) {
+						var scale = maxHeight / vals.max();
+						var val = this.bufferMeasure(j * len, len, buffer) * 1e4;
+						val *= scale;
+						val += 1;
+						this.drawBar(j, val);
+					}
+					if (this.settings.download) this.generateImage();
+					this.settings.onComplete(this.settings.canvas.toDataURL("image/png"), this.settings.context.getImageData(0, 0, this.settings.canvas.width, this.settings.canvas.height));
+					this.settings.context.clearRect(0, 0, this.settings.canvas.width, this.settings.canvas.height);
+				},
+				bufferMeasure: function(position, length, data) {
+					var sum = 0;
+					for (var i = position; i <= position + length - 1; i++) sum += Math.pow(data[i], 2);
+					return Math.sqrt(sum / data.length);
+				},
+				drawBar: function(i, h) {
+					this.settings.context.fillStyle = this.settings.wave_color;
+					var w = this.settings.bar_width;
+					if (this.settings.bar_gap !== 0) w *= Math.abs(1 - this.settings.bar_gap);
+					var x = i + w / 2, y = this.settings.canvas.height / 2 - h / 2 / 1.5;
+					this.settings.context.fillRect(x, y, w, h / 1.5);
+				},
+				generateImage: function() {
+					var image = this.settings.canvas.toDataURL("image/png");
+					var link = document.createElement("a");
+					link.href = image;
+					link.setAttribute("download", "");
+					link.click();
+				}
+			};
+			return SoundCloudWaveform;
+		};
+		module.exports = SCWF;
+	}));
+	require_base64_arraybuffer();
+	require_esprima();
+	require_invert_min();
+	require_timestamp();
+	require_convert_range();
+	require_croquis();
+	require_potrace();
+	require_soundcloud_waveform();
+	CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+		if (w < 2 * r) r = w / 2;
+		if (h < 2 * r) r = h / 2;
+		if (r < 0) r = 0;
+		this.beginPath();
+		this.moveTo(x + r, y);
+		this.arcTo(x + w, y, x + w, y + h, r);
+		this.arcTo(x + w, y + h, x, y + h, r);
+		this.arcTo(x, y + h, x, y, r);
+		this.arcTo(x, y, x + w, y, r);
+		this.closePath();
+		return this;
+	};
+	//#endregion
+	//#region lib/currentTransform.js
+	/**
+	* @license
+	* @fileoverview Implement 'currentTransform' of CanvasRenderingContext2D prototype (polyfill)
+	* @author Stefan Goessner (c) 2015
+	*/
+	/**
+	* extend CanvasRenderingContext2D.prototype by current transformation matrix access.
+	*/
+	if (!("currentTransform" in CanvasRenderingContext2D.prototype)) {
+		/**
+		* define property 'currentTransform'
+		*/
+		if ("mozCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+			get: function() {
+				var m = this.mozCurrentTransform;
+				return {
+					a: m[0],
+					b: m[1],
+					c: m[2],
+					d: m[3],
+					e: m[4],
+					f: m[5]
+				};
+			},
+			set: function(x) {
+				this.mozCurrentTransform = [
+					x.a,
+					x.b,
+					x.c,
+					x.d,
+					x.e,
+					x.f
+				];
+			},
+			enumerable: true,
+			configurable: false
+		});
+		else if ("webkitCurrentTransform" in CanvasRenderingContext2D.prototype) Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+			get: function() {
+				return this.webkitCurrentTransform;
+			},
+			set: function(x) {
+				this.webkitCurrentTransform = x;
+			},
+			enumerable: true,
+			configurable: false
+		});
+		else {
+			Object.defineProperty(CanvasRenderingContext2D.prototype, "currentTransform", {
+				get: function() {
+					return this._t2stack && this._t2stack[this._t2stack.length - 1] || {
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					};
+				},
+				set: function(x) {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a: x.a,
+						b: x.b,
+						c: x.c,
+						d: x.d,
+						e: x.e,
+						f: x.f
+					};
+				},
+				enumerable: true,
+				configurable: false
+			});
+			CanvasRenderingContext2D.prototype.save = function() {
+				var save = CanvasRenderingContext2D.prototype.save;
+				return function() {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					this._t2stack.push(t && {
+						a: t.a,
+						b: t.b,
+						c: t.c,
+						d: t.d,
+						e: t.e,
+						f: t.f
+					});
+					save.call(this);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.restore = function() {
+				var restore = CanvasRenderingContext2D.prototype.restore;
+				return function() {
+					if (this._t2stack) this._t2stack.pop();
+					restore.call(this);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.transform = function() {
+				var transform = CanvasRenderingContext2D.prototype.transform;
+				return function(a, b, c, d, e, f) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					var na = t.a * a + t.c * b;
+					var nb = t.b * a + t.d * b;
+					var nc = t.a * c + t.c * d;
+					var nd = t.b * c + t.d * d;
+					var ne = t.e + t.a * e + t.c * f;
+					var nf = t.f + t.b * e + t.d * f;
+					t.a = na;
+					t.b = nb;
+					t.c = nc;
+					t.d = nd;
+					t.e = ne;
+					t.f = nf;
+					transform.call(this, a, b, c, d, e, f);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.setTransform = function() {
+				var setTransform = CanvasRenderingContext2D.prototype.setTransform;
+				return function(a, b, c, d, e, f) {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a,
+						b,
+						c,
+						d,
+						e,
+						f
+					};
+					setTransform.call(this, a, b, c, d, e, f);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.resetTransform = function() {
+				var resetTransform = CanvasRenderingContext2D.prototype.resetTransform;
+				return function() {
+					if (!this._t2stack) this._t2stack = [{}];
+					this._t2stack[this._t2stack.length - 1] = {
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					};
+					resetTransform && resetTransform.call(this);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.scale = function() {
+				var scale = CanvasRenderingContext2D.prototype.scale;
+				return function(sx, sy) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					sx = sx || 1;
+					sy = sy || sx;
+					t.a *= sx;
+					t.c *= sy;
+					t.b *= sx;
+					t.d *= sy;
+					scale.call(this, sx, sy);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.rotate = function() {
+				var rotate = CanvasRenderingContext2D.prototype.rotate;
+				return function(w) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					var cw = Math.cos(-w);
+					var sw = Math.sin(-w);
+					var a = t.a * cw - t.c * sw;
+					var b = t.b * cw - t.d * sw;
+					var c = t.c * cw + t.a * sw;
+					var d = t.d * cw + t.b * sw;
+					t.a = a;
+					t.b = b;
+					t.c = c;
+					t.d = d;
+					return rotate.call(this, w);
+				};
+			}();
+			CanvasRenderingContext2D.prototype.translate = function() {
+				var translate = CanvasRenderingContext2D.prototype.translate;
+				return function(x, y) {
+					if (!this._t2stack) this._t2stack = [{
+						a: 1,
+						b: 0,
+						c: 0,
+						d: 1,
+						e: 0,
+						f: 0
+					}];
+					var t = this._t2stack[this._t2stack.length - 1];
+					t.e += x * t.a + y * t.c;
+					t.f += x * t.b + y * t.d;
+					return translate.call(this, x, y);
+				};
+			}();
+		}
+	}
 	//#endregion
 	//#region node_modules/uuid/dist/max.js
 	var max_default;
@@ -18514,7 +18322,8 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		init_validate();
 		init_version();
 	}));
-	require_potrace();
+	//#endregion
+	//#region src/Clipboard.js
 	const { v4: uuidv4$1 } = (init_dist(), __toCommonJS(dist_exports));
 	/**
 	* A clipboard utility class for copy/paste functionality.
@@ -18885,11 +18694,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					default: new Wick.Color("rgba(0, 0, 255, .5)")
 				},
 				{
-					type: "boolean",
-					name: "imageSmoothing",
-					default: true
-				},
-				{
 					type: "choice",
 					name: "brushMode",
 					default: "none",
@@ -18907,7 +18711,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		constructor() {
 			this._settings = {};
 			this._onSettingsChangedCallback = () => {};
-			this.project = null;
 			this.resetAllSettings();
 			this.loadSettingsFromLocalstorage();
 		}
@@ -19806,6 +19609,4102 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		}
 	};
 	Wick.FileCache._files = {};
+	//#endregion
+	//#region src/view/paper-ext/Layer.erase.js
+	(function() {
+		function splitCompoundPath(compoundPath) {
+			var holes = [];
+			var parts = [];
+			compoundPath.children.forEach(function(child) {
+				if (!child.clockwise) holes.push(child);
+				else {
+					var part = child.clone({ insert: false });
+					part.fillColor = compoundPath.fillColor;
+					part.insertAbove(compoundPath);
+					parts.push(part);
+				}
+			});
+			var resolvedHoles = [];
+			parts.forEach(function(part) {
+				var cmp;
+				holes.forEach(function(hole) {
+					if (part.bounds.contains(hole.bounds)) {
+						if (!cmp) {
+							cmp = new paper.CompoundPath({ insert: false });
+							cmp.insertAbove(part);
+							cmp.addChild(part.clone({ insert: false }));
+						}
+						cmp.addChild(hole);
+						resolvedHoles.push(hole);
+					}
+					if (cmp) {
+						cmp.fillColor = compoundPath.fillColor;
+						cmp.insertAbove(part);
+						part.remove();
+					}
+				});
+			});
+			holes.filter((hole) => {
+				return resolvedHoles.indexOf(hole) === -1;
+			}).forEach((hole) => {
+				hole.clockwise = !hole.clockwise;
+				paper.project.activeLayer.addChild(hole);
+			});
+			compoundPath.remove();
+		}
+		function eraseFill(path, eraserPath) {
+			if (path.closePath) path.closePath();
+			var res = path.subtract(eraserPath, {
+				insert: false,
+				trace: true
+			});
+			res.fillColor = path.fillColor;
+			if (res.children) {
+				res.insertAbove(path);
+				res.data = {};
+				path.remove();
+				splitCompoundPath(res);
+			} else {
+				if (res.segments.length > 0) {
+					res.data = {};
+					res.insertAbove(path);
+				}
+				path.remove();
+			}
+			path.remove();
+		}
+		function eraseStroke(path, eraserPath) {
+			if (path.children) {
+				var children = [];
+				path.children.forEach(function(child) {
+					child.data = {};
+					children.push(child);
+					child.name = null;
+				});
+				children.forEach(function(child) {
+					child.insertAbove(path);
+					child.style = path.style;
+					eraseStroke(child, eraserPath);
+				});
+			} else {
+				if (path instanceof paper.Path && path.closed && eraserPath.contains(path.firstSegment.point)) {
+					var start = path.firstSegment, end = start.clone();
+					start.handleIn = [0, 0];
+					end.handleOut = [0, 0];
+					path.addSegment(end);
+					path.closed = false;
+				}
+				var res = path.subtract(eraserPath, {
+					insert: false,
+					trace: false
+				});
+				if (res.children) {
+					var children = [];
+					res.children.forEach(function(child) {
+						child.data = {};
+						children.push(child);
+						child.name = null;
+					});
+					children.forEach(function(child) {
+						child.insertAbove(path);
+					});
+					res.remove();
+				} else {
+					res.remove();
+					if (res.segments.length > 0) res.insertAbove(path);
+				}
+			}
+			path.remove();
+		}
+		function splitPath(path) {
+			var fill = path.clone({ insert: false });
+			fill.name = null;
+			fill.strokeColor = null;
+			fill.strokeWidth = 1;
+			var stroke = path.clone({ insert: false });
+			stroke.name = null;
+			stroke.fillColor = null;
+			fill.insertAbove(path);
+			stroke.insertAbove(fill);
+			path.remove();
+			return {
+				fill,
+				stroke
+			};
+		}
+		function eraseWithPath(eraserPath) {
+			this.children.filter((path) => {
+				return path instanceof paper.Path || path instanceof paper.CompoundPath;
+			});
+			this.children.filter(function(child) {
+				return eraserPath.bounds.intersects(child.bounds);
+			}).forEach((path) => {
+				if (path.strokeColor && path.fillColor) {
+					var res = splitPath(path);
+					eraseFill(res.fill, eraserPath);
+					eraseStroke(res.stroke, eraserPath);
+				} else if (path.fillColor) eraseFill(path, eraserPath);
+				else if (path.strokeColor) eraseStroke(path, eraserPath);
+			});
+		}
+		paper.Layer.inject({ erase: eraseWithPath });
+	})();
+	//#endregion
+	//#region src/view/paper-ext/Paper.hole.js
+	const potrace$3 = require_potrace();
+	(function() {
+		var N_RASTER_CLONE = 1;
+		var RASTER_BASE_RESOLUTION = 3;
+		var FILL_TOLERANCE = 0;
+		var EXPAND_AMT = .85;
+		var onError;
+		var onFinish;
+		var layers;
+		var floodFillX;
+		var floodFillY;
+		var bgColor;
+		var gapFillAmount;
+		function rasterizePaths(callback) {
+			var layerGroup = new paper.Group({ insert: false });
+			layers.reverse().forEach((layer) => {
+				layer.children.forEach(function(child) {
+					if (child._class !== "Path" && child._class !== "CompoundPath") return;
+					for (var i = 0; i < N_RASTER_CLONE; i++) {
+						var clone = child.clone({ insert: false });
+						if (!clone.strokeColor && clone.fillColor) {
+							clone.strokeColor = clone.fillColor;
+							clone.strokeWidth = gapFillAmount / RASTER_BASE_RESOLUTION;
+						} else if (clone.strokeWidth) clone.strokeWidth += gapFillAmount / RASTER_BASE_RESOLUTION;
+						layerGroup.addChild(clone);
+					}
+				});
+			});
+			if (layerGroup.children.length === 0) {
+				onError("NO_PATHS");
+				return;
+			}
+			var rasterResolution = paper.view.resolution * RASTER_BASE_RESOLUTION / window.devicePixelRatio;
+			var layerPathsRaster = layerGroup.rasterize(rasterResolution, { insert: false });
+			var zoomFactor = RASTER_BASE_RESOLUTION * layerPathsRaster.bounds.width / layerPathsRaster.width;
+			var rasterCtx = layerPathsRaster.canvas.getContext("2d");
+			var layerPathsImageData = rasterCtx.getImageData(0, 0, layerPathsRaster.width, layerPathsRaster.height);
+			var layerPathsImageDataRaw = layerPathsImageData.data;
+			for (var i = 0; i < layerPathsImageDataRaw.length; i += 4) if (layerPathsImageDataRaw[i + 3] === 0) {
+				layerPathsImageDataRaw[i] = bgColor.red;
+				layerPathsImageDataRaw[i + 1] = bgColor.green;
+				layerPathsImageDataRaw[i + 2] = bgColor.blue;
+				layerPathsImageDataRaw[i + 3] = 255;
+			}
+			rasterCtx.putImageData(layerPathsImageData, 0, 0);
+			layerPathsImageData = rasterCtx.getImageData(0, 0, layerPathsRaster.width, layerPathsRaster.height);
+			var rasterPosition = layerPathsRaster.bounds.topLeft;
+			var x = (floodFillX - rasterPosition.x) * RASTER_BASE_RESOLUTION / zoomFactor;
+			var y = (floodFillY - rasterPosition.y) * RASTER_BASE_RESOLUTION / zoomFactor;
+			x = Math.round(x);
+			y = Math.round(y);
+			var floodFillCanvas = document.createElement("canvas");
+			floodFillCanvas.width = layerPathsRaster.canvas.width;
+			floodFillCanvas.height = layerPathsRaster.canvas.height;
+			if (x < 0 || y < 0 || x >= floodFillCanvas.width || y >= floodFillCanvas.height) {
+				onError("OUT_OF_BOUNDS");
+				return;
+			}
+			var floodFillCtx = floodFillCanvas.getContext("2d");
+			floodFillCtx.putImageData(layerPathsImageData, 0, 0);
+			floodFillCtx.fillStyle = "rgba(123,124,125,255)";
+			floodFillCtx.fillFlood(x, y, FILL_TOLERANCE);
+			var floodFillImageData = floodFillCtx.getImageData(0, 0, floodFillCanvas.width, floodFillCanvas.height);
+			var imageDataRaw = floodFillImageData.data;
+			for (var i = 0; i < imageDataRaw.length; i += 4) if (imageDataRaw[i] === 123 && imageDataRaw[i + 1] === 124 && imageDataRaw[i + 2] === 125) {
+				imageDataRaw[i] = 0;
+				imageDataRaw[i + 1] = 0;
+				imageDataRaw[i + 2] = 0;
+				imageDataRaw[i + 3] = 255;
+			} else {
+				imageDataRaw[i] = 255;
+				imageDataRaw[i + 1] = 255;
+				imageDataRaw[i + 2] = 255;
+				imageDataRaw[i + 3] = 0;
+			}
+			floodFillCtx.putImageData(floodFillImageData, 0, 0);
+			var floodFillProcessedImage = new Image();
+			floodFillProcessedImage.onload = function() {
+				var xmlString = potrace$3.fromImage(floodFillProcessedImage).toSVG(1), doc = new DOMParser().parseFromString(xmlString, "text/xml");
+				var resultHolePath = paper.project.importSVG(doc, { insert: true });
+				resultHolePath.remove();
+				resultHolePath = resultHolePath.children[0];
+				resultHolePath.scale(1 / RASTER_BASE_RESOLUTION, new paper.Point(0, 0));
+				var rasterPosition = layerPathsRaster.bounds.topLeft;
+				resultHolePath.position.x += rasterPosition.x;
+				resultHolePath.position.y += rasterPosition.y;
+				resultHolePath.applyMatrix = true;
+				var w = floodFillProcessedImage.width;
+				var h = floodFillProcessedImage.height;
+				for (var x = 0; x < floodFillProcessedImage.width; x++) if (getPixelAt(x, 0, w, h, floodFillImageData.data).r === 0 && getPixelAt(x, 0, w, h, floodFillImageData.data).a === 255) {
+					onError("LEAKY_HOLE");
+					return;
+				}
+				expandHole(resultHolePath);
+				resultHolePath.scale(zoomFactor, layerPathsRaster.bounds.topLeft);
+				callback(resultHolePath);
+			};
+			floodFillProcessedImage.src = floodFillCanvas.toDataURL();
+		}
+		function expandHole(path) {
+			if (path instanceof paper.Group) path = path.children[0];
+			var children;
+			if (path instanceof paper.Path) children = [path];
+			else if (path instanceof paper.CompoundPath) children = path.children;
+			children.forEach(function(hole) {
+				var normals = [];
+				hole.closePath();
+				hole.segments.forEach(function(segment) {
+					var a = segment.previous.point;
+					var b = segment.point;
+					var c = segment.next.point;
+					var ab = {
+						x: b.x - a.x,
+						y: b.y - a.y
+					};
+					var cb = {
+						x: b.x - c.x,
+						y: b.y - c.y
+					};
+					var d = {
+						x: ab.x - cb.x,
+						y: ab.y - cb.y
+					};
+					d.h = Math.sqrt(d.x * d.x + d.y * d.y);
+					d.x /= d.h;
+					d.y /= d.h;
+					d = rotate_point(d.x, d.y, 0, 0, 90);
+					normals.push({
+						x: d.x,
+						y: d.y
+					});
+				});
+				for (var i = 0; i < hole.segments.length; i++) {
+					var segment = hole.segments[i];
+					var normal = normals[i];
+					segment.point.x += normal.x * EXPAND_AMT;
+					segment.point.y += normal.y * EXPAND_AMT;
+				}
+			});
+		}
+		function rotate_point(pointX, pointY, originX, originY, angle) {
+			angle = angle * Math.PI / 180;
+			return {
+				x: Math.cos(angle) * (pointX - originX) - Math.sin(angle) * (pointY - originY) + originX,
+				y: Math.sin(angle) * (pointX - originX) + Math.cos(angle) * (pointY - originY) + originY
+			};
+		}
+		function getPixelAt(x, y, width, height, imageData) {
+			if (x < 0 || y < 0 || x >= width || y >= height) return null;
+			var offset = (y * width + x) * 4;
+			return {
+				r: imageData[offset],
+				g: imageData[offset + 1],
+				b: imageData[offset + 2],
+				a: imageData[offset + 3]
+			};
+		}
+		paper.PaperScope.inject({ hole: function(args) {
+			if (!args) console.error("paper.hole: args is required");
+			if (!args.point) console.error("paper.hole: args.point is required");
+			if (!args.onFinish) console.error("paper.hole: args.onFinish is required");
+			if (!args.onError) console.error("paper.hole: args.onError is required");
+			if (!args.bgColor) console.error("paper.hole: args.bgColor is required");
+			if (!args.layers) console.error("paper.hole: args.layers is required");
+			onFinish = args.onFinish;
+			onError = args.onError;
+			layers = args.layers;
+			floodFillX = args.point.x;
+			floodFillY = args.point.y;
+			gapFillAmount = args.gapFillAmount === void 0 ? 1 : args.gapFillAmount;
+			bgColor = args.bgColor;
+			rasterizePaths(onFinish);
+		} });
+	})();
+	//#endregion
+	//#region src/view/paper-ext/Paper.OrderingUtils.js
+	var PaperJSOrderingUtils = class PaperJSOrderingUtils {
+		/**
+		* Moves the selected items forwards.
+		*/
+		static moveForwards(items) {
+			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
+				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).reverse().forEach((item) => {
+					if (item.nextSibling && items.indexOf(item.nextSibling) === -1) item.insertAbove(item.nextSibling);
+				});
+			});
+		}
+		/**
+		* Moves the selected items backwards.
+		*/
+		static moveBackwards(items) {
+			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
+				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).forEach((item) => {
+					if (item.previousSibling && items.indexOf(item.previousSibling) === -1) item.insertBelow(item.previousSibling);
+				});
+			});
+		}
+		/**
+		* Brings the selected objects to the front.
+		*/
+		static bringToFront(items) {
+			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
+				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).forEach((item) => {
+					item.bringToFront();
+				});
+			});
+		}
+		/**
+		* Sends the selected objects to the back.
+		*/
+		static sendToBack(items) {
+			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
+				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).reverse().forEach((item) => {
+					item.sendToBack();
+				});
+			});
+		}
+		static _sortItemsByLayer(items) {
+			var layerLists = {};
+			items.forEach((item) => {
+				var layerID = item.layer.id;
+				if (!layerLists[layerID]) layerLists[layerID] = [];
+				layerLists[layerID].push(item);
+			});
+			var layerItemsArrays = [];
+			for (var layerID in layerLists) layerItemsArrays.push(layerLists[layerID]);
+			return layerItemsArrays;
+		}
+		static _sortItemsByZIndex(items) {
+			return items.sort(function(a, b) {
+				return a.index - b.index;
+			});
+		}
+	};
+	paper.PaperScope.inject({ OrderingUtils: PaperJSOrderingUtils });
+	//#endregion
+	//#region src/view/paper-ext/Paper.SelectionWidget.js
+	var SelectionWidget = class SelectionWidget {
+		/**
+		* Creates a SelectionWidget
+		*/
+		constructor(args) {
+			if (!args) args = {};
+			if (!args.layer) args.layer = paper.project.activeLayer;
+			this._layer = args.layer;
+			this._item = new paper.Group({ insert: false });
+			let startPath = new paper.Path.Circle({
+				radius: SelectionWidget.ENDPOINT_RADIUS,
+				fillColor: SelectionWidget.BOX_STROKE_COLOR,
+				insert: false,
+				applyMatrix: false,
+				data: {
+					handleType: "gradient-point",
+					handleEdge: "start"
+				}
+			});
+			let endPath = new paper.Path.Circle({
+				radius: SelectionWidget.ENDPOINT_RADIUS,
+				fillColor: SelectionWidget.BOX_STROKE_COLOR,
+				insert: false,
+				applyMatrix: false,
+				data: {
+					handleType: "gradient-point",
+					handleEdge: "end"
+				}
+			});
+			let linePath = new paper.Path.Line({
+				from: [0, 0],
+				to: [0, 0],
+				insert: false,
+				strokeColor: SelectionWidget.BOX_STROKE_COLOR,
+				strokeWidth: SelectionWidget.BOX_STROKE_WIDTH,
+				strokeScaling: false,
+				applyMatrix: false
+			});
+			let hoverStop = this._buildGradientStop(true);
+			this._gradientGUI = {
+				container: new paper.Group({
+					applyMatrix: false,
+					data: { isSelectionBoxGUI: true }
+				}),
+				startPath,
+				endPath,
+				linePath,
+				stops: [],
+				selectedStop: null,
+				hoverStop,
+				createdStopOnDown: false,
+				stroke: false,
+				radial: false,
+				startpoint: new paper.Point(0, 0),
+				endpoint: new paper.Point(0, 0),
+				lineVector: new paper.Point(0, 0)
+			};
+		}
+		/**
+		* The item containing the widget GUI
+		*/
+		get item() {
+			return this._item;
+		}
+		/**
+		* The layer to add the widget GUI item to.
+		*/
+		get layer() {
+			return this._layer;
+		}
+		set layer(layer) {
+			this._layer = layer;
+		}
+		/**
+		* The rotation of the selection box GUI.
+		*/
+		get boxRotation() {
+			return this._boxRotation;
+		}
+		set boxRotation(boxRotation) {
+			this._boxRotation = boxRotation;
+		}
+		/**
+		* The items currently inside the selection widget
+		*/
+		get itemsInSelection() {
+			return this._itemsInSelection;
+		}
+		/**
+		* The point to rotate/scale the widget around.
+		*/
+		get pivot() {
+			return this._pivot;
+		}
+		set pivot(pivot) {
+			this._pivot = pivot;
+		}
+		/**
+		* The position of the top left corner of the selection box.
+		*/
+		get position() {
+			return this._boundingBox.topLeft.rotate(this.rotation, this.pivot);
+		}
+		set position(position) {
+			var d = position.subtract(this.position);
+			this.translateSelection(d);
+		}
+		/**
+		* The width of the selection.
+		*/
+		get width() {
+			return this._boundingBox.width;
+		}
+		set width(width) {
+			var d = width / this.width;
+			if (d === 0) d = .001;
+			this.scaleSelection(new paper.Point(d, 1));
+		}
+		/**
+		* The height of the selection.
+		*/
+		get height() {
+			return this._boundingBox.height;
+		}
+		set height(height) {
+			var d = height / this.height;
+			this.scaleSelection(new paper.Point(1, d));
+		}
+		/**
+		* The rotation of the selection.
+		*/
+		get rotation() {
+			return this._boxRotation;
+		}
+		set rotation(rotation) {
+			var d = rotation - this.rotation;
+			this.rotateSelection(d);
+		}
+		/**
+		* Flip the selected items horizontally.
+		*/
+		flipHorizontally() {
+			this.scaleSelection(new paper.Point(-1, 1));
+		}
+		/**
+		* Flip the selected items vertically.
+		*/
+		flipVertically() {
+			this.scaleSelection(new paper.Point(1, -1));
+		}
+		/**
+		* The bounding box of the widget.
+		*/
+		get boundingBox() {
+			return this._boundingBox;
+		}
+		/**
+		* The current transformation being done to the selection widget.
+		* @type {string}
+		*/
+		get currentTransformation() {
+			return this._currentTransformation;
+		}
+		set currentTransformation(currentTransformation) {
+			if ([
+				"translate",
+				"scale",
+				"rotate",
+				"gradient-stop",
+				"gradient-point",
+				"gradient-none"
+			].indexOf(currentTransformation) === -1) {
+				console.error("Paper.SelectionWidget: Invalid transformation type: " + currentTransformation);
+				currentTransformation = null;
+			} else this._currentTransformation = currentTransformation;
+		}
+		/**
+		* Build a new SelectionWidget GUI around some items.
+		* @param {number} boxRotation - the rotation of the selection GUI. Optional, defaults to 0
+		* @param {paper.Item[]} items - the items to build the GUI around
+		* @param {paper.Point} pivot - the pivot point that the selection rotates around. Defaults to (0,0)
+		* @param {string|boolean} useGradientGUI - whether to use a gradient editing GUI. Defaults to false
+		*/
+		build(args) {
+			if (!args) args = {};
+			if (!args.boxRotation) args.boxRotation = 0;
+			if (!args.items) args.items = [];
+			if (!args.pivot) args.pivot = new paper.Point();
+			this._itemsInSelection = args.items;
+			this._boxRotation = args.boxRotation;
+			this._pivot = args.pivot;
+			this._useGradientGUI = args.useGradientGUI;
+			this._boundingBox = this._calculateBoundingBox();
+			this.item.remove();
+			this.item.removeChildren();
+			if (this._ghost) this._ghost.remove();
+			if (this._pivotPointHandle) this._pivotPointHandle.remove();
+			if (this._itemsInSelection.length > 0) {
+				this._center = this._calculateBoundingBoxOfItems(this._itemsInSelection).center;
+				if (args.useGradientGUI) this._buildGradientGUI(args.selectedStopIndex);
+				else this._buildGUI();
+				this.layer.addChild(this.item);
+			}
+		}
+		/**
+		*
+		*/
+		startTransformation(item, e) {
+			if (this._useGradientGUI) return this.startGradientTransformation(item, e);
+			this._ghost = this._buildGhost();
+			this._layer.addChild(this._ghost);
+			if (item.data.handleType === "rotation") this.currentTransformation = "rotate";
+			else if (item.data.handleType === "scale") this.currentTransformation = "scale";
+			else this.currentTransformation = "translate";
+			this._ghost.data.initialPosition = this._ghost.position;
+			this._ghost.data.scale = new paper.Point(1, 1);
+		}
+		/**
+		*
+		*/
+		updateTransformation(item, e) {
+			if (this.currentTransformation.substring(0, 8) === "gradient") return this.updateGradientTransformation(item, e);
+			if (!this.mod || !this.mod.initiated) {
+				this.mod = { initiated: true };
+				this.mod.onePoint = new paper.Point(1, 1);
+				this.mod.initialPoint = e.point;
+				this.mod.truePivot = this.pivot;
+				if (this.currentTransformation === "translate") {
+					this.mod.action = "translate";
+					this.mod.initialPosition = this._ghost.position;
+				} else if (this.currentTransformation === "rotate") {
+					this.mod.action = "rotate";
+					this.mod.rotateDelta = 0;
+					this.mod.initialAngle = this.mod.initialPoint.subtract(this.pivot).angle;
+					this.mod.initialBoxRotation = this.boxRotation || 0;
+				} else if (item.data.handleEdge.includes("Center")) {
+					this.mod.action = "move-edge";
+					this.mod.topLeft = item.data.handleEdge === "topCenter" || item.data.handleEdge === "leftCenter";
+					this.mod.vertical = item.data.handleEdge === "topCenter" || item.data.handleEdge === "bottomCenter";
+					this.mod.transformMatrix = new paper.Matrix();
+				} else {
+					this.mod.action = "move-corner";
+					this.mod.scaleFactor = this.mod.onePoint;
+				}
+			}
+			this.mod.modifiers = {
+				skew: e.modifiers.command,
+				center: !e.modifiers.alt,
+				freescale: !e.modifiers.shift
+			};
+			if (this.mod.action === "translate") {
+				var initialDelta = e.point.subtract(this.mod.initialPoint);
+				if (!this.mod.modifiers.freescale) {
+					var angle = initialDelta.angle;
+					angle = Math.round(Math.round(angle / 45) * 45) * Math.PI / 180;
+					var angleVector = new paper.Point(Math.cos(angle), Math.sin(angle));
+					initialDelta = initialDelta.project(angleVector);
+				}
+				this.mod.offset = initialDelta;
+				this._ghost.position = this.mod.initialPosition.add(initialDelta);
+			} else if (this.mod.action === "rotate") {
+				this._ghost.rotate(-this.mod.rotateDelta, this.pivot);
+				var rotateDelta = e.point.subtract(this.pivot).angle - this.mod.initialAngle;
+				if (!this.mod.modifiers.freescale) rotateDelta = Math.round(Math.round(rotateDelta / 45) * 45);
+				this.mod.rotateDelta = rotateDelta;
+				this.boxRotation = this.mod.initialBoxRotation + rotateDelta;
+				this._ghost.rotate(this.mod.rotateDelta, this.pivot);
+			} else if (this.mod.action === "move-corner") {
+				this._ghost.rotate(-this.boxRotation, this.pivot);
+				this._ghost.scale(this.mod.onePoint.divide(this.mod.scaleFactor), this.mod.truePivot);
+				if (this.mod.modifiers.center) this.mod.truePivot = this.pivot;
+				else {
+					let bounds = this._ghost.bounds;
+					switch (item.data.handleEdge) {
+						case "topRight":
+							this.mod.truePivot = bounds.bottomLeft;
+							break;
+						case "topLeft":
+							this.mod.truePivot = bounds.bottomRight;
+							break;
+						case "bottomRight":
+							this.mod.truePivot = bounds.topLeft;
+							break;
+						case "bottomLeft": this.mod.truePivot = bounds.topRight;
+					}
+				}
+				var currentPointRelative = e.point.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
+				var initialPointRelative = this.mod.initialPoint.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
+				var scaleFactor = currentPointRelative.divide(initialPointRelative);
+				if (!this.mod.modifiers.freescale) {
+					if (Math.abs(scaleFactor.x) < Math.abs(scaleFactor.y)) scaleFactor.x = Math.sign(scaleFactor.x) * Math.abs(scaleFactor.y);
+					else scaleFactor.y = Math.sign(scaleFactor.y) * Math.abs(scaleFactor.x);
+				}
+				this.mod.scaleFactor = scaleFactor;
+				this._ghost.scale(this.mod.scaleFactor, this.mod.truePivot);
+				this._ghost.rotate(this.boxRotation, this.pivot);
+			} else {
+				this._ghost.rotate(-this.boxRotation, this.pivot);
+				this._ghost.translate(this.mod.truePivot.multiply(-1)).transform(this.mod.transformMatrix.inverted()).translate(this.mod.truePivot);
+				if (this.mod.modifiers.center) this.mod.truePivot = this.pivot;
+				else if (this.mod.topLeft) this.mod.truePivot = this._ghost.bounds.bottomRight;
+				else this.mod.truePivot = this._ghost.bounds.topLeft;
+				this.mod.transformMatrix.reset();
+				var currentPointRelative = e.point.rotate(-this.boxRotation, this.pivot);
+				var initialPointRelative = this.mod.initialPoint.rotate(-this.boxRotation, this.pivot);
+				if (!this.mod.modifiers.skew || this.mod.modifiers.skew && e.modifiers.shift) {
+					var scaleFactor = currentPointRelative.subtract(this.mod.truePivot).divide(initialPointRelative.subtract(this.mod.truePivot));
+					if (this.mod.vertical) scaleFactor.x = 1;
+					else scaleFactor.y = 1;
+					this.mod.transformMatrix.scale(scaleFactor);
+				}
+				if (this.mod.modifiers.skew) {
+					var shearFactor = currentPointRelative.subtract(initialPointRelative).divide(this._ghost.bounds.height, this._ghost.bounds.width);
+					if (this.mod.vertical) shearFactor.y = 0;
+					else shearFactor.x = 0;
+					if (this.mod.modifiers.center) shearFactor = shearFactor.multiply(2);
+					if (this.mod.topLeft) shearFactor = shearFactor.multiply(-1);
+					this.mod.transformMatrix.shear(shearFactor.transform(this.mod.transformMatrix.inverted()));
+				}
+				this._ghost.translate(this.mod.truePivot.multiply(-1)).transform(this.mod.transformMatrix).translate(this.mod.truePivot);
+				this._ghost.rotate(this.boxRotation, this.pivot);
+			}
+		}
+		/**
+		*
+		*/
+		finishTransformation(item) {
+			if (!this._currentTransformation) return;
+			if (this.currentTransformation.substring(0, 8) === "gradient") return this.finishGradientTransformation();
+			this._ghost.remove();
+			if (this.mod.action === "translate") this.translateSelection(this.mod.offset);
+			else if (this.mod.action === "rotate") this.rotateSelection(this._ghost.rotation);
+			else if (this.mod.action === "move-corner") this.scaleSelection(this.mod.scaleFactor, this.mod.truePivot);
+			else this.transformSelection(this.mod.transformMatrix, this.mod.truePivot);
+			this._currentTransformation = null;
+			this.mod.initiated = false;
+		}
+		/**
+		*
+		*/
+		translateSelection(delta) {
+			this._itemsInSelection.forEach((item) => {
+				item.position = item.position.add(delta);
+			});
+			this.pivot = this.pivot.add(delta);
+		}
+		/**
+		*
+		*/
+		rotateSelection(angle) {
+			this._itemsInSelection.forEach((item) => {
+				item.rotate(angle, this.pivot);
+			});
+		}
+		/**
+		*
+		*/
+		scaleSelection(scale, pivot = this.pivot) {
+			this._itemsInSelection.forEach((item) => {
+				item.rotate(-this.boxRotation, this.pivot);
+				item.scale(scale, pivot);
+				item.rotate(this.boxRotation, this.pivot);
+			});
+			var newPivot = pivot.add(this.pivot.subtract(pivot).multiply(scale));
+			this.pivot = newPivot.rotate(this.boxRotation, this.pivot);
+		}
+		/**
+		*
+		*/
+		transformSelection(matrix, pivot = this.pivot) {
+			this._itemsInSelection.forEach((item) => {
+				item.rotate(-this.boxRotation, this.pivot);
+				item.translate(pivot.multiply(-1)).transform(matrix).translate(pivot);
+				item.rotate(this.boxRotation, this.pivot);
+			});
+			var newPivot = pivot.add(this.pivot.subtract(pivot).transform(matrix));
+			this.pivot = newPivot.rotate(this.boxRotation, this.pivot);
+		}
+		_buildGUI() {
+			this.item.addChild(this._buildBorder());
+			if (this._itemsInSelection.length > 1) this.item.addChildren(this._buildItemOutlines());
+			let guiElements = [];
+			guiElements.push(this._buildRotationHotspot("topLeft"));
+			guiElements.push(this._buildRotationHotspot("topRight"));
+			guiElements.push(this._buildRotationHotspot("bottomLeft"));
+			guiElements.push(this._buildRotationHotspot("bottomRight"));
+			guiElements.push(this._buildScalingHandle("topLeft"));
+			guiElements.push(this._buildScalingHandle("topRight"));
+			guiElements.push(this._buildScalingHandle("bottomLeft"));
+			guiElements.push(this._buildScalingHandle("bottomRight"));
+			guiElements.push(this._buildScalingHandle("topCenter"));
+			guiElements.push(this._buildScalingHandle("bottomCenter"));
+			guiElements.push(this._buildScalingHandle("leftCenter"));
+			guiElements.push(this._buildScalingHandle("rightCenter"));
+			this.item.addChildren(guiElements);
+			this._pivotPointHandle = this._buildPivotPointHandle();
+			this.layer.addChild(this._pivotPointHandle);
+			this.item.rotate(this.boxRotation, this._center);
+			this.item.children.forEach((child) => {
+				child.data.isSelectionBoxGUI = true;
+			});
+		}
+		_buildBorder() {
+			var border = new paper.Path.Rectangle({
+				name: "border",
+				from: this.boundingBox.topLeft,
+				to: this.boundingBox.bottomRight,
+				strokeWidth: SelectionWidget.BOX_STROKE_WIDTH / paper.view.zoom,
+				strokeColor: SelectionWidget.BOX_STROKE_COLOR,
+				insert: false
+			});
+			border.data.isBorder = true;
+			return border;
+		}
+		_buildItemOutlines() {
+			return this._itemsInSelection.map((item) => {
+				var clone = item.clone({ insert: false });
+				clone.rotate(-this.boxRotation, this._center);
+				var bounds = clone.bounds;
+				var border = new paper.Path.Rectangle({
+					from: bounds.topLeft,
+					to: bounds.bottomRight,
+					strokeWidth: SelectionWidget.BOX_STROKE_WIDTH / paper.view.zoom,
+					strokeColor: SelectionWidget.BOX_STROKE_COLOR
+				});
+				border.remove();
+				return border;
+			});
+		}
+		_buildScalingHandle(edge) {
+			return this._buildHandle({
+				name: edge,
+				type: "scale",
+				center: this.boundingBox[edge],
+				fillColor: SelectionWidget.HANDLE_FILL_COLOR,
+				strokeColor: SelectionWidget.HANDLE_STROKE_COLOR
+			});
+		}
+		_buildPivotPointHandle() {
+			var handle = this._buildHandle({
+				name: "pivot",
+				type: "pivot",
+				center: this.pivot,
+				fillColor: SelectionWidget.PIVOT_FILL_COLOR,
+				strokeColor: SelectionWidget.PIVOT_STROKE_COLOR
+			});
+			handle.locked = true;
+			return handle;
+		}
+		_buildHandle(args) {
+			if (!args) console.error("_createHandle: args is required");
+			if (!args.name) console.error("_createHandle: args.name is required");
+			if (!args.type) console.error("_createHandle: args.type is required");
+			if (!args.center) console.error("_createHandle: args.center is required");
+			if (!args.fillColor) console.error("_createHandle: args.fillColor is required");
+			if (!args.strokeColor) console.error("_createHandle: args.strokeColor is required");
+			var circle = new paper.Path.Circle({
+				center: args.center,
+				radius: SelectionWidget.HANDLE_RADIUS / paper.view.zoom,
+				strokeWidth: SelectionWidget.HANDLE_STROKE_WIDTH / paper.view.zoom,
+				strokeColor: args.strokeColor,
+				fillColor: args.fillColor,
+				insert: false
+			});
+			circle.applyMatrix = false;
+			circle.data.isSelectionBoxGUI = true;
+			circle.data.handleType = args.type;
+			circle.data.handleEdge = args.name;
+			return circle;
+		}
+		_buildRotationHotspot(cornerName) {
+			var r = SelectionWidget.ROTATION_HOTSPOT_RADIUS / paper.view.zoom;
+			var hotspot = new paper.Path([
+				new paper.Point(0, 0),
+				new paper.Point(0, r),
+				new paper.Point(r, r),
+				new paper.Point(r, -r),
+				new paper.Point(-r, -r),
+				new paper.Point(-r, 0)
+			]);
+			hotspot.fillColor = SelectionWidget.ROTATION_HOTSPOT_FILLCOLOR;
+			hotspot.position.x = this.boundingBox[cornerName].x;
+			hotspot.position.y = this.boundingBox[cornerName].y;
+			hotspot.rotate({
+				"topRight": 0,
+				"bottomRight": 90,
+				"bottomLeft": 180,
+				"topLeft": 270
+			}[cornerName]);
+			hotspot.data.handleType = "rotation";
+			hotspot.data.handleEdge = cornerName;
+			return hotspot;
+		}
+		_buildGhost() {
+			var ghost = new paper.Group({
+				insert: false,
+				applyMatrix: false
+			});
+			this._itemsInSelection.forEach((item) => {
+				var outline = item.clone();
+				outline.remove();
+				outline.fillColor = "rgba(0,0,0,0)";
+				outline.strokeColor = SelectionWidget.GHOST_STROKE_COLOR;
+				outline.strokeWidth = SelectionWidget.GHOST_STROKE_WIDTH * 2 / paper.view.zoom;
+				ghost.addChild(outline);
+				var outline2 = outline.clone();
+				outline2.remove();
+				outline2.fillColor = "rgba(0,0,0,0)";
+				outline2.strokeColor = "#ffffff";
+				outline2.strokeWidth = SelectionWidget.GHOST_STROKE_WIDTH / paper.view.zoom;
+				ghost.addChild(outline2);
+			});
+			var boundsOutline = new paper.Path.Rectangle({
+				from: this.boundingBox.topLeft,
+				to: this.boundingBox.bottomRight,
+				fillColor: "rgba(0,0,0,0)",
+				strokeColor: SelectionWidget.GHOST_STROKE_COLOR,
+				strokeWidth: SelectionWidget.GHOST_STROKE_WIDTH / paper.view.zoom,
+				applyMatrix: false
+			});
+			boundsOutline.rotate(this.boxRotation, this._center);
+			ghost.addChild(boundsOutline);
+			ghost.opacity = .5;
+			return ghost;
+		}
+		_calculateBoundingBox() {
+			if (this._itemsInSelection.length === 0) return new paper.Rectangle();
+			var center = this._calculateBoundingBoxOfItems(this._itemsInSelection).center;
+			var itemsForBoundsCalc = this._itemsInSelection.map((item) => {
+				var clone = item.clone();
+				clone.rotate(-this.boxRotation, center);
+				clone.remove();
+				return clone;
+			});
+			return this._calculateBoundingBoxOfItems(itemsForBoundsCalc);
+		}
+		_calculateBoundingBoxOfItems(items) {
+			var bounds = null;
+			items.forEach((item) => {
+				bounds = bounds ? bounds.unite(item.bounds) : item.bounds;
+			});
+			return bounds || new paper.Rectangle();
+		}
+		_buildGradientGUI(selectedStopIndex) {
+			let item = this._itemsInSelection[0];
+			let color, stops, startpoint, endpoint;
+			if (this._useGradientGUI === "stroke") {
+				color = item.strokeColor;
+				this._gradientGUI.stroke = true;
+			} else {
+				color = item.fillColor;
+				this._gradientGUI.stroke = false;
+			}
+			if (!color) color = new paper.Color(0, 0, 0);
+			if (color.gradient) {
+				this._gradientGUI.radial = color.gradient.radial;
+				stops = color.gradient.stops;
+				startpoint = color.origin;
+				endpoint = color.destination;
+			} else {
+				this._gradientGUI.radial = false;
+				stops = [{
+					color: color.clone(),
+					offset: 0
+				}, {
+					color: color.clone(),
+					offset: 1
+				}];
+				let bounds = this._calculateBoundingBoxOfItems(this._itemsInSelection);
+				startpoint = bounds.topCenter;
+				endpoint = bounds.bottomCenter;
+			}
+			this._gradientGUI.startpoint = startpoint;
+			this._gradientGUI.endpoint = endpoint;
+			this._gradientGUI.lineVector = endpoint.subtract(startpoint);
+			let container = this._gradientGUI.container;
+			container.removeChildren();
+			this._transformContainer();
+			container.addChildren(this._buildGradientLine());
+			container.addChildren(this._buildGradientStops(stops));
+			container.addChild(this._buildHoverStop());
+			this._selectStop(this._gradientGUI.stops[selectedStopIndex]);
+			this.item.addChild(container);
+			container.children.forEach((child) => {
+				child.data.isSelectionBoxGUI = true;
+			});
+		}
+		/**
+		* Update the gradient line GUI.
+		* @param {paper.Color} color The paper.js gradient color object.
+		* @returns {paper.Path[]} The start point, end point, and connecting line paths.
+		*/
+		_buildGradientLine() {
+			let length = this._gradientGUI.lineVector.length;
+			this._gradientGUI.endPath.position.x = length;
+			this._gradientGUI.linePath.segments[1].point.x = length;
+			const scaling = 1 / paper.view.zoom;
+			this._gradientGUI.startPath.scaling = scaling;
+			this._gradientGUI.endPath.scaling = scaling;
+			return [
+				this._gradientGUI.linePath,
+				this._gradientGUI.startPath,
+				this._gradientGUI.endPath
+			];
+		}
+		/**
+		* Update the gradient stops GUI.
+		* @param {paper.Color} color The paper.js gradient color object.
+		* @returns {paper.Path[]} The list of color stop paths.
+		*/
+		_buildGradientStops(paperStops) {
+			let stopList = this._gradientGUI.stops;
+			paperStops.forEach((paperStop, idx) => {
+				if (idx >= stopList.length) stopList.push(this._buildGradientStop());
+				let stop = stopList[idx];
+				stop.data.setColor(paperStop.color);
+				stop.data.setOffset(paperStop.offset);
+				stop.data.setScaling();
+			});
+			stopList.length = paperStops.length;
+			return stopList;
+		}
+		_buildGradientStop(isHover) {
+			const ARROW_HEIGHT = SelectionWidget.COLOR_STOP_RECT_RADIUS / 5;
+			const COLOR_BOX_CENTER = [0, -(SelectionWidget.COLOR_STOP_RECT_RADIUS + ARROW_HEIGHT)];
+			const COLOR_BOX_INNER_SIZE = 2 * (SelectionWidget.COLOR_STOP_RECT_RADIUS - SelectionWidget.COLOR_STOP_RECT_PADDING);
+			const COLOR_BOX_OUTER_SIZE = 2 * SelectionWidget.COLOR_STOP_RECT_RADIUS;
+			const CHECKER_SIZE = 8;
+			let stopObj = new paper.Group({
+				pivot: [0, 0],
+				position: [0, -SelectionWidget.ENDPOINT_RADIUS],
+				applyMatrix: false,
+				insert: false,
+				data: {
+					handleType: "gradient-stop",
+					color: "black",
+					offset: 0,
+					selected: false
+				}
+			});
+			let colorBox = new paper.Path.Rectangle({
+				center: COLOR_BOX_CENTER,
+				size: [COLOR_BOX_INNER_SIZE, COLOR_BOX_INNER_SIZE],
+				fillColor: "red",
+				strokeWidth: 0,
+				data: {
+					isSelectionBoxGUI: true,
+					parentItem: stopObj
+				}
+			});
+			let opaqueColorBox = new paper.Path.Rectangle({
+				center: [-COLOR_BOX_INNER_SIZE / 4, COLOR_BOX_CENTER[1]],
+				size: [COLOR_BOX_INNER_SIZE / 2, COLOR_BOX_INNER_SIZE],
+				fillColor: "red",
+				strokeWidth: 0,
+				data: {
+					isSelectionBoxGUI: true,
+					parentItem: stopObj,
+					isBorder: true
+				}
+			});
+			let outerBox = new paper.Path.Rectangle({
+				center: COLOR_BOX_CENTER,
+				size: [COLOR_BOX_OUTER_SIZE, COLOR_BOX_OUTER_SIZE],
+				fillColor: "#ffffff",
+				strokeWidth: SelectionWidget.COLOR_STOP_OUTLINE_WIDTH,
+				data: {
+					isSelectionBoxGUI: true,
+					parentItem: stopObj
+				}
+			});
+			let checker = new paper.Group({
+				children: [
+					new paper.Path.Rectangle({
+						position: [0, 0],
+						size: 24,
+						fillColor: "#e6e6e6",
+						data: {
+							isSelectionBoxGUI: true,
+							parentItem: stopObj,
+							isBorder: true
+						}
+					}),
+					new paper.Path.Rectangle({
+						position: [0, -8],
+						size: CHECKER_SIZE,
+						fillColor: "#d4d4d4",
+						data: {
+							isSelectionBoxGUI: true,
+							parentItem: stopObj,
+							isBorder: true
+						}
+					}),
+					new paper.Path.Rectangle({
+						position: [-8, 0],
+						size: CHECKER_SIZE,
+						fillColor: "#d4d4d4",
+						data: {
+							isSelectionBoxGUI: true,
+							parentItem: stopObj,
+							isBorder: true
+						}
+					}),
+					new paper.Path.Rectangle({
+						position: [0, CHECKER_SIZE],
+						size: CHECKER_SIZE,
+						fillColor: "#d4d4d4",
+						data: {
+							isSelectionBoxGUI: true,
+							parentItem: stopObj,
+							isBorder: true
+						}
+					}),
+					new paper.Path.Rectangle({
+						position: [CHECKER_SIZE, 0],
+						size: CHECKER_SIZE,
+						fillColor: "#d4d4d4",
+						data: {
+							isSelectionBoxGUI: true,
+							parentItem: stopObj,
+							isBorder: true
+						}
+					})
+				],
+				strokeWidth: 0
+			});
+			outerBox.addTo(stopObj);
+			checker.position = COLOR_BOX_CENTER;
+			checker.scaling = COLOR_BOX_INNER_SIZE / 24;
+			checker.addTo(stopObj);
+			colorBox.addTo(stopObj);
+			opaqueColorBox.addTo(stopObj);
+			let arrow;
+			if (!isHover) {
+				arrow = new paper.Path({
+					segments: [
+						[-ARROW_HEIGHT, -ARROW_HEIGHT],
+						[0, 0],
+						[ARROW_HEIGHT, -ARROW_HEIGHT]
+					],
+					closed: true,
+					fillColor: SelectionWidget.DESELECTED_COLOR,
+					strokeWidth: SelectionWidget.COLOR_STOP_OUTLINE_WIDTH,
+					data: {
+						isSelectionBoxGUI: true,
+						parentItem: stopObj
+					}
+				});
+				arrow.addTo(stopObj);
+			}
+			stopObj.strokeColor = SelectionWidget.DESELECTED_COLOR;
+			if (isHover) {
+				stopObj.data.isBorder = true;
+				outerBox.data.isBorder = true;
+				colorBox.data.isBorder = true;
+			}
+			stopObj.data.setColor = (color) => {
+				colorBox.fillColor = color || "black";
+				opaqueColorBox.fillColor = color || "black";
+				opaqueColorBox.fillColor.alpha = 1;
+				stopObj.data.color = color;
+			};
+			stopObj.data.setOffset = (offset) => {
+				stopObj.position.x = this._gradientGUI.lineVector.length * offset;
+				stopObj.data.offset = offset;
+			};
+			stopObj.data.setSelected = (selected) => {
+				stopObj.strokeColor = selected ? SelectionWidget.SELECTED_COLOR : SelectionWidget.DESELECTED_COLOR;
+				if (arrow) arrow.fillColor = selected ? SelectionWidget.SELECTED_COLOR : SelectionWidget.DESELECTED_COLOR;
+				stopObj.data.selected = selected;
+			};
+			stopObj.data.setScaling = () => {
+				const scaling = 1 / paper.view.zoom;
+				stopObj.scaling = scaling;
+				stopObj.position.y = -SelectionWidget.ENDPOINT_RADIUS * scaling;
+			};
+			stopObj.data.setScaling();
+			return stopObj;
+		}
+		_buildHoverStop(point) {
+			this._gradientGUI.hoverStop.visible = false;
+			if (point) {
+				let offset = this._calculateValidOffset(point);
+				if (offset !== null) {
+					this._interpolateStop(this._gradientGUI.hoverStop, offset);
+					this._gradientGUI.hoverStop.visible = true;
+					this._gradientGUI.hoverStop.data.setScaling();
+				}
+			}
+			return this._gradientGUI.hoverStop;
+		}
+		startGradientTransformation(item, e) {
+			if (item && item.data.parentItem) item = item.data.parentItem;
+			this._gradientGUI.hoverStop.remove();
+			if (item && item.data.handleType === "gradient-stop") this.currentTransformation = "gradient-stop";
+			else if (item && item.data.handleType === "gradient-point") {
+				this.currentTransformation = "gradient-point";
+				this._gradientGUI.initialStartpoint = this._gradientGUI.startpoint;
+				this._gradientGUI.initialEndpoint = this._gradientGUI.endpoint;
+				this._gradientGUI.initialLineVector = this._gradientGUI.lineVector;
+			} else if (this._gradientGUI.createdStopOnDown) {
+				this.currentTransformation = "gradient-stop";
+				this._gradientGUI.createdStopOnDown = false;
+			} else this.currentTransformation = "gradient-none";
+		}
+		updateGradientTransformation(item, e) {
+			if (item && item.data.parentItem) item = item.data.parentItem;
+			if (this.currentTransformation === "gradient-stop") {
+				let offset = this._calculateOffset(e.point);
+				if (offset < 0) offset = 0;
+				if (offset > 1) offset = 1;
+				this._gradientGUI.selectedStop.data.setOffset(offset);
+			} else if (this.currentTransformation === "gradient-point") {
+				if (item.data.handleEdge === "start") this._gradientGUI.startpoint = e.point;
+				else this._gradientGUI.endpoint = e.point;
+				if (e.modifiers.shift) {
+					this._gradientGUI.lineVector = this._gradientGUI.initialLineVector;
+					if (item.data.handleEdge === "start") this._gradientGUI.endpoint = e.point.add(this._gradientGUI.lineVector);
+					else this._gradientGUI.startpoint = e.point.subtract(this._gradientGUI.lineVector);
+				} else {
+					if (item.data.handleEdge === "start") this._gradientGUI.endpoint = this._gradientGUI.initialEndpoint;
+					else this._gradientGUI.startpoint = this._gradientGUI.initialStartpoint;
+					this._gradientGUI.lineVector = this._gradientGUI.endpoint.subtract(this._gradientGUI.startpoint);
+				}
+				this._transformContainer();
+				this._buildGradientLine();
+				this._gradientGUI.stops.forEach((stopObj) => {
+					stopObj.data.setOffset(stopObj.data.offset);
+					stopObj.data.setScaling();
+				});
+			}
+			if (this.currentTransformation !== "gradient-none") this._updateItems();
+		}
+		finishGradientTransformation(item, e) {
+			if (!this._currentTransformation) return;
+			if (this.currentTransformation !== "gradient-none") this._updateItems();
+			this._currentTransformation = null;
+		}
+		_updateItems() {
+			let colorObj = {
+				origin: this._gradientGUI.startpoint,
+				destination: this._gradientGUI.endpoint,
+				stops: this._gradientGUI.stops.map((stopPath) => {
+					return {
+						color: stopPath.data.color,
+						offset: stopPath.data.offset
+					};
+				}),
+				radial: this._gradientGUI.radial
+			};
+			if (this._gradientGUI.stroke) this._itemsInSelection.forEach((item) => {
+				item.strokeColor = colorObj;
+			});
+			else this._itemsInSelection.forEach((item) => {
+				item.fillColor = colorObj;
+			});
+		}
+		_selectStop(stopObj) {
+			if (this._gradientGUI.selectedStop) this._gradientGUI.selectedStop.data.setSelected(false);
+			this._gradientGUI.selectedStop = stopObj;
+			stopObj.data.setSelected(true);
+		}
+		_createStopFromPoint(point) {
+			let offset = this._calculateValidOffset(point);
+			if (offset !== null) {
+				let newStop = this._buildGradientStop();
+				this._interpolateStop(newStop, offset);
+				this._gradientGUI.stops.push(newStop);
+				this._gradientGUI.container.addChild(newStop);
+				this._selectStop(newStop);
+				this._updateItems();
+				return this._gradientGUI.stops.length - 1;
+			}
+			return null;
+		}
+		_interpolateStop(stop, offset) {
+			let stops = this._gradientGUI.stops;
+			let stop1, stop2;
+			let index1 = 0;
+			let index2 = 1;
+			stops.forEach((stop) => {
+				let stopOffset = stop.data.offset;
+				if (index1 <= stopOffset && stopOffset <= offset) {
+					stop1 = stop;
+					index1 = stopOffset;
+				} else if (offset <= stopOffset && stopOffset <= index2) {
+					stop2 = stop;
+					index2 = stopOffset;
+				}
+			});
+			let color;
+			if (!stop1) color = stop2.data.color ? stop2.data.color.clone() : new paper.Color("black");
+			else if (!stop2) color = stop1.data.color ? stop1.data.color.clone() : new paper.Color("black");
+			else {
+				let offsetRelative = (offset - index1) / (index2 - index1);
+				let color1 = stop1.data.color || new paper.Color("black");
+				let color2 = stop2.data.color || new paper.Color("black");
+				color = color1.add(color2.subtract(color1).multiply(offsetRelative));
+				color.alpha = color1.alpha + (color2.alpha - color1.alpha) * offsetRelative;
+			}
+			stop.data.setColor(color);
+			stop.data.setOffset(offset);
+		}
+		_transformContainer() {
+			let container = this._gradientGUI.container;
+			container.matrix.reset();
+			container.translate(this._gradientGUI.startpoint);
+			container.rotate(this._gradientGUI.lineVector.angle, this._gradientGUI.startpoint);
+		}
+		_calculateDistanceFromLine(point) {
+			let pointVector = point.subtract(this._gradientGUI.startpoint);
+			return this._gradientGUI.lineVector.normalize().cross(pointVector);
+		}
+		_calculateOffset(point) {
+			let pointVector = point.subtract(this._gradientGUI.startpoint);
+			let lineVector = this._gradientGUI.lineVector;
+			return lineVector.dot(pointVector) / (lineVector.length * lineVector.length);
+		}
+		_calculateValidOffset(point) {
+			let distance = -this._calculateDistanceFromLine(point);
+			if (distance < 0 || distance > SelectionWidget.COLOR_STOP_CREATION_DISTANCE / paper.view.zoom) return null;
+			let offset = this._calculateOffset(point);
+			return 0 <= offset && offset <= 1 ? offset : null;
+		}
+	};
+	SelectionWidget.BOX_STROKE_WIDTH = 1;
+	SelectionWidget.BOX_STROKE_COLOR = "rgba(100,150,255,1.0)";
+	SelectionWidget.HANDLE_RADIUS = 5;
+	SelectionWidget.HANDLE_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
+	SelectionWidget.HANDLE_STROKE_COLOR = SelectionWidget.BOX_STROKE_COLOR;
+	SelectionWidget.HANDLE_FILL_COLOR = "rgba(255,255,255,0.3)";
+	SelectionWidget.PIVOT_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
+	SelectionWidget.PIVOT_FILL_COLOR = "rgba(255,255,255,0.5)";
+	SelectionWidget.PIVOT_STROKE_COLOR = "rgba(0,0,0,1)";
+	SelectionWidget.PIVOT_RADIUS = SelectionWidget.HANDLE_RADIUS;
+	SelectionWidget.ROTATION_HOTSPOT_RADIUS = 20;
+	SelectionWidget.ROTATION_HOTSPOT_FILLCOLOR = "rgba(100,150,255,0.5)";
+	SelectionWidget.GHOST_STROKE_COLOR = "rgba(0, 0, 0, 1.0)";
+	SelectionWidget.GHOST_STROKE_WIDTH = 1;
+	SelectionWidget.ENDPOINT_RADIUS = 8;
+	SelectionWidget.COLOR_STOP_RECT_RADIUS = 12;
+	SelectionWidget.COLOR_STOP_RECT_PADDING = 2;
+	SelectionWidget.COLOR_STOP_OUTLINE_WIDTH = 2;
+	SelectionWidget.COLOR_STOP_CREATION_DISTANCE = SelectionWidget.ENDPOINT_RADIUS + 2.2 * SelectionWidget.COLOR_STOP_RECT_RADIUS;
+	SelectionWidget.SELECTED_COLOR = "#0c8ce9";
+	SelectionWidget.DESELECTED_COLOR = "#cccccc";
+	paper.PaperScope.inject({ SelectionWidget });
+	//#endregion
+	//#region src/view/paper-ext/Paper.SelectionBox.js
+	paper.SelectionBox = class {
+		constructor(paperContext) {
+			this.paper = paperContext;
+			this._start = new this.paper.Point();
+			this._end = new this.paper.Point();
+			this._items = [];
+			this._active = false;
+			this._box = new this.paper.Path.Rectangle({ insert: false });
+			this._mode = "intersects";
+		}
+		start(point) {
+			this._active = true;
+			this._start = point;
+			this._end = point;
+			this._rebuildBox();
+		}
+		drag(point) {
+			this._end = point;
+			this._rebuildBox();
+		}
+		end(point) {
+			this._end = point;
+			this._active = false;
+			this._rebuildBox();
+			this._box.remove();
+			this._items = this._itemsInBox(this._box);
+		}
+		get items() {
+			return this._items;
+		}
+		get active() {
+			return this._active;
+		}
+		get mode() {
+			return this._mode;
+		}
+		set mode(mode) {
+			if (mode !== "contains" && mode !== "intersects") throw new Error("SelectionBox.mode: invalid mode");
+			this._mode = mode;
+		}
+		_rebuildBox() {
+			this._box.remove();
+			this._box = new this.paper.Path.Rectangle({
+				from: this._start,
+				to: this._end,
+				strokeWidth: 1 / this.paper.view.zoom,
+				strokeColor: "black"
+			});
+		}
+		_itemsInBox(box) {
+			var checkItems = [];
+			this._getSelectableLayers().forEach((layer) => {
+				layer.children.forEach((child) => {
+					checkItems.push(child);
+				});
+			});
+			var items = [];
+			checkItems.forEach((item) => {
+				if (this.mode === "contains") {
+					if (this._box.bounds.contains(item.bounds)) items.push(item);
+				} else if (this.mode === "intersects") {
+					if (this._shapesIntersect(item, this._box)) items.push(item);
+				}
+			});
+			return items;
+		}
+		_shapesIntersect(itemA, itemB) {
+			if (itemA instanceof this.paper.Group) {
+				var intersects = false;
+				var itemBClone = itemB.clone();
+				itemBClone.transform(itemA.matrix.inverted());
+				itemA.children.forEach((child) => {
+					if (!intersects && this._shapesIntersect(child, itemBClone)) intersects = true;
+				});
+				return intersects;
+			} else {
+				var shapesDoIntersect = itemB.intersects(itemA);
+				var boundsContain = itemB.bounds.contains(itemA.bounds);
+				if (shapesDoIntersect || boundsContain) return true;
+			}
+		}
+		_getSelectableLayers() {
+			return this.paper.project.layers.filter((layer) => {
+				return !layer.locked;
+			});
+		}
+	};
+	paper.PaperScope.inject({ SelectionBox: paper.SelectionBox });
+	//#endregion
+	//#region src/view/paper-ext/Path.potrace.js
+	const potrace$2 = require_potrace();
+	paper.Path.inject({ potrace: function(args) {
+		var self = this;
+		if (!args) throw new Error("Path.potrace: args is required.");
+		if (!args.resolution) throw new Error("Path.potrace: args.resolution is required.");
+		if (!args.done) throw new Error("Path.potrace: args.done is required.");
+		var finalRasterResolution = paper.view.resolution * args.resolution / window.devicePixelRatio;
+		var raster = this.rasterize(finalRasterResolution);
+		var zoomFactor = args.resolution * raster.bounds.width / raster.width;
+		raster.remove();
+		var rasterDataURL = raster.toDataURL();
+		if (rasterDataURL === "data:,") args.done(null);
+		var img = new Image();
+		img.onload = function() {
+			var svg = potrace$2.fromImage(img).toSVG(1 / args.resolution);
+			var potracePath = paper.project.importSVG(svg);
+			potracePath.position.x = self.position.x;
+			potracePath.position.y = self.position.y;
+			potracePath.remove();
+			potracePath.closed = true;
+			potracePath.children[0].closed = true;
+			potracePath.children[0].scale(zoomFactor);
+			args.done(potracePath.children[0]);
+		};
+		img.src = rasterDataURL;
+	} });
+	new function() {
+		var errorThreshold = .1;
+		geomEpsilon = 1e-8, abs = Math.abs, enforeArcs = false;
+		function offsetPath(path, offset, dontMerge) {
+			var result = new Path({ insert: false }), curves = path.getCurves(), strokeJoin = path.getStrokeJoin(), miterLimit = path.getMiterLimit();
+			for (var i = 0, l = curves.length; i < l; i++) {
+				var curve = curves[i];
+				if (curve.hasLength(geomEpsilon)) {
+					var segments = getOffsetSegments(curve, offset);
+					if (!result.isEmpty()) connect(result, segments.shift(), curve.segment1, offset, strokeJoin, miterLimit, true);
+					result.addSegments(segments);
+				}
+			}
+			if (path.isClosed() && !result.isEmpty()) {
+				connect(result, result.firstSegment, path.firstSegment, offset, strokeJoin, miterLimit);
+				if (dontMerge) result.setClosed(true);
+				else result.closePath();
+			}
+			return result;
+		}
+		function connect(path, dest, originSegment, offset, type, miterLimit, addLine) {
+			function fixHandles(seg) {
+				var handleIn = seg.handleIn, handleOut = seg.handleOut;
+				if (handleIn.length < handleOut.length) seg.handleIn = handleIn.project(handleOut);
+				else seg.handleOut = handleOut.project(handleIn);
+			}
+			function addPoint(point) {
+				if (!point.equals(path.lastSegment.point)) path.add(point);
+			}
+			var center = originSegment.point, start = path.lastSegment, pt1 = start.point, pt2 = dest.point, connected = false;
+			if (!pt1.isClose(pt2, geomEpsilon)) {
+				if (enforeArcs || new Line(pt1, pt2).getSignedDistance(center) * offset <= geomEpsilon) {
+					var radius = abs(offset);
+					switch (type) {
+						case "round":
+							var v1 = pt1.subtract(center), v2 = pt2.subtract(center), v = v1.add(v2), through = v.getLength() < geomEpsilon ? v2.rotate(90).add(center) : center.add(v.normalize(radius));
+							path.arcTo(through, pt2);
+							break;
+						case "miter":
+							Path._addBevelJoin(originSegment, "miter", radius, 4, null, null, addPoint);
+							break;
+						case "square":
+							Path._addSquareCap(originSegment, "square", radius, null, null, addPoint);
+							break;
+						default: path.lineTo(pt2);
+					}
+					connected = true;
+				} else if (addLine) {
+					path.lineTo(pt2);
+					connected = true;
+				}
+				if (connected) {
+					fixHandles(start);
+					var last = path.lastSegment;
+					fixHandles(last);
+					if (dest !== path.firstSegment) last.handleOut = dest.handleOut;
+				}
+			}
+			return connected;
+		}
+		function joinOffsets(outerPath, innerPath, originPath, offset) {
+			outerPath.closed = innerPath.closed = false;
+			var path = outerPath, open = !originPath.closed, strokeCap = originPath.strokeCap;
+			path.reverse();
+			if (open) connect(path, innerPath.firstSegment, originPath.firstSegment, offset, strokeCap);
+			path.join(innerPath);
+			if (open) connect(path, path.firstSegment, originPath.lastSegment, offset, strokeCap);
+			path.closePath();
+			return path;
+		}
+		function cleanupPath(path) {
+			path.children.forEach(function(child) {
+				if (Math.abs(child.area) < errorThreshold) child.remove();
+			});
+		}
+		/**
+		* Creates an offset for the specified curve and returns the segments of
+		* that offset path.
+		*
+		* @param {Curve} curve the curve to be offset
+		* @param {Number} offset the offset distance
+		* @returns {Segment[]} an array of segments describing the offset path
+		*/
+		function getOffsetSegments(curve, offset) {
+			if (curve.isStraight()) {
+				var n = curve.getNormalAtTime(.5).multiply(offset), p1 = curve.point1.add(n), p2 = curve.point2.add(n);
+				return [new Segment(p1), new Segment(p2)];
+			} else {
+				var curves = splitCurveForOffseting(curve), segments = [];
+				for (var i = 0, l = curves.length; i < l; i++) {
+					var offsetCurves = getOffsetCurves(curves[i], offset, 0), prevSegment;
+					for (var j = 0, m = offsetCurves.length; j < m; j++) {
+						var curve = offsetCurves[j], segment = curve.segment1;
+						if (prevSegment) prevSegment.handleOut = segment.handleOut.project(prevSegment.handleIn);
+						else segments.push(segment);
+						segments.push(prevSegment = curve.segment2);
+					}
+				}
+				return segments;
+			}
+		}
+		function getOffsetCurves(curve, offset) {
+			var radius = abs(offset);
+			function getOffsetPoint(v, t) {
+				return Curve.getPoint(v, t).add(Curve.getNormal(v, t).multiply(offset));
+			}
+			/**
+			* Approach for Curve Offsetting based on:
+			*   "A New Shape Control and Classification for Cubic Bézier Curves"
+			*   Shi-Nine Yang and Ming-Liang Huang
+			*/
+			function offsetAndSubdivide(curve, curves) {
+				var v = curve.getValues(), ps = [getOffsetPoint(v, 0), getOffsetPoint(v, 1)], ts = [Curve.getTangent(v, 0), Curve.getTangent(v, 1)], pt = getOffsetPoint(v, .5), div = ts[0].cross(ts[1]) * 3 / 4, d = pt.add(pt).subtract(ps[0].add(ps[1])), a = d.cross(ts[1]) / div, b = d.cross(ts[0]) / div, hs = [ts[0].multiply(a), ts[1].multiply(-b)];
+				if (a < 0 && b > 0 || a > 0 && b < 0) {
+					var i1 = abs(a) > abs(b) ? 0 : 1, i2 = i1 ^ 1, p = ps[i1], h = hs[i1], cross = new Line(p, h, true).intersect(new Line(ps[i2], ts[i2], true), true);
+					hs[i2] = null;
+					if (cross) {
+						var nh = cross.subtract(p), scale = nh.dot(h) / h.dot(h);
+						if (0 < scale && scale < 1) hs[i1] = nh;
+					}
+				}
+				var offsetCurve = new Curve(ps[0], hs[0], hs[1], ps[1]);
+				if (getOffsetError(v, offsetCurve.getValues(), radius) > errorThreshold && offsetCurve.getLength() > errorThreshold) {
+					var curve2 = curve.divideAtTime(getAverageTangentTime(v));
+					offsetAndSubdivide(curve, curves);
+					offsetAndSubdivide(curve2, curves);
+				} else curves.push(offsetCurve);
+				return curves;
+			}
+			return offsetAndSubdivide(curve, []);
+		}
+		function getOffsetError(cv, ov, radius) {
+			var count = 16, error = 0;
+			for (var i = 1; i < count; i++) {
+				var t = i / count, p = Curve.getPoint(cv, t), n = Curve.getNormal(cv, t), roots = Curve.getCurveLineIntersections(ov, p.x, p.y, n.x, n.y), dist = 2 * radius;
+				for (var j = 0, l = roots.length; j < l; j++) {
+					var d = Curve.getPoint(ov, roots[j]).getDistance(p);
+					if (d < dist) dist = d;
+				}
+				var err = abs(radius - dist);
+				if (err > error) error = err;
+			}
+			return error;
+		}
+		/**
+		* Split curve into sections that can then be treated individually by an
+		* offset algorithm.
+		*/
+		function splitCurveForOffseting(curve) {
+			var curves = [curve.clone()];
+			if (curve.isStraight()) return curves;
+			function splitAtRoots(index, roots, noHandles) {
+				for (var i = 0, prevT, l = roots && roots.length; i < l; i++) {
+					var t = roots[i];
+					var curve = curves[index].divideAtTime(i ? (t - prevT) / (1 - prevT) : t);
+					prevT = t;
+					if (curve) curves.splice(++index, 0, curve);
+				}
+			}
+			function splitLargeAngles(index, recursion) {
+				var curve = curves[index], v = curve.getValues(), n1 = Curve.getNormal(v, 0), n2 = Curve.getNormal(v, 1).negate();
+				if (n1.dot(n2) > -.5 && ++recursion < 4) {
+					curves.splice(index + 1, 0, curve.divideAtTime(getAverageTangentTime(v)));
+					splitLargeAngles(index + 1, recursion);
+					splitLargeAngles(index, recursion);
+				}
+			}
+			var info = curve.classify(), roots = info.roots;
+			if (roots && info.type !== "loop") splitAtRoots(0, roots);
+			var getPeaks = Curve.getPeaks;
+			for (var i = curves.length - 1; i >= 0; i--) splitAtRoots(i, getPeaks(curves[i].getValues()));
+			for (var i = curves.length - 1; i >= 0; i--) splitLargeAngles(i, 0);
+			return curves;
+		}
+		/**
+		* Returns the first curve-time where the curve has its tangent in the same
+		* direction as the average of the tangents at its beginning and end.
+		*/
+		function getAverageTangentTime(v) {
+			var tan = Curve.getTangent(v, 0).add(Curve.getTangent(v, .5)).add(Curve.getTangent(v, 1)), tx = tan.x, ty = tan.y, flip = abs(ty) < abs(tx), s = flip ? ty / tx : tx / ty, ia = flip ? 1 : 0, io = ia ^ 1, a0 = v[ia + 0], o0 = v[io + 0], a1 = v[ia + 2], o1 = v[io + 2], a2 = v[ia + 4], o2 = v[io + 4], a3 = v[ia + 6], o3 = v[io + 6], aA = -a0 + 3 * a1 - 3 * a2 + a3, aB = 3 * a0 - 6 * a1 + 3 * a2, aC = -3 * a0 + 3 * a1, oA = -o0 + 3 * o1 - 3 * o2 + o3, oB = 3 * o0 - 6 * o1 + 3 * o2, oC = -3 * o0 + 3 * o1, roots = [], epsilon = Numerical.CURVETIME_EPSILON;
+			return Numerical.solveQuadratic(3 * (aA - s * oA), 2 * (aB - s * oB), aC - s * oC, roots, epsilon, 1 - epsilon) > 0 ? roots[0] : .5;
+		}
+		return {
+			offsetPath,
+			joinOffsets,
+			cleanupPath
+		};
+	}();
+	//#endregion
+	//#region src/view/paper-ext/Path.flatten.js
+	paper.Path.inject({ flatten: function() {
+		var offset = this.strokeWidth / 2;
+		var outerPath = OffsetUtils.offsetPath(this, offset, true);
+		var innerPath = OffsetUtils.offsetPath(this, -offset, true);
+		var flatPath = OffsetUtils.joinOffsets(outerPath.clone(), innerPath.clone(), this, offset);
+		flatPath = flatPath.unite();
+		return flatPath;
+	} });
+	//#endregion
+	//#region src/view/paper-ext/TextItem.edit.js
+	(function() {
+		var editElem = $("<textarea style=\"resize: none;\">");
+		editElem.css("position", "absolute");
+		editElem.css("overflow", "hidden");
+		editElem.css("width", "100px");
+		editElem.css("height", "100px");
+		editElem.css("left", "0px");
+		editElem.css("top", "0px");
+		editElem.css("resize", "none");
+		editElem.css("line-height", "1.2");
+		editElem.css("background-color", "#ffffff");
+		editElem.css("box-sizing", "content-box");
+		editElem.css("-moz-box-sizing", "content-box");
+		editElem.css("-webkit-box-sizing", "content-box");
+		editElem.css("border", "none");
+		paper.TextItem.inject({
+			attachTextArea: function(paper) {
+				if (editElem) editElem.remove();
+				$(paper.view.element.offsetParent).append(editElem);
+				editElem.focus();
+				var clone = this.clone();
+				clone.rotation = 0;
+				clone.scaling = new paper.Point(1, 1);
+				clone.remove();
+				var extraPadding = 3;
+				var width = clone.bounds.width * paper.view.zoom + extraPadding;
+				var height = clone.bounds.height * paper.view.zoom + extraPadding;
+				editElem.css("width", width + "px");
+				editElem.css("height", height + "px");
+				var outlineWidth = 1;
+				editElem.css("outline", outlineWidth * paper.view.zoom + "px dashed black");
+				var position = paper.view.projectToView(clone.bounds.topLeft.x, clone.bounds.topLeft.y);
+				position.x -= extraPadding / 2 + outlineWidth;
+				position.y -= extraPadding / 2 + outlineWidth;
+				var scale = this.scaling;
+				var rotation = this.rotation;
+				var fontSize = this.fontSize * paper.view.zoom;
+				var fontFamily = this.fontFamily;
+				var content = this.content;
+				editElem.css("font-family", fontFamily);
+				editElem.css("font-size", fontSize);
+				editElem.val(content);
+				var transformString = "";
+				transformString += "translate(" + position.x + "px," + position.y + "px) ";
+				transformString += "rotate(" + rotation + "deg) ";
+				transformString += "scale(" + scale.x + "," + scale.y + ") ";
+				editElem.css("transform", transformString);
+			},
+			edit: function(paper) {
+				this.attachTextArea(paper);
+				var self = this;
+				editElem[0].oninput = function() {
+					self.content = editElem[0].value;
+					self.attachTextArea(paper);
+				};
+			},
+			finishEditing: function() {
+				editElem.remove();
+			}
+		});
+	})();
+	//#endregion
+	//#region src/view/paper-ext/View.pressure.js
+	paper.View.inject({
+		pressure: 1,
+		enablePressure: function(args) {
+			let self = this;
+			$(this.element.parentElement).pressure({
+				change: function(force, event) {
+					self.pressure = force;
+				},
+				end: function() {
+					self.pressure = 0;
+				}
+			}, { polyfill: false });
+		}
+	});
+	//#endregion
+	//#region src/view/paper-ext/View.gestures.js
+	paper.View.inject({ enableGestures: function(args) {} });
+	//#endregion
+	//#region src/view/paper-ext/View.scrollToZoom.js
+	paper.View.inject({ enableScrollToZoom: function(args) {} });
+	//#endregion
+	//#region src/gui/GUIElement.js
+	Wick.GUIElement = class {
+		/**
+		* Create a new GUIElement
+		* @param {Wick.Base} model - The object containing the data to use to draw this GUIElement
+		*/
+		constructor(model) {
+			this.model = model;
+			this.canAutoScrollY = false;
+			this.canAutoScrollY = false;
+			this.cursor = "default";
+		}
+		/**
+		* The object to use the data from to create this GUIElement
+		* @type {Wick.Base}
+		*/
+		set model(model) {
+			this._model = model;
+		}
+		get model() {
+			return this._model;
+		}
+		/**
+		* The root GUIElement.
+		* @type {Wick.GUIElement}
+		*/
+		get project() {
+			if (!this._root) this._root = this.model.project.guiElement;
+			return this._root;
+		}
+		/**
+		* The canvas that this GUIElement belongs to.
+		*/
+		get canvas() {
+			return this.project._canvas;
+		}
+		/**
+		* The context of the canvas that this GUIElement belongs to.
+		*/
+		get ctx() {
+			return this.model.project.guiElement._ctx;
+		}
+		/**
+		* The current translation of the canvas. NOTE: This won't work without the following polyfill:
+		* https://github.com/goessner/canvas-currentTransform
+		* @type {object}
+		*/
+		get currentTranslation() {
+			var transform = this.ctx.currentTransform;
+			return {
+				x: transform.e,
+				y: transform.f
+			};
+		}
+		/**
+		* A copy of the transformation of the canvas when this object was drawn.
+		* @type {object}
+		*/
+		get localTranslation() {
+			return this._localTranslation;
+		}
+		/**
+		* The current grid cell width that all GUIElements are based off of.
+		* @type {number}
+		*/
+		get gridCellWidth() {
+			return Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH;
+		}
+		/**
+		* The current grid cell height that all GUIElements are based off of.
+		* @type {number}
+		*/
+		get gridCellHeight() {
+			return Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT;
+		}
+		/**
+		* The bounding box of the hit area for mouse interactions.
+		* @type {object}
+		*/
+		get bounds() {
+			return null;
+		}
+		/**
+		* The position of the mouse relative to this elements translation.
+		* @type {object}
+		*/
+		get localMouse() {
+			var translation = this.localTranslation;
+			return {
+				x: this.project._mouse.x - translation.x,
+				y: this.project._mouse.y - translation.y
+			};
+		}
+		/**
+		* Checks if this object is touching the mouse.
+		* @returns {boolean}
+		*/
+		mouseInBounds(mouse) {
+			if (!this.bounds) return false;
+			var localMouse = this.localMouse;
+			var bounds = this.bounds;
+			return localMouse.x > bounds.x && localMouse.y > bounds.y && localMouse.x < bounds.x + bounds.width && localMouse.y < bounds.y + bounds.height;
+		}
+		/**
+		* Check if the mouse is hovering or clicking this element.
+		* @type {string}
+		*/
+		get mouseState() {
+			if (this === this.project._getTopMouseTarget()) {
+				if (this.project._isDragging) return "down";
+				else return "over";
+			} else return "out";
+		}
+		/**
+		* Draw this GUIElement
+		*/
+		draw() {
+			this._localTranslation = this.currentTranslation;
+			this.project.markElementAsDrawn(this);
+		}
+		/**
+		* The function to call when the mouse clicks this element.
+		*/
+		onMouseDown(e) {}
+		/**
+		* The function to call when the mouse drags this element.
+		*/
+		onMouseDrag(e) {}
+		/**
+		* The function to call when the mouse finishes a click on this element.
+		*/
+		onMouseUp(e) {}
+		/**
+		* Causes the project to call it's onProjectModified function. Call this after modifying the project.
+		*/
+		projectWasModified() {
+			this.project._onProjectModified();
+		}
+		/**
+		* Causes the project to call it's onProjectSoftModified function. Call this after modifying the project.
+		*/
+		projectWasSoftModified() {
+			this.project._onProjectSoftModified();
+		}
+	};
+	Wick.GUIElement.IS_MOBILE = window.innerWidth < 600;
+	Wick.GUIElement.GRID_SMALL_CELL_WIDTH = 22;
+	Wick.GUIElement.GRID_SMALL_CELL_HEIGHT = 32;
+	Wick.GUIElement.GRID_NORMAL_CELL_WIDTH = 38;
+	Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT = 42;
+	Wick.GUIElement.GRID_LARGE_CELL_WIDTH = 62;
+	Wick.GUIElement.GRID_LARGE_CELL_HEIGHT = 52;
+	const userAgent = navigator.userAgent.toLowerCase();
+	if (/(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(userAgent)) {
+		Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
+		Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
+	} else {
+		Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
+		Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
+	}
+	const _savedFrameSize = localStorage.getItem("wickEditorFrameSizeMode");
+	if (_savedFrameSize) switch (_savedFrameSize) {
+		case "small":
+			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
+			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_SMALL_CELL_HEIGHT;
+			break;
+		case "large":
+			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
+			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
+			break;
+		case "normal":
+		default:
+			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
+			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
+	}
+	Wick.GUIElement.GRID_MARGIN = 1;
+	Wick.GUIElement.TIMELINE_BACKGROUND_COLOR = "#2A2E30";
+	Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR = "#00ADEF";
+	Wick.GUIElement.BREADCRUMBS_HEIGHT = 30;
+	Wick.GUIElement.BREADCRUMBS_BG_COLOR = "#202122";
+	Wick.GUIElement.BREADCRUMBS_ACTIVE_BUTTON_FILL_COLOR = "#2A2E30";
+	Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR = "#202122";
+	Wick.GUIElement.BREADCRUMBS_HOVER_BUTTON_FILL_COLOR = "#6F6F6F";
+	Wick.GUIElement.BREADCRUMBS_SHADOW_COLOR = "#000000";
+	Wick.GUIElement.BREADCRUMBS_DROP_SHADOW_DEPTH = 2;
+	Wick.GUIElement.BREADCRUMBS_ACTIVE_BORDER_COLOR = "#1EE29A";
+	Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT = 3;
+	Wick.GUIElement.BREADCRUMBS_PADDING = 5;
+	Wick.GUIElement.LAYERS_CONTAINER_LARGE = 160;
+	Wick.GUIElement.LAYERS_CONTAINER_SMALL = 100;
+	Wick.GUIElement.LAYERS_CONTAINER_WIDTH = Wick.GUIElement.IS_MOBILE ? Wick.GUIElement.LAYERS_CONTAINER_SMALL : Wick.GUIElement.LAYERS_CONTAINER_LARGE;
+	Wick.GUIElement.NUMBER_LINE_HEIGHT = 35;
+	Wick.GUIElement.NUMBER_LINE_NUMBERS_HIGHLIGHT_COLOR = "#ffffff";
+	Wick.GUIElement.NUMBER_LINE_NUMBERS_COMMON_COLOR = "#494949";
+	Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_FAMILY = "PT Mono";
+	Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_SIZE = "18";
+	Wick.GUIElement.FRAME_HEIGHT = Wick.GUIElement.FRAMES_STRIP_HEIGHT;
+	Wick.GUIElement.FRAME_HOVERED_OVER = "#1EE29A";
+	Wick.GUIElement.FRAME_TWEENED_HOVERED_OVER = "#ddddff";
+	Wick.GUIElement.FRAME_CONTENTFUL_FILL_COLOR = "#ffffff";
+	Wick.GUIElement.FRAME_AUDIO_FILL_COLOR = "#ccffff";
+	Wick.GUIElement.FRAME_UNCONTENTFUL_FILL_COLOR = "rgba(233,233,233,0.8)";
+	Wick.GUIElement.FRAME_TWEENED_FILL_COLOR = "#ffffff";
+	Wick.GUIElement.FRAME_BORDER_RADIUS = 5;
+	Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS = 7;
+	Wick.GUIElement.FRAME_CONTENT_DOT_STROKE_WIDTH = 3;
+	Wick.GUIElement.FRAME_CONTENT_DOT_COLOR = "#1EE29A";
+	Wick.GUIElement.FRAME_MARGIN = .5;
+	Wick.GUIElement.FRAME_DROP_SHADOW_DEPTH = 2;
+	Wick.GUIElement.FRAME_DROP_SHADOW_FILL = "rgba(0,0,0,1)";
+	Wick.GUIElement.FRAME_SCRIPT_DOT_COLOR = "#F5A623";
+	Wick.GUIElement.FRAME_HANDLE_HOVER_FILL_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+	Wick.GUIElement.FRAME_HANDLE_WIDTH = 12;
+	Wick.GUIElement.TWEEN_DIAMOND_RADIUS = 7;
+	Wick.GUIElement.TWEEN_STROKE_WIDTH = 3;
+	Wick.GUIElement.TWEEN_FILL_COLOR_1 = "#494949";
+	Wick.GUIElement.TWEEN_FILL_COLOR_2 = "#8E8E8E";
+	Wick.GUIElement.TWEEN_HOVER_COLOR_1 = "#09C07D";
+	Wick.GUIElement.TWEEN_HOVER_COLOR_2 = "#1EE29A";
+	Wick.GUIElement.TWEEN_STROKE_COLOR = "#222244";
+	Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH = 2;
+	Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR = "#8E8E8E";
+	Wick.GUIElement.FRAME_GHOST_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+	Wick.GUIElement.FRAME_GHOST_NOT_ALLOWED_COLOR = "#ff0000";
+	Wick.GUIElement.FRAME_GHOST_OPACITY = .45;
+	Wick.GUIElement.FRAME_GHOST_STROKE_WIDTH = 5;
+	Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH = 3;
+	Wick.GUIElement.FRAMES_STRIP_VERTICAL_MARGIN = 4;
+	Wick.GUIElement.FRAMES_STRIP_ACTIVE_FILL_COLOR = "rgba(216, 216, 216, 0.31)";
+	Wick.GUIElement.FRAMES_STRIP_INACTIVE_FILL_COLOR = "rgba(95, 97, 99, 0.31)";
+	Wick.GUIElement.FRAMES_STRIP_BORDER_RADIUS = 4;
+	Wick.GUIElement.ADD_FRAME_OVERLAY_FILL_COLOR = "#9E9E9E";
+	Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR = "#191919";
+	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR = "rgba(0,0,0,0.2)";
+	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_HIGHLIGHT_STROKE_COLOR = "rgba(255,255,255,0.3)";
+	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_WIDTH = 2.5;
+	Wick.GUIElement.PLAYHEAD_FILL_COLOR = "#FF5C5C";
+	Wick.GUIElement.PLAYHEAD_STROKE_COLOR = "#D83333";
+	Wick.GUIElement.PLAYHEAD_STROKE_WIDTH = 3;
+	Wick.GUIElement.PLAYHEAD_MARGIN = 8;
+	Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR = "#1EE29A";
+	Wick.GUIElement.LAYER_LABEL_INACTIVE_FILL_COLOR = "#B7B7B7";
+	Wick.GUIElement.LAYER_LABEL_HIDDEN_FILL_COLOR = "rgba(183, 183, 183, .1)";
+	Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS = 3;
+	Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM = 4;
+	Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES = 4;
+	Wick.GUIElement.LAYER_LABEL_FONT_FAMILY = "Nunito Sans";
+	Wick.GUIElement.LAYER_LABEL_FONT_SIZE = 18;
+	Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR = "#40002D";
+	Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR = "#322E2E";
+	Wick.GUIElement.LAYER_LABEL_FONT_WEIGHT = "600";
+	Wick.GUIElement.LAYER_LABEL_FONT_FAMILY = "Nunito Sans";
+	Wick.GUIElement.LAYER_LABEL_GHOST_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+	Wick.GUIElement.LAYER_LABEL_HOVER_COLOR = "#F5A623";
+	Wick.GUIElement.LAYER_BUTTON_ICON_COLOR = "#000000";
+	Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS = 10;
+	Wick.GUIElement.LAYER_BUTTON_ICON_OPACITY = .3;
+	Wick.GUIElement.LAYER_BUTTON_HOVER_COLOR = "#00ADEF";
+	Wick.GUIElement.LAYER_BUTTON_MOUSEDOWN_COLOR = "#0198D1";
+	Wick.GUIElement.LAYER_BUTTON_TOGGLE_ACTIVE_COLOR = "rgba(255,255,255,0.7)";
+	Wick.GUIElement.LAYER_BUTTON_TOGGLE_INACTIVE_COLOR = "rgba(255,255,255,0.01)";
+	Wick.GUIElement.ACTION_BUTTON_HOVER_COLOR = "#979797";
+	Wick.GUIElement.ACTION_BUTTON_COLOR = "#979797";
+	Wick.GUIElement.ACTION_BUTTON_RADIUS = 14;
+	Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH = 100;
+	Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH = 50;
+	Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR = "#191919";
+	Wick.GUIElement.SCROLLBAR_FILL_COLOR = "#B7B7B7";
+	Wick.GUIElement.SCROLLBAR_ACTIVE_FILL_COLOR = "#cccccc";
+	Wick.GUIElement.SCROLLBAR_SIZE = 18;
+	Wick.GUIElement.SCROLLBAR_MARGIN = 3;
+	Wick.GUIElement.SCROLLBAR_BORDER_RADIUS = 6;
+	Wick.GUIElement.AUTO_SCROLL_SPEED = .17;
+	//#endregion
+	//#region src/gui/Ghost.js
+	Wick.GUIElement.Ghost = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+		}
+		draw() {
+			super.draw();
+			this._mouseStart = this._mouseStart || {
+				x: this.localMouse.x,
+				y: this.localMouse.y
+			};
+			this._mouseEnd = {
+				x: this.localMouse.x,
+				y: this.localMouse.y
+			};
+			this._mouseDiff = {
+				x: this._mouseEnd.x - this._mouseStart.x,
+				y: this._mouseEnd.y - this._mouseStart.y
+			};
+			var moveRowCols = this._roundToGrid(this._mouseDiff.x, this._mouseDiff.y);
+			this.moveCols = moveRowCols.col;
+			this.moveRows = moveRowCols.row;
+			var startRowCols = this._roundToGrid(this._mouseStart.x, this._mouseStart.y);
+			this.startCol = startRowCols.col;
+			this.startRow = startRowCols.row;
+			var endRowCols = this._roundToGrid(this._mouseEnd.x, this._mouseEnd.y);
+			this.endCol = endRowCols.col;
+			this.endRow = endRowCols.row;
+		}
+		finish() {}
+		_roundToGrid(x, y) {
+			return {
+				col: Math.round(x / this.gridCellWidth),
+				row: Math.round(y / this.gridCellHeight)
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/Button.js
+	Wick.GUIElement.Button = class extends Wick.GUIElement {
+		/**
+		* Create a new button.
+		* @param {Wick.Base} model - See Wick.GUIElement constructor
+		* @param {function} clickFn - The function to call when the button is clicked
+		* @param {string} tooltip - (Optional) The title of the tooltip
+		*/
+		constructor(model, args) {
+			super(model);
+			if (!args) args = {};
+			this._clickFn = args.clickFn;
+			this._tooltip = args.tooltip;
+			this.tooltip = new Wick.GUIElement.Tooltip(this.model, this._tooltip);
+			this.cursor = "pointer";
+			this.lastPressed = 0;
+		}
+		draw() {
+			super.draw();
+		}
+		onMouseDown(e) {
+			let now = Date.now();
+			if (now - this.lastPressed > 150) {
+				this._clickFn(e);
+				this.lastPressed = now;
+			}
+		}
+	};
+	//#endregion
+	//#region src/gui/Icons.js
+	Wick.GUIElement.Icons = class {
+		static get dummyIcon() {
+			if (!this._dummyIcon) {
+				this._dummyIcon = new Image();
+				this._dummyIcon.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAEGWlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPrtzZyMkzlNsNIV0qD8NJQ2TVjShtLp/3d02bpZJNtoi6GT27s6Yyc44M7v9oU9FUHwx6psUxL+3gCAo9Q/bPrQvlQol2tQgKD60+INQ6Ium65k7M5lpurHeZe58853vnnvuuWfvBei5qliWkRQBFpquLRcy4nOHj4g9K5CEh6AXBqFXUR0rXalMAjZPC3e1W99Dwntf2dXd/p+tt0YdFSBxH2Kz5qgLiI8B8KdVy3YBevqRHz/qWh72Yui3MUDEL3q44WPXw3M+fo1pZuQs4tOIBVVTaoiXEI/MxfhGDPsxsNZfoE1q66ro5aJim3XdoLFw72H+n23BaIXzbcOnz5mfPoTvYVz7KzUl5+FRxEuqkp9G/Ajia219thzg25abkRE/BpDc3pqvphHvRFys2weqvp+krbWKIX7nhDbzLOItiM8358pTwdirqpPFnMF2xLc1WvLyOwTAibpbmvHHcvttU57y5+XqNZrLe3lE/Pq8eUj2fXKfOe3pfOjzhJYtB/yll5SDFcSDiH+hRkH25+L+sdxKEAMZahrlSX8ukqMOWy/jXW2m6M9LDBc31B9LFuv6gVKg/0Szi3KAr1kGq1GMjU/aLbnq6/lRxc4XfJ98hTargX++DbMJBSiYMIe9Ck1YAxFkKEAG3xbYaKmDDgYyFK0UGYpfoWYXG+fAPPI6tJnNwb7ClP7IyF+D+bjOtCpkhz6CFrIa/I6sFtNl8auFXGMTP34sNwI/JhkgEtmDz14ySfaRcTIBInmKPE32kxyyE2Tv+thKbEVePDfW/byMM1Kmm0XdObS7oGD/MypMXFPXrCwOtoYjyyn7BV29/MZfsVzpLDdRtuIZnbpXzvlf+ev8MvYr/Gqk4H/kV/G3csdazLuyTMPsbFhzd1UabQbjFvDRmcWJxR3zcfHkVw9GfpbJmeev9F08WW8uDkaslwX6avlWGU6NRKz0g/SHtCy9J30o/ca9zX3Kfc19zn3BXQKRO8ud477hLnAfc1/G9mrzGlrfexZ5GLdn6ZZrrEohI2wVHhZywjbhUWEy8icMCGNCUdiBlq3r+xafL549HQ5jH+an+1y+LlYBifuxAvRN/lVVVOlwlCkdVm9NOL5BE4wkQ2SMlDZU97hX86EilU/lUmkQUztTE6mx1EEPh7OmdqBtAvv8HdWpbrJS6tJj3n0CWdM6busNzRV3S9KTYhqvNiqWmuroiKgYhshMjmhTh9ptWhsF7970j/SbMrsPE1suR5z7DMC+P/Hs+y7ijrQAlhyAgccjbhjPygfeBTjzhNqy28EdkUh8C+DU9+z2v/oyeH791OncxHOs5y2AtTc7nb/f73TWPkD/qwBnjX8BoJ98VQNcC+8AAAALSURBVAgdY/gPBAAJ+wP9DLtb5wAAAABJRU5ErkJggg==";
+			}
+			return this._dummyIcon;
+		}
+		static get icons() {
+			if (!this._icons) this._icons = {};
+			return this._icons;
+		}
+		static loadIcon(name, src) {
+			Wick.GUIElement.Icons.dummyIcon;
+			if (this.icons && this.icons[name]) return;
+			this.icons[name] = new Image();
+			this.icons[name].src = src;
+		}
+		static getIcon(name) {
+			var icon = this.icons[name];
+			if (!icon) return Wick.GUIElement.Icons.dummyIcon;
+			return icon;
+		}
+	};
+	//#endregion
+	//#region src/gui/FramesContainer.js
+	Wick.GUIElement.FramesContainer = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.canAutoScrollX = true;
+			this.canAutoScrollY = true;
+			this._frameStrips = {};
+			this._frameGhost = null;
+			this._selectionBox = null;
+		}
+		draw() {
+			super.draw();
+			this.addFrameCol = Math.floor(this.localMouse.x / this.gridCellWidth);
+			this.addFrameRow = Math.floor(this.localMouse.y / this.gridCellHeight);
+			var ctx = this.ctx;
+			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
+			ctx.beginPath();
+			ctx.rect(this.project.scrollX, this.project.scrollY, this.canvas.width, this.canvas.height);
+			ctx.fill();
+			ctx.save();
+			ctx.translate(2, 2);
+			this.model.layers.forEach((layer) => {
+				var i = layer.index;
+				ctx.save();
+				ctx.translate(0, i * this.gridCellHeight);
+				if (layer.isActive) ctx.fillStyle = Wick.GUIElement.FRAMES_STRIP_ACTIVE_FILL_COLOR;
+				else ctx.fillStyle = Wick.GUIElement.FRAMES_STRIP_INACTIVE_FILL_COLOR;
+				var width = this.canvas.width;
+				var height = Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT - 2;
+				ctx.beginPath();
+				ctx.rect(this.project.scrollX, 0, width, height);
+				ctx.fill();
+				ctx.restore();
+			});
+			ctx.lineWidth = 1;
+			ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR;
+			var skip = Math.round(this.project.scrollX / this.gridCellWidth);
+			for (var i = -1; i < this.canvas.width / this.gridCellWidth + 1; i++) {
+				ctx.beginPath();
+				var x = (i + skip) * this.gridCellWidth;
+				ctx.moveTo(x, this.project.scrollY);
+				ctx.lineTo(x, this.project.scrollY + this.canvas.height);
+				ctx.stroke();
+			}
+			var frames = this.model.getAllFrames();
+			var draggingFrames = frames.filter((frame) => {
+				if (frame.guiElement._ghost) return true;
+				if (frame.tweens.find((tween) => {
+					return tween.guiElement._ghost;
+				})) return true;
+				return false;
+			});
+			frames.forEach((frame) => {
+				if (draggingFrames.indexOf(frame) !== -1) return;
+				this._drawFrame(frame, true);
+			});
+			draggingFrames.forEach((frame) => {
+				this._drawFrame(frame, false);
+			});
+			if (this.mouseState === "over" && !this._selectionBox && this._addFrameOverlayIsActive()) {
+				this.cursor = "pointer";
+				var x = this.addFrameCol * this.gridCellWidth;
+				var y = this.addFrameRow * this.gridCellHeight;
+				ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_FILL_COLOR;
+				ctx.beginPath();
+				ctx.roundRect(x, y, this.gridCellWidth, this.gridCellHeight, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				ctx.fill();
+				ctx.font = "30px bold Courier New";
+				ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR;
+				ctx.globalAlpha = .5;
+				ctx.fillText("+", x + this.gridCellWidth / 2 - 8, y + this.gridCellHeight / 2 + 8);
+				ctx.globalAlpha = 1;
+			} else this.cursor = "default";
+			if (this._selectionBox) this._selectionBox.draw();
+			ctx.fillStyle = "rgba(0,0,0,0.2)";
+			ctx.beginPath();
+			ctx.rect(this.project.scrollX - 2, this.project.scrollY - 2, this.canvas.width, 2);
+			ctx.fill();
+			ctx.beginPath();
+			ctx.rect(this.project.scrollX - 2, this.project.scrollY - 2, this.canvas.width, 1);
+			ctx.fill();
+			ctx.restore();
+		}
+		_drawFrame(frame, enableCull) {
+			var ctx = this.ctx;
+			var frameStartX = (frame.start - 1) * this.gridCellWidth;
+			var frameStartY = frame.parentLayer.index * this.gridCellHeight;
+			var frameEndX = frameStartX + frame.length * this.gridCellWidth;
+			var frameEndY = frameStartY + this.gridCellHeight;
+			var framesContainerWidth = this.canvas.width - Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
+			var framesContainerHeight = this.canvas.height - Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.NUMBER_LINE_HEIGHT;
+			if (enableCull) {
+				var scrollX = this.project.scrollX;
+				var scrollY = this.project.scrollY;
+				if (frameEndX < scrollX || frameEndY < scrollY) return;
+				if (frameStartX > scrollX + framesContainerWidth || frameStartY > scrollY + framesContainerHeight) return;
+			}
+			ctx.save();
+			ctx.translate(frameStartX, frameStartY);
+			frame.guiElement.draw();
+			ctx.restore();
+		}
+		onMouseDrag() {
+			if (!this._selectionBox) this._selectionBox = new Wick.GUIElement.SelectionBox(this.model);
+			var newPlayhead = this.addFrameCol + 1;
+			if (this.model.playheadPosition !== newPlayhead) {
+				this.model.playheadPosition = newPlayhead;
+				this.projectWasSoftModified();
+			}
+		}
+		onMouseUp(e) {
+			if (this._selectionBox) {
+				if (!e.shiftKey) this.model.project.selection.clear();
+				this._selectionBox.finish();
+			} else if (this._addFrameOverlayIsActive()) {
+				var playheadPosition = this.addFrameCol + 1;
+				var layerIndex = this.addFrameRow;
+				var newFrame = new Wick.Frame({ start: playheadPosition });
+				this.model.layers[layerIndex].addFrame(newFrame);
+				this.model.project.selection.clear();
+				this.model.project.selection.select(newFrame);
+				newFrame.parentLayer.activate();
+				this.model.project.activeTimeline.playheadPosition = playheadPosition;
+				this.projectWasModified();
+			} else {
+				this.model.project.selection.clear();
+				this.projectWasModified();
+			}
+			this._selectionBox = null;
+		}
+		get bounds() {
+			return {
+				x: this.project.scrollX,
+				y: this.project.scrollY,
+				width: this.canvas.width,
+				height: this.canvas.height
+			};
+		}
+		_addFrameOverlayIsActive() {
+			return this.addFrameCol >= 0 && this.addFrameRow >= 0 && this.addFrameRow < this.model.layers.length && !this.model.layers[this.addFrameRow].getFrameAtPlayheadPosition(this.addFrameCol + 1);
+		}
+	};
+	//#endregion
+	//#region src/gui/Layer.js
+	Wick.GUIElement.Layer = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.cursor = "pointer";
+			this.canAutoScrollY = true;
+			this.hideButton = new Wick.GUIElement.LayerButton(model, {
+				toggledTooltip: "Show Layer",
+				untoggledTooltip: "Hide Layer",
+				toggledIcon: "show_layer",
+				untoggledIcon: "hide_layer",
+				isToggledFn: () => {
+					return this.model.hidden;
+				},
+				clickFn: () => {
+					this.model.hidden = !this.model.hidden;
+					this.model.activate();
+					this.projectWasModified();
+				}
+			});
+			this.lockButton = new Wick.GUIElement.LayerButton(model, {
+				toggledTooltip: "Unlock Layer",
+				untoggledTooltip: "Lock Layer",
+				toggledIcon: "unlock_layer",
+				untoggledIcon: "lock_layer",
+				isToggledFn: () => {
+					return this.model.locked;
+				},
+				clickFn: () => {
+					this.model.locked = !this.model.locked;
+					this.model.activate();
+					this.projectWasModified();
+				}
+			});
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			var mouseY = this.localMouse.y + this.model.index * this.gridCellHeight;
+			this.mouseLayerIndex = Math.round(mouseY / this.gridCellHeight) + 1;
+			this.mouseLayerIndex = Math.max(1, this.mouseLayerIndex);
+			this.mouseLayerIndex = Math.min(this.model.parentTimeline.layers.length + 1, this.mouseLayerIndex);
+			this.mouseLayerIndex -= this.model.index;
+			var width = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES * 2;
+			var height = this.gridCellHeight - Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM * 2;
+			if (this.model.hidden) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_HIDDEN_FILL_COLOR;
+			else if (this.model.isActive) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR;
+			else ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_INACTIVE_FILL_COLOR;
+			if (this.model.isSelected) {
+				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+				ctx.lineWidth = 3;
+			} else if (this.mouseState === "over" || this.mouseState === "down") {
+				ctx.lineWidth = 3;
+				ctx.strokeStyle = Wick.GUIElement.LAYER_LABEL_HOVER_COLOR;
+			} else {
+				ctx.strokeStyle = "rgba(0,0,0,0)";
+				ctx.lineWidth = 0;
+			}
+			ctx.save();
+			ctx.translate(Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES, Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM);
+			ctx.beginPath();
+			ctx.roundRect(0, 0, width, height, Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS);
+			ctx.fill();
+			ctx.stroke();
+			ctx.restore();
+			var maxWidth = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - 10;
+			ctx.save();
+			ctx.beginPath();
+			ctx.rect(0, 0, maxWidth, this.gridCellHeight);
+			ctx.clip();
+			ctx.font = "16px " + Wick.GUIElement.LAYER_LABEL_FONT_FAMILY;
+			ctx.fillStyle = this.model.isActive ? Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR : Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR;
+			ctx.fillText(this.model.name, 57, this.gridCellHeight / 2 + 6);
+			ctx.restore();
+			ctx.save();
+			ctx.translate(20, this.gridCellHeight / 2);
+			this.hideButton.draw(this.model.hidden ? "eye_closed" : "eye_open", this.model.hidden);
+			ctx.restore();
+			ctx.save();
+			ctx.translate(40, this.gridCellHeight / 2);
+			this.lockButton.draw(this.model.locked ? "lock_closed" : "lock_open", this.model.locked);
+			ctx.restore();
+			if (this.mouseState === "down") {
+				ctx.fillStyle = "red";
+				ctx.save();
+				ctx.translate(0, (this.mouseLayerIndex - 1) * this.gridCellHeight);
+				ctx.beginPath();
+				ctx.moveTo(0, 0);
+				ctx.lineTo(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
+				ctx.stroke();
+				ctx.restore();
+			}
+		}
+		get bounds() {
+			return {
+				x: 0,
+				y: 0,
+				width: Wick.GUIElement.LAYERS_CONTAINER_WIDTH,
+				height: this.gridCellHeight
+			};
+		}
+		onMouseDown(e) {
+			this.model.activate();
+			this.model.project.selection.clear();
+			this.model.project.selection.select(this.model);
+			this.projectWasModified();
+		}
+		onMouseDrag(e) {}
+		onMouseUp(e) {
+			var moveIndex = this.mouseLayerIndex - 1 + this.model.index;
+			if (moveIndex === this.model.index) return;
+			if (moveIndex > this.model.index) moveIndex--;
+			this.model.move(moveIndex);
+			this.model.activate();
+			this.projectWasModified();
+		}
+	};
+	//#endregion
+	//#region src/gui/LayerCreateLabel.js
+	Wick.GUIElement.LayerCreateLabel = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.cursor = "pointer";
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			ctx.fillStyle = this.mouseState === "over" ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)";
+			var width = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES * 2;
+			var height = this.gridCellHeight - Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM * 2;
+			ctx.save();
+			ctx.translate(Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES, Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM);
+			ctx.beginPath();
+			ctx.roundRect(0, 0, width, height, Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS);
+			ctx.fill();
+			ctx.restore();
+			ctx.font = "20px " + Wick.GUIElement.LAYER_LABEL_FONT_FAMILY;
+			ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR;
+			ctx.fillText("+", Wick.GUIElement.LAYERS_CONTAINER_WIDTH / 2 - 5, this.gridCellHeight / 2 + 5);
+		}
+		get bounds() {
+			return {
+				x: 0,
+				y: 0,
+				width: Wick.GUIElement.LAYERS_CONTAINER_WIDTH,
+				height: this.gridCellHeight
+			};
+		}
+		onMouseDown(e) {
+			var newLayer = new Wick.Layer();
+			this.model.project.activeTimeline.addLayer(newLayer);
+			newLayer.activate();
+			this.model.project.selection.clear();
+			this.model.project.selection.select(newLayer);
+			this.projectWasModified();
+		}
+	};
+	//#endregion
+	//#region src/gui/LayersContainer.js
+	Wick.GUIElement.LayersContainer = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.layerCreateLabel = new Wick.GUIElement.LayerCreateLabel(model);
+		}
+		draw() {
+			var ctx = this.ctx;
+			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
+			ctx.beginPath();
+			ctx.rect(0, this.project.scrollY, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, this.canvas.height);
+			ctx.fill();
+			this.model.layers.forEach((layer) => {
+				ctx.save();
+				ctx.translate(0, layer.index * this.gridCellHeight);
+				layer.guiElement.draw();
+				ctx.restore();
+			});
+			ctx.save();
+			ctx.translate(0, this.model.layers.length * this.gridCellHeight);
+			this.layerCreateLabel.draw();
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/NumberLine.js
+	Wick.GUIElement.NumberLine = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.cursor = "grab";
+			this.canAutoScrollX = true;
+			this.playhead = new Wick.GUIElement.Playhead(model);
+			this.onionSkinRangeLeft = new Wick.GUIElement.OnionSkinRange(model, "left");
+			this.onionSkinRangeRight = new Wick.GUIElement.OnionSkinRange(model, "right");
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			ctx.save();
+			ctx.translate(2, 0);
+			this.mousePlayheadPosition = Math.floor(this.localMouse.x / this.gridCellWidth) + 1;
+			var width = this.canvas.width - Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
+			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT;
+			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
+			ctx.beginPath();
+			ctx.rect(this.project.scrollX - 2, 0, width, height);
+			ctx.fill();
+			for (var i = -1; i < width / this.gridCellWidth + 1; i++) {
+				var skip = Math.round(this.project.scrollX / this.gridCellWidth);
+				this._drawCell(i + skip);
+			}
+			if (this.model.project.onionSkinEnabled) {
+				ctx.save();
+				ctx.translate((this.model.playheadPosition - 1) * this.gridCellWidth + this.gridCellWidth / 2, 0);
+				this.onionSkinRangeLeft.draw();
+				this.onionSkinRangeRight.draw();
+				ctx.restore();
+			}
+			this.playhead.draw();
+			ctx.restore();
+		}
+		_drawCell(i) {
+			var ctx = this.ctx;
+			var highlight = i === 0 || i % 5 === 4;
+			if (this.project.frameSizeMode !== "small" || highlight) {
+				var fontSize = i >= 99 ? 13 : 16;
+				var fontFamily = Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_FAMILY;
+				ctx.font = fontSize + "px " + fontFamily;
+				if (highlight) ctx.fillStyle = Wick.GUIElement.NUMBER_LINE_NUMBERS_HIGHLIGHT_COLOR;
+				else ctx.fillStyle = Wick.GUIElement.NUMBER_LINE_NUMBERS_COMMON_COLOR;
+				var textContent = "" + (i + 1);
+				var textWidth = ctx.measureText(textContent).width;
+				ctx.fillText(textContent, i * this.gridCellWidth + this.gridCellWidth / 2 - textWidth / 2, Wick.GUIElement.NUMBER_LINE_HEIGHT - 5);
+			}
+			ctx.lineWidth = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_WIDTH;
+			if (highlight) ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_HIGHLIGHT_STROKE_COLOR;
+			else ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR;
+			ctx.beginPath();
+			var wallX = i * this.gridCellWidth;
+			ctx.moveTo(wallX, 0);
+			ctx.lineTo(wallX, Wick.GUIElement.NUMBER_LINE_HEIGHT);
+			ctx.stroke();
+		}
+		onMouseDown(e) {
+			this._movePlayhead();
+		}
+		onMouseDrag(e) {
+			this._movePlayhead();
+		}
+		onMouseUp(e) {
+			this.projectWasModified();
+		}
+		get bounds() {
+			return {
+				x: this.project.scrollX,
+				y: 0,
+				width: this.canvas.width,
+				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
+			};
+		}
+		_movePlayhead() {
+			var timeline = this.project.model.activeTimeline;
+			if (timeline.playheadPosition !== this.mousePlayheadPosition) {
+				timeline.playheadPosition = this.mousePlayheadPosition;
+				this.projectWasSoftModified();
+			}
+		}
+	};
+	//#endregion
+	//#region src/gui/OnionSkinRange.js
+	Wick.GUIElement.OnionSkinRange = class extends Wick.GUIElement {
+		constructor(model, direction) {
+			super(model);
+			this.cursor = "grab";
+			this.canAutoScrollX = true;
+			this.direction = direction;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			this.mousePlayheadPosition = Math.round(this.localMouse.x / this.gridCellWidth);
+			var seek = this.direction === "right" ? this.model.project.onionSkinSeekForwards : this.model.project.onionSkinSeekBackwards;
+			var width = Math.max(seek * this.gridCellWidth, this.gridCellWidth / 2);
+			var edgeWidth = this.gridCellWidth - Wick.GUIElement.PLAYHEAD_MARGIN * 2;
+			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT * .9;
+			var grd = ctx.createLinearGradient(0, 0, width + edgeWidth, 0);
+			grd.addColorStop(0, "rgba(255,92,92,0.2)");
+			grd.addColorStop(1, "rgba(255,92,92,1)");
+			ctx.fillStyle = grd;
+			ctx.lineWidth = 1, ctx.save();
+			ctx.globalAlpha = this.mouseState === "over" ? .5 : 1;
+			if (this.direction == "left") ctx.scale(-1, 1);
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(width, 0);
+			ctx.lineTo(width + edgeWidth / 2, 0);
+			ctx.lineTo(width + edgeWidth / 2, height * 2 / 3);
+			ctx.lineTo(width, height);
+			ctx.lineTo(0, height);
+			ctx.lineTo(0, 0);
+			ctx.fill();
+			ctx.restore();
+		}
+		onMouseDrag(e) {
+			if (this.direction === "right") this.model.project.onionSkinSeekForwards = Math.max(0, this.mousePlayheadPosition);
+			else if (this.direction === "left") this.model.project.onionSkinSeekBackwards = Math.max(0, -this.mousePlayheadPosition);
+			this.projectWasSoftModified();
+		}
+		get bounds() {
+			if (this.direction === "right") return {
+				x: this.gridCellWidth / 2,
+				y: 0,
+				width: Math.max(this.model.project.onionSkinSeekForwards * this.gridCellWidth, this.gridCellWidth / 3),
+				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
+			};
+			else if (this.direction === "left") return {
+				x: -this.model.project.onionSkinSeekBackwards * this.gridCellWidth - this.gridCellWidth / 2,
+				y: 0,
+				width: Math.max(this.model.project.onionSkinSeekBackwards * this.gridCellWidth, this.gridCellWidth / 3),
+				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/Playhead.js
+	Wick.GUIElement.Playhead = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			var margin = 0;
+			if (this.project.frameSizeMode === "small") margin = 2;
+			else if (this.project.frameSizeMode === "normal") margin = 8;
+			else if (this.project.frameSizeMode === "large") margin = 20;
+			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT - 2;
+			var width = this.gridCellWidth - margin * 2;
+			ctx.fillStyle = Wick.GUIElement.PLAYHEAD_FILL_COLOR;
+			ctx.strokeStyle = Wick.GUIElement.PLAYHEAD_FILL_COLOR;
+			ctx.lineWidth = 5, ctx.save();
+			ctx.translate((this.model.playheadPosition - 1) * this.gridCellWidth, 0);
+			var playheadX = this.gridCellWidth / 2 - Wick.GUIElement.PLAYHEAD_STROKE_WIDTH / 2 + 1.5;
+			ctx.strokeStyle = "Wick.GUIElement.PLAYHEAD_FILL_COLOR";
+			ctx.lineWidth = Wick.GUIElement.PLAYHEAD_STROKE_WIDTH;
+			ctx.beginPath();
+			ctx.moveTo(playheadX, 0);
+			ctx.lineTo(playheadX, this.canvas.height);
+			ctx.stroke();
+			ctx.save();
+			ctx.translate(margin, 0);
+			ctx.beginPath();
+			ctx.moveTo(0, 0);
+			ctx.lineTo(width, 0);
+			ctx.lineTo(width, height * 2 / 3);
+			ctx.lineTo(width / 2, height);
+			ctx.lineTo(0, height * 2 / 3);
+			ctx.lineTo(0, 0);
+			ctx.fill();
+			ctx.stroke();
+			var handleMargin = 3;
+			var handleSpacing = 4;
+			var handleLeft = handleMargin;
+			var handleRight = handleLeft + width - handleMargin * 2;
+			ctx.strokeStyle = Wick.GUIElement.PLAYHEAD_STROKE_COLOR;
+			ctx.lineWidth = 2;
+			for (var i = 0; i < 3; i++) {
+				ctx.beginPath();
+				ctx.moveTo(handleLeft, handleSpacing * (i + 1));
+				ctx.lineTo(handleRight, handleSpacing * (i + 1));
+				ctx.stroke();
+			}
+			ctx.restore();
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/PopupMenu.js
+	Wick.GUIElement.PopupMenu = class extends Wick.GUIElement {
+		constructor(model, args) {
+			super(model, args);
+			this.x = args.x;
+			this.y = args.y;
+			this.height = 40;
+			this.mode = args.mode;
+			this.extendFramesButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Extend Frames",
+				icon: "gap_fill_extend_frames",
+				clickFn: () => {
+					this.project.model.activeTimeline.fillGapsMethod = "auto_extend";
+					localStorage.setItem("wickEditorFillGapsMethod", "auto_extend");
+					this.projectWasModified();
+				}
+			});
+			this.emptyFramesButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Add Blank Frames",
+				icon: "gap_fill_empty_frames",
+				clickFn: () => {
+					this.project.model.activeTimeline.fillGapsMethod = "blank_frames";
+					localStorage.setItem("wickEditorFillGapsMethod", "blank_frames");
+					this.projectWasModified();
+				}
+			});
+			this.smallFramesButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Small",
+				icon: "small_frames",
+				clickFn: () => {
+					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
+					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_SMALL_CELL_HEIGHT;
+					localStorage.setItem("wickEditorFrameSizeMode", "small");
+				}
+			});
+			this.normalFramesButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Medium",
+				icon: "normal_frames",
+				clickFn: () => {
+					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
+					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
+					localStorage.setItem("wickEditorFrameSizeMode", "normal");
+				}
+			});
+			this.largeFramesButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Large",
+				icon: "large_frames",
+				clickFn: () => {
+					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
+					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
+					localStorage.setItem("wickEditorFrameSizeMode", "large");
+				}
+			});
+		}
+		draw(isActive) {
+			super.draw();
+			if (this.mode === "gapfill") this._drawFrameGapsButtons();
+			else if (this.mode === "framesize") this._drawFrameSizeButtons();
+		}
+		_drawFrameGapsButtons() {
+			var ctx = this.ctx;
+			var method = this.project.model.activeTimeline.fillGapsMethod;
+			ctx.save();
+			ctx.translate(this.x, this.y - this.height);
+			ctx.fillStyle = "#111";
+			ctx.beginPath();
+			ctx.roundRect(0, 0, 80, 40, 3);
+			ctx.fill();
+			ctx.save();
+			ctx.translate(20, 20);
+			this.extendFramesButton.toggled = method === "auto_extend";
+			this.extendFramesButton.draw(method !== "auto_extend");
+			ctx.restore();
+			ctx.save();
+			ctx.translate(57, 20);
+			this.emptyFramesButton.toggled = method === "blank_frames";
+			this.emptyFramesButton.draw(method !== "blank_frames");
+			ctx.restore();
+			ctx.restore();
+		}
+		_drawFrameSizeButtons() {
+			var ctx = this.ctx;
+			var currentSize = Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH;
+			var smallSize = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
+			var normalSize = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
+			var largeSize = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
+			ctx.save();
+			ctx.translate(this.x, this.y - this.height);
+			ctx.fillStyle = "#111";
+			ctx.beginPath();
+			ctx.roundRect(0, 0, 120, 40, 3);
+			ctx.fill();
+			ctx.save();
+			ctx.translate(20, 20);
+			this.smallFramesButton.toggled = currentSize === smallSize;
+			this.smallFramesButton.draw(currentSize !== smallSize);
+			ctx.restore();
+			ctx.save();
+			ctx.translate(57, 20);
+			this.normalFramesButton.toggled = currentSize === normalSize;
+			this.normalFramesButton.draw(currentSize !== normalSize);
+			ctx.restore();
+			ctx.save();
+			ctx.translate(94, 20);
+			this.largeFramesButton.toggled = currentSize === largeSize;
+			this.largeFramesButton.draw(currentSize !== largeSize);
+			ctx.restore();
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/Project.js
+	/**
+	* The Project GUIElement handles the creation of the canvas and drawing the rest of the GUIElements.
+	*/
+	Wick.GUIElement.Project = class extends Wick.GUIElement {
+		/**
+		* Create a new GUIElement and build the canvas.
+		*/
+		constructor(model) {
+			super(model);
+			this._canvas = document.createElement("canvas");
+			this._ctx = this._canvas.getContext("2d");
+			this._canvasContainer = document.createElement("div");
+			this._canvasContainer.style.width = "100%";
+			this._canvasContainer.style.height = "100%";
+			this._canvasContainer.appendChild(this._canvas);
+			this._drawnElements = [];
+			this._mouse = {
+				x: 0,
+				y: 0
+			};
+			this._mouseHoverTargets = [];
+			this._scrollX = 0;
+			this._scrollY = 0;
+			this._popupMenu = null;
+			this._onProjectModified = () => {};
+			this._onProjectSoftModified = () => {};
+			this._attachedDocumentEvents = [];
+			this._attachedCanvasEvents = [];
+		}
+		/**
+		* Create an event on the document. Saves a reference to the event internally.
+		*/
+		createDocumentEvent(event, callback, c) {
+			document.addEventListener(event, callback, c);
+			this._attachedDocumentEvents.push({
+				event,
+				fn: callback
+			});
+		}
+		/**
+		* Create an event on the canvas. Saves a reference to the event internally.
+		*/
+		createCanvasEvent(event, callback, c) {
+			this._canvas.addEventListener(event, callback, c);
+			this._attachedCanvasEvents.push({
+				event,
+				fn: callback
+			});
+		}
+		/**
+		* Removes all events from the document and canvas.
+		*/
+		removeAllEventListeners() {
+			this._attachedDocumentEvents.forEach((evt) => {
+				document.removeEventListener(evt.event, evt.fn);
+			});
+			this._attachedCanvasEvents.forEach((evt) => {
+				this._canvas.removeEventListener(evt.event, evt.fn);
+			});
+		}
+		/**
+		* The div containing the GUI canvas
+		*/
+		get canvasContainer() {
+			return this._canvasContainer;
+		}
+		set canvasContainer(canvasContainer) {
+			this._canvasContainer = canvasContainer;
+			if (this._canvas !== this._canvasContainer.children[0]) {
+				this._canvasContainer.innerHTML = "";
+				this._canvasContainer.appendChild(this._canvas);
+			}
+			if (!this._mouseEventsAttached) {
+				this.createDocumentEvent("mousemove", (e) => {
+					if (e.touches) return;
+					this._onMouseMove(e);
+				}, false);
+				this.createDocumentEvent("mouseup", (e) => {
+					if (e.touches) return;
+					this._onMouseUp(e);
+				}, false);
+				this.createCanvasEvent("mousedown", (e) => {
+					if (e.touches) return;
+					this._timeline_onMouseDown(e);
+				}, false);
+				this.createDocumentEvent("mousedown", (e) => {
+					if (e.touches) return;
+					if (e.target !== this._canvas) {
+						this.closePopupMenu();
+						this.draw();
+					}
+				}, false);
+				$(this._canvas).on("mousewheel", this._onMouseWheel.bind(this));
+				this.createCanvasEvent("touchstart", (e) => {
+					e.buttons = 0;
+					e.clientX = e.touches[0].clientX;
+					e.clientY = e.touches[0].clientY;
+					this._touchStartX = e.clientX;
+					this._touchStartY = e.clientY;
+					e.movementX = e.touches[0].movementX;
+					e.movementY = e.touches[0].movementY;
+					this._onMouseMove(e);
+					this._timeline_onMouseDown(e);
+				}, false);
+				this.createDocumentEvent("touchmove", (e) => {
+					e.buttons = 1;
+					e.clientX = e.touches[0].clientX;
+					e.clientY = e.touches[0].clientY;
+					e.movementX = e.clientX - this._touchStartX;
+					e.movementY = e.clientY - this._touchStartY;
+					this._touchStartX = e.clientX;
+					this._touchStartY = e.clientY;
+					this._onMouseMove(e);
+				}, false);
+				this.createDocumentEvent("touchend", (e) => {
+					this._onMouseUp(e);
+				}, false);
+				this._mouseEventsAttached = true;
+			}
+		}
+		/**
+		* Resize the canvas so that it fits inside the canvas container, call this when the size of the canvas container changes.
+		*/
+		resize() {
+			if (!this._canvasContainer || !this._canvas) return;
+			var containerWidth = this.canvasContainer.offsetWidth;
+			var containerHeight = this.canvasContainer.offsetHeight;
+			containerWidth = Math.floor(containerWidth) - 2;
+			containerHeight = Math.floor(containerHeight) - 1;
+			if (this._canvas.width !== containerWidth) this._canvas.width = containerWidth;
+			if (this._canvas.height !== containerHeight) this._canvas.height = containerHeight;
+		}
+		/**
+		* Draw this GUIElement and update the mouse state
+		*/
+		draw() {
+			var ctx = this.ctx;
+			this.resize();
+			this._drawnElements = [];
+			ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			this.model.activeTimeline.guiElement.draw();
+			if (this._popupMenu) this._popupMenu.draw();
+			this._mouseHoverTargets.forEach((target) => {
+				if (target.tooltip) target.tooltip.draw(target.localTranslation.x, target.localTranslation.y);
+			});
+		}
+		/**
+		* Give a function to call when the timeline modifies the project.
+		* @param {function} fn - the function to call
+		*/
+		onProjectModified(fn) {
+			this._onProjectModified = fn;
+		}
+		/**
+		* Give a function to call when the timeline "soft modifies" the project (moving the playhead, etc).
+		* @param {function} fn - the function to call
+		*/
+		onProjectSoftModified(fn) {
+			this._onProjectSoftModified = fn;
+		}
+		/**
+		* Add a GUIElement to the list of objects that were drawn in the last draw call.
+		* @param {Wick.GUIElement} elem - the GUIElement to add
+		*/
+		markElementAsDrawn(elem) {
+			this._drawnElements.push(elem);
+		}
+		/**
+		* The amount the timeline is scrolled horizontally.
+		* @type {number}
+		*/
+		get scrollX() {
+			return this._scrollX;
+		}
+		set scrollX(scrollX) {
+			if (scrollX < 0) scrollX = 0;
+			if (scrollX > this.horizontalScrollSpace) scrollX = this.horizontalScrollSpace;
+			this._scrollX = scrollX;
+		}
+		/**
+		* The amount the timeline is scrolled vertically.
+		* @type {number}
+		*/
+		get scrollY() {
+			return this._scrollY;
+		}
+		set scrollY(scrollY) {
+			if (scrollY < 0) scrollY = 0;
+			if (scrollY > this.verticalScrollSpace) scrollY = this.verticalScrollSpace;
+			this._scrollY = scrollY;
+		}
+		/**
+		* The amount of distance the timeline can be scrolled horizontally. Depends on the number of frames.
+		* @type {number}
+		*/
+		get horizontalScrollSpace() {
+			return this.model.activeTimeline.length * this.gridCellWidth * 3 + 500;
+		}
+		/**
+		* The amount of distance the timeline can be scrolled vertically. Depends on the number of layers.
+		* @type {number}
+		*/
+		get verticalScrollSpace() {
+			return this.model.activeTimeline.layers.length * this.gridCellHeight + this.gridCellHeight * 2;
+		}
+		/**
+		* Open a popup menu
+		* @param {Wick.GUIElement.PopupMenu} popupMenu - the PopupMenu to open
+		*/
+		openPopupMenu(popupMenu) {
+			this._popupMenu = popupMenu;
+			this.draw();
+		}
+		/**
+		* Close the current popup menu
+		*/
+		closePopupMenu() {
+			this._popupMenu = null;
+			this.draw();
+		}
+		/**
+		* String representation of the current frame size, can be "small", "normal", or "large".
+		* @type {string}
+		*/
+		get frameSizeMode() {
+			if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_SMALL_CELL_WIDTH) return "small";
+			else if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_NORMAL_CELL_WIDTH) return "normal";
+			else if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_LARGE_CELL_WIDTH) return "large";
+		}
+		/**
+		* Drop an asset onto the timeline.
+		* @param {string} uuid - The UUID of the desired asset.
+		* @param {number} x - The x location of the image after creation in relation to the window.
+		* @param {number} y - The y location of the image after creation in relation to the window.
+		* @param {boolean} drop - If true, will drop the asset with the uuid onto the hovered frame, modifying the frame.
+		*/
+		dragAssetAtPosition(uuid, x, y, drop) {
+			this._onMouseMove({
+				clientX: x,
+				clientY: y,
+				buttons: 0
+			});
+			var target = this._getTopMouseTarget();
+			if (!target || !(target.model instanceof Wick.Frame)) return;
+			var frame = target.model;
+			var asset = target.project.model.getAssetByUUID(uuid);
+			var oldSound = frame.sound;
+			frame.sound = asset;
+			if (drop) this.projectWasModified();
+			else {
+				this.draw();
+				if (oldSound) frame.sound = oldSound;
+				else frame.removeSound();
+			}
+		}
+		/**
+		* Auto scrolls the timeline if the playhead is considered off-screen.
+		* This is built specifically for moving the playead with hotkeys.
+		*/
+		checkForPlayheadAutoscroll() {
+			var scrollWidth = this.canvas.width;
+			scrollWidth -= Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
+			scrollWidth -= Wick.GUIElement.SCROLLBAR_SIZE;
+			scrollWidth -= this.gridCellWidth;
+			var scrollMin = this.scrollX;
+			var scrollMax = this.scrollX + scrollWidth;
+			var playheadX = (this.model.activeTimeline.playheadPosition - 1) * this.gridCellWidth;
+			if (playheadX < scrollMin) {
+				this.scrollX = playheadX;
+				this.draw();
+			}
+			if (playheadX > scrollMax) {
+				this.scrollX = playheadX - scrollWidth;
+				this.draw();
+			}
+		}
+		_onMouseMove(e) {
+			var rect = this._canvas.getBoundingClientRect();
+			this._mouse = {
+				x: e.clientX - rect.left,
+				y: e.clientY - rect.top
+			};
+			var mouseOffCanvas = this._mouse.x < 0 || this._mouse.y < 0 || this._mouse.x > this.canvas.width || this._mouse.y > this.canvas.height;
+			if (e.buttons === 0 && !this.canvasClicked && mouseOffCanvas) {
+				if (this._mouseHoverTargets.length > 0) {
+					this._mouseHoverTargets = [];
+					this.draw();
+				}
+				return;
+			}
+			if (e.buttons === 0) {
+				this._mouseHoverTargets = this._drawnElements.filter((elem) => {
+					return elem.model.project && elem.mouseInBounds(this._mouse);
+				});
+				var top = this._getTopMouseTarget();
+				if (top) this.canvas.style.cursor = top.cursor;
+				else this.canvas.style.cursor = "default";
+			} else if (!this.canvasClicked) {} else if (!this._mouseHasMoved(this._clickXY, {
+				x: e.clientX,
+				y: e.clientY
+			}, 5)) {} else this._onMouseDrag(e);
+			this.draw();
+		}
+		_timeline_onMouseDown(e) {
+			this.closePopupMenu();
+			this.canvasClicked = true;
+			this._clickXY = {
+				x: e.clientX,
+				y: e.clientY
+			};
+			if (this._mouseHoverTargets.length === 0) this.model.selection.clear();
+			else {
+				this._lastClickedElem = this._getTopMouseTarget();
+				this._lastClickedElem.onMouseDown(e);
+			}
+			this.draw();
+		}
+		_onMouseUp(e) {
+			var target = this._getTopMouseTarget();
+			if (this.canvasClicked && this._isDragging) target && target.onMouseUp(e);
+			else if (this.canvasClicked && this._lastClickedElem === target) target && target.onMouseUp(e);
+			this.canvasClicked = false;
+			this._isDragging = false;
+			this.draw();
+			this._onMouseMove(e);
+			clearInterval(this.autoscrollInterval);
+			this.autoscrollInterval = null;
+		}
+		_onMouseDrag(e) {
+			this._isDragging = true;
+			var target = this._getTopMouseTarget();
+			if (target) {
+				this.canvas.style.cursor = "grabbing";
+				target.onMouseDrag(e);
+				this._doAutoScroll(target);
+			}
+		}
+		/**
+		* Refers to mousewheel events on the timeline.
+		* @param {*} e 
+		*/
+		_onMouseWheel(e) {
+			e.preventDefault();
+			if (!this.model.isPublished) {
+				var dx = e.deltaX * e.deltaFactor * .5;
+				var dy = e.deltaY * e.deltaFactor * .5;
+				this.scrollX += dx;
+				this.scrollY -= dy;
+				this.draw();
+			}
+		}
+		_getTopMouseTarget() {
+			var l = this._mouseHoverTargets.length - 1;
+			return this._mouseHoverTargets[l];
+		}
+		_doAutoScroll(target) {
+			if (this.autoscrollInterval) return;
+			this.autoscrollInterval = setInterval(() => {
+				var left = Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
+				var right = this.canvas.width - Wick.GUIElement.SCROLLBAR_SIZE;
+				var top = Wick.GUIElement.NUMBER_LINE_HEIGHT + Wick.GUIElement.BREADCRUMBS_HEIGHT;
+				var bottom = this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE;
+				var distFromLeft = this._mouse.x - left;
+				var distFromRight = this._mouse.x - right;
+				var distFromTop = this._mouse.y - top;
+				var distFromBottom = this._mouse.y - bottom;
+				if (target.canAutoScrollX) {
+					if (this._mouse.x > right) this.scrollX += distFromRight * Wick.GUIElement.AUTO_SCROLL_SPEED;
+					if (this._mouse.x < left) this.scrollX += distFromLeft * Wick.GUIElement.AUTO_SCROLL_SPEED;
+				}
+				if (target.canAutoScrollY) {
+					if (this._mouse.y > bottom) this.scrollY += distFromBottom * Wick.GUIElement.AUTO_SCROLL_SPEED;
+					if (this._mouse.y < top) this.scrollY += distFromTop * Wick.GUIElement.AUTO_SCROLL_SPEED;
+				}
+				this.draw();
+			}, 16);
+		}
+		_mouseHasMoved(origMouse, currMouse, amount) {
+			var d = {
+				x: Math.abs(origMouse.x - currMouse.x),
+				y: Math.abs(origMouse.y - currMouse.y)
+			};
+			return d.x > amount || d.y > amount;
+		}
+	};
+	//#endregion
+	//#region src/gui/Scrollbar.js
+	Wick.GUIElement.Scrollbar = class extends Wick.GUIElement {
+		constructor(model, direction) {
+			super(model);
+			this.grabber = new Wick.GUIElement.ScrollbarGrabber(this.model, direction);
+			this.direction = direction;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			this.maxWidth = this.canvas.width - this.localTranslation.x - Wick.GUIElement.SCROLLBAR_SIZE;
+			this.maxHeight = this.canvas.height - this.localTranslation.y - Wick.GUIElement.SCROLLBAR_SIZE;
+			var size = Wick.GUIElement.SCROLLBAR_SIZE;
+			if (!this._canScrollVertically() && this.direction === "vertical") {
+				this.project.scrollY = 0;
+				return;
+			}
+			ctx.fillStyle = Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR;
+			ctx.beginPath();
+			if (this.direction === "horizontal") ctx.rect(0, 0, this.maxWidth, size);
+			else if (this.direction === "vertical") ctx.rect(0, 0, size, this.maxHeight);
+			ctx.fill();
+			if (this.direction === "horizontal") {
+				ctx.fillStyle = Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR;
+				ctx.beginPath();
+				ctx.roundRect(this.maxWidth, 0, this.maxWidth + size, size, 0);
+				ctx.fill();
+			}
+			ctx.save();
+			var pos = this._getScrollbarPosition();
+			if (this.direction === "horizontal") ctx.translate(pos.x, 0);
+			else if (this.direction === "vertical") ctx.translate(0, pos.y);
+			this.grabber.scrollRatioX = this.project.horizontalScrollSpace / (this.maxWidth - Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH);
+			this.grabber.scrollRatioY = this.project.verticalScrollSpace / (this.maxHeight - Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH);
+			this.grabber.draw();
+			ctx.restore();
+		}
+		_canScrollVertically() {
+			return this.model.project.activeTimeline.layers.length > 1;
+		}
+		_getScrollbarPosition() {
+			return {
+				x: this.project.scrollX / this.project.horizontalScrollSpace * (this.maxWidth - Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH),
+				y: this.project.scrollY / this.project.verticalScrollSpace * (this.maxHeight - Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH)
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/ScrollbarGrabber.js
+	Wick.GUIElement.ScrollbarGrabber = class extends Wick.GUIElement {
+		constructor(model, direction) {
+			super(model);
+			this.cursor = "grab";
+			this.direction = direction;
+			this.horizontalLength = 100;
+			this.verticalLength = 50;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			var fillColor = this.mouseState === "over" ? Wick.GUIElement.SCROLLBAR_ACTIVE_FILL_COLOR : Wick.GUIElement.SCROLLBAR_FILL_COLOR;
+			var r = Wick.GUIElement.SCROLLBAR_BORDER_RADIUS;
+			var s = Wick.GUIElement.SCROLLBAR_SIZE - Wick.GUIElement.SCROLLBAR_MARGIN;
+			ctx.fillStyle = fillColor;
+			ctx.save();
+			ctx.translate(Wick.GUIElement.SCROLLBAR_MARGIN / 2, Wick.GUIElement.SCROLLBAR_MARGIN / 2);
+			if (this.direction === "horizontal") {
+				ctx.beginPath();
+				ctx.roundRect(0, 0, this.horizontalLength, s, r);
+				ctx.fill();
+			} else if (this.direction === "vertical") {
+				ctx.beginPath();
+				ctx.roundRect(0, 0, s, this.verticalLength, r);
+				ctx.fill();
+			}
+			ctx.restore();
+		}
+		onMouseDrag(e) {
+			if (this.direction === "horizontal") this.project.scrollX += e.movementX * this.scrollRatioX;
+			else if (this.direction === "vertical") this.project.scrollY += e.movementY * this.scrollRatioY;
+		}
+		get bounds() {
+			if (this.direction === "horizontal") return {
+				x: 0,
+				y: 0,
+				width: this.horizontalLength,
+				height: Wick.GUIElement.SCROLLBAR_SIZE
+			};
+			else if (this.direction === "vertical") return {
+				x: 0,
+				y: 0,
+				width: Wick.GUIElement.SCROLLBAR_SIZE,
+				height: this.verticalLength
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/Timeline.js
+	/**
+	* The Timeline is responsible for drawing the following GUI elements:
+	* - Breadcrumbs
+	* - Frames Container
+	* - Layers Container
+	* - Horizontal + Vertical Scrollbars
+	* - Number Line
+	*/
+	Wick.GUIElement.Timeline = class extends Wick.GUIElement {
+		/**
+		* Create a new GUIElement
+		*/
+		constructor(model) {
+			super(model);
+			this.breadcrumbs = new Wick.GUIElement.Breadcrumbs(model);
+			this.actionButtonsContainer = new Wick.GUIElement.ActionButtonsContainer(model);
+			this.layersContainer = new Wick.GUIElement.LayersContainer(model);
+			this.framesContainer = new Wick.GUIElement.FramesContainer(model);
+			this.numberLine = new Wick.GUIElement.NumberLine(model);
+			this.horizontalScrollbar = new Wick.GUIElement.Scrollbar(model, "horizontal");
+			this.verticalScrollbar = new Wick.GUIElement.Scrollbar(model, "vertical");
+		}
+		/**
+		* Draw this GUIElement
+		*/
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			ctx.save();
+			ctx.translate(0, Wick.GUIElement.BREADCRUMBS_HEIGHT);
+			ctx.save();
+			ctx.translate(0, Wick.GUIElement.NUMBER_LINE_HEIGHT);
+			ctx.save();
+			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
+			ctx.save();
+			ctx.translate(-this.project.scrollX, -this.project.scrollY);
+			this.framesContainer.draw();
+			ctx.restore();
+			ctx.restore();
+			ctx.restore();
+			ctx.save();
+			ctx.translate(-this.project.scrollX + Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
+			this.numberLine.draw();
+			ctx.restore();
+			ctx.save();
+			ctx.translate(0, Wick.GUIElement.NUMBER_LINE_HEIGHT);
+			ctx.save();
+			ctx.translate(0, -this.project.scrollY);
+			this.layersContainer.draw();
+			ctx.restore();
+			ctx.restore();
+			this.actionButtonsContainer.draw();
+			ctx.restore();
+			ctx.save();
+			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.BREADCRUMBS_HEIGHT + Wick.GUIElement.NUMBER_LINE_HEIGHT);
+			ctx.save();
+			ctx.translate(0, this.canvas.height - this.currentTranslation.y - Wick.GUIElement.SCROLLBAR_SIZE);
+			this.horizontalScrollbar.draw();
+			ctx.restore();
+			ctx.save();
+			ctx.translate(this.canvas.width - this.currentTranslation.x - Wick.GUIElement.SCROLLBAR_SIZE, 0);
+			this.verticalScrollbar.draw();
+			ctx.restore();
+			ctx.restore();
+			this.breadcrumbs.draw();
+			ctx.save();
+			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.BREADCRUMBS_HEIGHT);
+			ctx.fillStyle = "rgba(0,0,0,0.2)";
+			ctx.beginPath();
+			ctx.rect(0, 0, 2, this.canvas.height);
+			ctx.fill();
+			ctx.beginPath();
+			ctx.rect(0, 0, 1, this.canvas.height);
+			ctx.fill();
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/Tooltip.js
+	Wick.GUIElement.Tooltip = class extends Wick.GUIElement {
+		constructor(model, label) {
+			super(model);
+			this.label = label;
+		}
+		draw(x, y) {
+			super.draw();
+			if (!this.label) return;
+			var ctx = this.ctx;
+			ctx.font = "14px Nunito Sans";
+			var textContent = this.label;
+			var textWidth = ctx.measureText(textContent).width;
+			var textHeight = 14;
+			ctx.save();
+			var tx = x - textWidth / 2;
+			var ty = y + textHeight;
+			var xMin = 3;
+			if (tx < xMin) tx = xMin;
+			if (ty > this.canvas.height) ty = this.canvas.height - 35;
+			else if (ty > this.canvas.height - 25) ty = this.canvas.height - 20;
+			ctx.translate(tx, ty);
+			var margin = 4;
+			var r = Wick.GUIElement.FRAME_BORDER_RADIUS;
+			ctx.fillStyle = "#3878AF";
+			ctx.beginPath();
+			ctx.roundRect(-margin / 2, -margin / 2, textWidth + margin, textHeight + margin, r);
+			ctx.fill();
+			ctx.fillStyle = "#FFFFFF";
+			ctx.fillText(textContent, 0, 12);
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/Tween.js
+	Wick.GUIElement.Tween = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.cursor = "grab";
+			this.canAutoScrollX = true;
+			this._ghost = null;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
+			if (this.project.frameSizeMode === "large") r *= 1.25;
+			ctx.save();
+			ctx.rotate(Math.PI / 4);
+			if (this.mouseState === "over") ctx.fillStyle = Wick.GUIElement.TWEEN_HOVER_COLOR_1;
+			else ctx.fillStyle = Wick.GUIElement.TWEEN_FILL_COLOR_1;
+			ctx.beginPath();
+			ctx.roundRect(-r, -r, r * 2, r * 2, 3);
+			ctx.fill();
+			ctx.restore();
+			ctx.save();
+			ctx.beginPath();
+			ctx.rect(0, -30, 30, 60);
+			ctx.clip();
+			ctx.rotate(Math.PI / 4);
+			if (this.mouseState === "over") ctx.fillStyle = Wick.GUIElement.TWEEN_HOVER_COLOR_2;
+			else ctx.fillStyle = Wick.GUIElement.TWEEN_FILL_COLOR_2;
+			ctx.beginPath();
+			ctx.roundRect(-r, -r, r * 2, r * 2, 3);
+			ctx.fill();
+			ctx.restore();
+			if (this.model.isSelected) {
+				ctx.save();
+				ctx.rotate(Math.PI / 4);
+				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+				ctx.lineWidth = Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH;
+				ctx.beginPath();
+				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
+				ctx.stroke();
+				ctx.restore();
+			}
+			var linePadding = 18;
+			var nextTween = this.model.getNextTween();
+			if (nextTween) {
+				var nextTweenPosition = (nextTween.playheadPosition - this.model.playheadPosition) * this.gridCellWidth;
+				var arrowSize = 5;
+				ctx.strokeStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
+				ctx.lineWidth = Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH;
+				ctx.beginPath();
+				ctx.moveTo(linePadding, 0);
+				ctx.lineTo(nextTweenPosition - linePadding, 0);
+				ctx.stroke();
+				ctx.fillStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
+				ctx.beginPath();
+				ctx.moveTo(nextTweenPosition - linePadding, 0);
+				ctx.lineTo(nextTweenPosition - linePadding - arrowSize, -arrowSize);
+				ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(nextTweenPosition - linePadding, 0);
+				ctx.lineTo(nextTweenPosition - linePadding - arrowSize, arrowSize);
+				ctx.stroke();
+			} else if (this.model.playheadPosition !== this.model.parentFrame.length) {
+				var tweenPos = this.model.playheadPosition * this.gridCellWidth;
+				var frameRightEdge = this.model.parentFrame.length * this.gridCellWidth - tweenPos + this.gridCellWidth / 2;
+				ctx.save();
+				ctx.strokeStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
+				ctx.lineWidth = Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH;
+				ctx.setLineDash([5, 5]);
+				ctx.beginPath();
+				ctx.moveTo(linePadding, 0);
+				ctx.lineTo(frameRightEdge - 2, 0);
+				ctx.stroke();
+				ctx.restore();
+			}
+			if (this._ghost) this._ghost.draw();
+		}
+		get bounds() {
+			var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS * 1.25;
+			return {
+				x: -r,
+				y: -r,
+				width: r * 2,
+				height: r * 2
+			};
+		}
+		onMouseDown(e) {
+			var playheadPosition = this.model.playheadPosition + this.model.parentFrame.start - 1;
+			this.model.project.activeTimeline.playheadPosition = playheadPosition;
+			if (this.model.isSelected) {
+				if (e.shiftKey) this.model.project.selection.deselect(this.model);
+			} else {
+				if (!e.shiftKey) this.model.project.selection.clear();
+				this.model.project.selection.select(this.model);
+				this.model.parentLayer.activate();
+				this.projectWasModified();
+			}
+		}
+		onMouseDrag(e) {
+			if (!this._ghost) this._ghost = new Wick.GUIElement.TweenGhost(this.model);
+		}
+		onMouseUp(e) {
+			if (this._ghost) {
+				this._ghost.finish();
+				this._ghost = null;
+				this.projectWasModified();
+			}
+		}
+	};
+	//#endregion
+	//#region src/gui/ActionButtonsContainer.js
+	Wick.GUIElement.ActionButtonsContainer = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.deleteFrameButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Delete",
+				icon: "delete_frame",
+				clickFn: () => {
+					this.model.project.deleteSelectedObjects();
+					this.projectWasModified();
+				}
+			});
+			this.insertBlankFrameButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Add Frame",
+				icon: "cut_frame",
+				clickFn: () => {
+					this.model.project.insertBlankFrame();
+					this.projectWasModified();
+				}
+			});
+			this.addTweenButton = new Wick.GUIElement.ActionButton(this.model, {
+				tooltip: "Add Tween",
+				icon: "add_tween",
+				clickFn: () => {
+					this.model.project.createTween();
+					this.projectWasModified();
+				}
+			});
+			if (!Wick.GUIElement.IS_MOBILE) {
+				this.fillGapsModeButton = new Wick.GUIElement.ActionButton(this.model, {
+					tooltip: "Gap Fill Mode",
+					icon: "gap_fill_menu_blank_frames",
+					height: 8,
+					width: 16,
+					clickFn: () => {
+						this.project.openPopupMenu(new Wick.GUIElement.PopupMenu(this.model, {
+							x: 0,
+							y: this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE,
+							mode: "gapfill"
+						}));
+					}
+				});
+				this.gridSizeButton = new Wick.GUIElement.ActionButton(this.model, {
+					tooltip: "Frame Size",
+					icon: "frame_size_menu",
+					height: 8,
+					width: 16,
+					clickFn: () => {
+						this.project.openPopupMenu(new Wick.GUIElement.PopupMenu(this.model, {
+							x: 20,
+							y: this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE,
+							mode: "framesize"
+						}));
+					}
+				});
+			}
+		}
+		draw() {
+			var ctx = this.ctx;
+			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
+			ctx.beginPath();
+			ctx.rect(0, 0, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.NUMBER_LINE_HEIGHT);
+			ctx.fill();
+			ctx.fillStyle = "#111";
+			ctx.beginPath();
+			ctx.rect(0, this.canvas.height - Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.SCROLLBAR_SIZE, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.SCROLLBAR_SIZE);
+			ctx.fill();
+			if (!Wick.GUIElement.IS_MOBILE) {
+				ctx.save();
+				var method = this.project.model.activeTimeline.fillGapsMethod;
+				if (method === "auto_extend") this.fillGapsModeButton.icon = "gap_fill_menu_extend_frames";
+				else if (method === "blank_frames") this.fillGapsModeButton.icon = "gap_fill_menu_blank_frames";
+				ctx.translate(18, this.canvas.height - Wick.GUIElement.NUMBER_LINE_HEIGHT - 4);
+				this.fillGapsModeButton.draw(true);
+				ctx.restore();
+				ctx.save();
+				ctx.translate(54, this.canvas.height - Wick.GUIElement.NUMBER_LINE_HEIGHT - 4);
+				this.gridSizeButton.draw(true);
+				ctx.restore();
+			}
+			var tweenButtonIsActive = this.model.project.canCreateTween;
+			var deleteButtonIsActive = this.model.project.selection.getSelectedObjects("Timeline").length > 0;
+			ctx.save();
+			ctx.save();
+			var leftOfContainer = Wick.GUIElement.LAYERS_CONTAINER_WIDTH + 10 - 90;
+			ctx.translate(leftOfContainer, 0);
+			ctx.save();
+			ctx.globalAlpha = deleteButtonIsActive ? 1 : .3;
+			ctx.translate(0, 20);
+			this.deleteFrameButton.draw(deleteButtonIsActive);
+			ctx.restore();
+			ctx.save();
+			ctx.globalAlpha = 1;
+			ctx.translate(30, 20);
+			this.insertBlankFrameButton.draw(true);
+			ctx.restore();
+			ctx.save();
+			ctx.globalAlpha = tweenButtonIsActive ? 1 : .3;
+			ctx.translate(60, 20);
+			this.addTweenButton.draw(tweenButtonIsActive);
+			ctx.restore();
+			ctx.restore();
+			ctx.restore();
+		}
+	};
+	//#endregion
+	//#region src/gui/Breadcrumbs.js
+	Wick.GUIElement.Breadcrumbs = class extends Wick.GUIElement {
+		/**
+		* Create a new GUIElement
+		*/
+		constructor(model) {
+			super(model);
+			this._buttons = {};
+		}
+		/**
+		* Draw this GUIElement
+		*/
+		draw() {
+			var ctx = this.ctx;
+			ctx.fillStyle = Wick.GUIElement.BREADCRUMBS_BG_COLOR;
+			ctx.beginPath();
+			ctx.rect(0, 0, this.canvas.width, Wick.GUIElement.BREADCRUMBS_HEIGHT);
+			ctx.fill();
+			var totalWidth = 0;
+			this.model.project.focus.lineage.reverse().forEach((clip) => {
+				var button = this._buttons[clip.uuid];
+				if (!button) {
+					button = new Wick.GUIElement.BreadcrumbsButton(clip);
+					this._buttons[clip.uuid] = button;
+				}
+				ctx.save();
+				ctx.translate(totalWidth, 0);
+				button.draw();
+				ctx.restore();
+				totalWidth += button.buttonWidth;
+			});
+		}
+	};
+	//#endregion
+	//#region src/gui/Frame.js
+	Wick.GUIElement.Frame = class extends Wick.GUIElement {
+		constructor(model) {
+			super(model);
+			this.canAutoScrollX = true;
+			this.canAutoScrollY = true;
+			this._ghost = null;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			if (this.model.parentLayer.hidden) ctx.globalAlpha = .3;
+			var widthPx = this.model.length * this.gridCellWidth - 1;
+			var heightPx = this.gridCellHeight - 1;
+			var edge = this._mouseOverFrameEdge();
+			if (this.model.contentful || this.model.tweens.length > 0 || this.model.sound) ctx.fillStyle = Wick.GUIElement.FRAME_CONTENTFUL_FILL_COLOR;
+			else ctx.fillStyle = Wick.GUIElement.FRAME_UNCONTENTFUL_FILL_COLOR;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, widthPx, heightPx, Wick.GUIElement.FRAME_BORDER_RADIUS);
+			ctx.fill();
+			if (!edge && this.mouseState === "over" || this.mouseState === "down") {
+				ctx.lineWidth = 3;
+				ctx.strokeStyle = Wick.GUIElement.FRAME_HOVERED_OVER;
+				ctx.stroke();
+			}
+			if (this.model.isSelected) {
+				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
+				ctx.lineWidth = Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH;
+				ctx.stroke();
+			}
+			if (edge) {
+				this.cursor = "ew-resize";
+				var edgeGradient = ctx.createLinearGradient(widthPx - Wick.GUIElement.FRAME_HANDLE_WIDTH, 0, widthPx, 0);
+				edgeGradient.addColorStop(0, "rgba(255,222,35, 0.0)");
+				edgeGradient.addColorStop(1, "rgba(255,222,35, 1.0)");
+				ctx.fillStyle = edgeGradient;
+				ctx.strokeStyle = edgeGradient;
+				ctx.lineWidth = 5;
+				ctx.save();
+				if (edge === "left") {
+					ctx.translate(widthPx, 0);
+					ctx.scale(-1, 1);
+				}
+				ctx.beginPath();
+				ctx.roundRect(0, 0, widthPx, heightPx, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+			} else this.cursor = "grab";
+			if (this.model.hasContentfulScripts) {
+				ctx.fillStyle = Wick.GUIElement.FRAME_SCRIPT_DOT_COLOR;
+				ctx.beginPath();
+				ctx.arc(this.gridCellWidth / 2, 0, Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS * 1.3, 0, Math.PI);
+				ctx.fill();
+			}
+			if (this.model.identifier) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(0, 0, this.model.length * this.gridCellWidth, this.gridCellHeight);
+				ctx.clip();
+				ctx.font = "12px Courier New";
+				ctx.fillStyle = "black";
+				ctx.fillText(this.model.identifier, 0, 12);
+				ctx.restore();
+			}
+			if (this.model.tweens.length === 0 && !this.model.sound) {
+				ctx.fillStyle = Wick.GUIElement.FRAME_CONTENT_DOT_COLOR;
+				if (this.model.contentful) ctx.strokeStyle = Wick.GUIElement.FRAME_CONTENT_DOT_COLOR;
+				else ctx.strokeStyle = "#aaa";
+				ctx.lineWidth = Wick.GUIElement.FRAME_CONTENT_DOT_STROKE_WIDTH;
+				var r = Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS;
+				if (this.project.frameSizeMode === "small") r *= .75;
+				else if (this.project.frameSizeMode === "large") r *= 1.25;
+				ctx.beginPath();
+				ctx.arc(this.gridCellWidth / 2, this.gridCellHeight / 2, r, 0, 2 * Math.PI);
+				if (this.model.contentful) ctx.fill();
+				ctx.stroke();
+			} else if (this.model.sound) {
+				var framerate = this.model.project.framerate;
+				var sound = this.model.sound;
+				var waveform = sound.waveform;
+				var soundLengthMS = sound.duration * 1e3;
+				var frameLengthMS = 1 / framerate * this.model.length * 1e3;
+				var frameLengthPx = this.model.length * this.gridCellWidth;
+				var cropPx = frameLengthMS / soundLengthMS * 1200;
+				var pxPerMS = 1e3 / framerate / this.gridCellWidth;
+				var shiftSoundStart = -(this.model.soundStart * (1 / pxPerMS));
+				var volumeCropAmt = waveform.height / 2 * (1 - 1 / this.model.soundVolume);
+				ctx.drawImage(waveform, 0, volumeCropAmt, cropPx, waveform.height - volumeCropAmt * 2, shiftSoundStart, 0, frameLengthPx, this.gridCellHeight);
+			} else if (this.model.tweens.length > 0) this.model.tweens.forEach((tween) => {
+				ctx.save();
+				ctx.translate((tween.playheadPosition - 1) * this.gridCellWidth + this.gridCellWidth / 2, this.gridCellHeight / 2);
+				tween.guiElement.draw();
+				ctx.restore();
+			});
+			ctx.globalAlpha = 1;
+			if (this._ghost) this._ghost.draw();
+		}
+		onMouseDown(e) {
+			this._clickedEdge = this._mouseOverFrameEdge();
+			var playheadPosition = this.model.start + Math.floor(this.localMouse.x / this.gridCellWidth);
+			this.model.project.activeTimeline.playheadPosition = playheadPosition;
+			if (this.model.isSelected) {
+				if (e.shiftKey) this.model.project.selection.deselect(this.model);
+			} else {
+				if (!e.shiftKey) this.model.project.selection.clear();
+				this.model.project.selection.select(this.model);
+				this.model.parentLayer.activate();
+			}
+			this.projectWasModified();
+		}
+		onMouseDrag(e) {
+			if (!this._ghost) {
+				var edge = this._clickedEdge;
+				if (edge) this._ghost = new Wick.GUIElement.FrameEdgeGhost(this.model, edge);
+				else this._ghost = new Wick.GUIElement.FrameGhost(this.model);
+			}
+		}
+		onMouseUp(e) {
+			if (this._ghost) {
+				this._ghost.finish();
+				this._ghost = null;
+				this.projectWasModified();
+			}
+		}
+		get bounds() {
+			return {
+				x: -1,
+				y: 0,
+				width: this.model.length * this.gridCellWidth + 1,
+				height: this.gridCellHeight + 1
+			};
+		}
+		_mouseOverFrameEdge() {
+			var widthPx = this.model.length * this.gridCellWidth;
+			var handlePx = Wick.GUIElement.FRAME_HANDLE_WIDTH;
+			if (this.project.frameSizeMode === "small") handlePx *= .5;
+			if (this.project._isDragging || !this.mouseInBounds()) return null;
+			else if (this.localMouse.x < handlePx) return "left";
+			else if (this.localMouse.x > widthPx - handlePx) return "right";
+			else return null;
+		}
+	};
+	//#endregion
+	//#region src/gui/ActionButton.js
+	Wick.GUIElement.ActionButton = class extends Wick.GUIElement.Button {
+		constructor(model, args) {
+			super(model, args);
+			this.icon = args.icon;
+			this.width = args.width || Wick.GUIElement.ACTION_BUTTON_RADIUS;
+			this.height = args.height || Wick.GUIElement.ACTION_BUTTON_RADIUS;
+			this.toggled = args.toggled || false;
+		}
+		draw(isActive) {
+			super.draw();
+			var ctx = this.ctx;
+			if (isActive) this.cursor = "pointer";
+			else this.cursor = "default";
+			if (isActive && this.mouseState == "over" || this.toggled) {
+				ctx.fillStyle = Wick.GUIElement.FRAME_HOVERED_OVER;
+				ctx.beginPath();
+				ctx.roundRect(-this.width, -this.height, this.width * 2, this.height * 2, 3);
+				ctx.fill();
+			}
+			var w = this.width * .8;
+			var h = this.height * .8;
+			ctx.drawImage(Wick.GUIElement.Icons.getIcon(this.icon), -w, -h, w * 2, h * 2);
+		}
+		get bounds() {
+			return {
+				x: -this.width,
+				y: -this.height,
+				width: this.width * 2,
+				height: this.height * 2
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/BreadcrumbsButton.js
+	Wick.GUIElement.BreadcrumbsButton = class extends Wick.GUIElement.Button {
+		constructor(model) {
+			super(model, { clickFn: () => {
+				this.model.project.focus = model;
+				this.projectWasModified();
+			} });
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			ctx.font = "14px Nunito Sans";
+			var textContent = this.model.identifier || "Clip";
+			var textWidth = ctx.measureText(textContent).width;
+			var textX = Wick.GUIElement.BREADCRUMBS_PADDING;
+			var textY = Wick.GUIElement.BREADCRUMBS_HEIGHT / 2 + Wick.GUIElement.BREADCRUMBS_PADDING;
+			var buttonBodyColor = "red";
+			if (this.model === this.model.project.focus) buttonBodyColor = Wick.GUIElement.BREADCRUMBS_ACTIVE_BUTTON_FILL_COLOR;
+			else if (this.mouseState === "down") buttonBodyColor = Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR;
+			else if (this.mouseState === "over") buttonBodyColor = Wick.GUIElement.BREADCRUMBS_HOVER_BUTTON_FILL_COLOR;
+			else buttonBodyColor = Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR;
+			var buttonWidth = textWidth + Wick.GUIElement.BREADCRUMBS_PADDING * 2;
+			this.buttonWidth = buttonWidth;
+			ctx.fillStyle = buttonBodyColor;
+			ctx.beginPath();
+			ctx.roundRect(0, 0, buttonWidth, Wick.GUIElement.BREADCRUMBS_HEIGHT, Wick.GUIElement.FRAME_BORDER_RADIUS);
+			ctx.fill();
+			ctx.beginPath();
+			ctx.rect(0, Wick.GUIElement.BREADCRUMBS_HEIGHT / 2, buttonWidth, Wick.GUIElement.BREADCRUMBS_HEIGHT / 2);
+			ctx.fill();
+			if (this.model === this.model.project.focus) {
+				ctx.fillStyle = Wick.GUIElement.BREADCRUMBS_ACTIVE_BORDER_COLOR;
+				ctx.beginPath();
+				ctx.rect(0, Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT, buttonWidth, Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT);
+				ctx.fill();
+			}
+			ctx.fillStyle = "#BBBBBB";
+			ctx.fillText(textContent, textX, textY);
+		}
+		get bounds() {
+			return {
+				x: 0,
+				y: 0,
+				width: this.buttonWidth,
+				height: Wick.GUIElement.BREADCRUMBS_HEIGHT
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/LayerButton.js
+	Wick.GUIElement.LayerButton = class extends Wick.GUIElement.Button {
+		constructor(model, args) {
+			super(model, args);
+			this.toggledIcon = args.toggledIcon;
+			this.untoggledIcon = args.untoggledIcon;
+			this.toggledTooltip = args.toggledTooltip;
+			this.untoggledTooltip = args.untoggledTooltip;
+			this.isToggledFn = args.isToggledFn;
+		}
+		/**
+		* Draw this layer button.
+		* @param {string} icon - The name of the icon to draw.
+		* @param {boolean} isToggled - Should the button be toggled?
+		*/
+		draw(isToggled) {
+			super.draw();
+			var isToggled = this.isToggledFn && this.isToggledFn();
+			var ctx = this.ctx;
+			var icon = null;
+			if (isToggled) {
+				this.tooltip.label = this.toggledTooltip;
+				icon = this.toggledIcon;
+			} else {
+				this.tooltip.label = this.untoggledTooltip;
+				icon = this.untoggledIcon;
+			}
+			var fillColor;
+			if (this.mouseState == "down") fillColor = Wick.GUIElement.LAYER_BUTTON_MOUSEDOWN_COLOR;
+			else if (this.mouseState == "over") fillColor = Wick.GUIElement.LAYER_BUTTON_HOVER_COLOR;
+			else if (isToggled) fillColor = Wick.GUIElement.LAYER_BUTTON_TOGGLE_ACTIVE_COLOR;
+			else fillColor = Wick.GUIElement.LAYER_BUTTON_TOGGLE_INACTIVE_COLOR;
+			ctx.fillStyle = fillColor;
+			ctx.beginPath();
+			ctx.arc(0, 0, Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS, 0, 2 * Math.PI);
+			ctx.fill();
+			var r = Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS * .8;
+			ctx.globalAlpha = .5;
+			ctx.drawImage(Wick.GUIElement.Icons.getIcon(icon), -r, -r, r * 2, r * 2);
+			ctx.globalAlpha = 1;
+		}
+		get bounds() {
+			var r = Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS;
+			return {
+				x: -r,
+				y: -r,
+				width: r * 2,
+				height: r * 2
+			};
+		}
+	};
+	//#endregion
+	//#region src/gui/FrameEdgeGhost.js
+	Wick.GUIElement.FrameEdgeGhost = class extends Wick.GUIElement.Ghost {
+		constructor(model, edge) {
+			super(model);
+			this._mainFrame = model;
+			this._frames = [];
+			if (edge === "left") this._frames = model.project.selection.getLeftmostFrames();
+			else if (edge === "right") this._frames = model.project.selection.getRightmostFrames();
+			this._edge = edge;
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			var mainFrame = this._mainFrame;
+			var start = mainFrame.start - this._mainFrame.start;
+			var row = mainFrame.parentLayer.index - this._mainFrame.parentLayer.index;
+			this.moveCols = Math.round(this._mouseDiff.x / this.gridCellWidth);
+			var movePx = this._mouseDiff.x;
+			this._frames.forEach((frame) => {
+				var length = frame.length;
+				if (this._edge === "right") this.moveCols = Math.max(-length + 1, this.moveCols);
+				else if (this._edge === "left") this.moveCols = Math.min(length - 1, this.moveCols);
+				if (this._edge === "right") movePx = Math.max(movePx, this.moveCols * this.gridCellWidth);
+				else if (this._edge === "left") movePx = Math.min(movePx, this.moveCols * this.gridCellWidth);
+			});
+			this._frames.forEach((frame) => {
+				var x = start * this.gridCellWidth;
+				var y = row * this.gridCellHeight;
+				var width = frame.length * this.gridCellWidth;
+				var height = this.gridCellHeight;
+				var gridDiffX = frame.start - mainFrame.start;
+				var gridDiffY = frame.parentLayer.index - mainFrame.parentLayer.index;
+				ctx.save();
+				ctx.translate(gridDiffX * this.gridCellWidth, gridDiffY * this.gridCellHeight);
+				ctx.save();
+				ctx.globalAlpha = .4;
+				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
+				ctx.beginPath();
+				if (this._edge === "right") ctx.roundRect(x, y, width + movePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				else if (this._edge === "left") ctx.roundRect(x + movePx, y, width - movePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				ctx.fill();
+				ctx.restore();
+				ctx.strokeStyle = "#00ff00";
+				ctx.setLineDash([5, 5]);
+				ctx.lineWidth = 3;
+				ctx.beginPath();
+				if (this._edge === "right") ctx.roundRect(x, y, width + this.moveCols * this.gridCellWidth, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				else if (this._edge === "left") {
+					var gridMovePx = this.moveCols * this.gridCellWidth;
+					ctx.roundRect(x + gridMovePx, y, width - gridMovePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				}
+				ctx.save();
+				ctx.globalAlpha = .8;
+				ctx.stroke();
+				ctx.restore();
+				ctx.restore();
+			});
+		}
+		finish() {
+			this._frames.forEach((frame) => {
+				frame._originalLayer = frame.parentLayer;
+				frame.remove();
+				if (this._edge === "right") frame.end += this.moveCols;
+				else if (this._edge === "left") frame.start += this.moveCols;
+			});
+			this._frames.forEach((frame) => {
+				frame._originalLayer.addFrame(frame);
+				delete frame._originalLayer;
+			});
+		}
+	};
+	//#endregion
+	//#region src/gui/FrameGhost.js
+	Wick.GUIElement.FrameGhost = class extends Wick.GUIElement.Ghost {
+		constructor(model) {
+			super(model);
+			this._mainFrame = model;
+			this._frames = model.project.selection.getSelectedObjects("Frame");
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			this._frames.forEach((frame) => {
+				var start = frame.start - this._mainFrame.start;
+				var length = frame.length;
+				var row = frame.parentLayer.index - this._mainFrame.parentLayer.index;
+				var x = start * this.gridCellWidth;
+				var y = row * this.gridCellHeight;
+				var width = length * this.gridCellWidth;
+				var height = this.gridCellHeight;
+				ctx.save();
+				ctx.translate(this._mouseDiff.x, this._mouseDiff.y);
+				ctx.globalAlpha = .4;
+				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
+				ctx.beginPath();
+				ctx.roundRect(x, y, width, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				ctx.fill();
+				ctx.restore();
+				ctx.save();
+				ctx.translate(this.moveCols * this.gridCellWidth, this.moveRows * this.gridCellHeight);
+				if (frame.parentLayer.index + this.moveRows > frame.parentTimeline.layers.length - 1) {
+					ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_NOT_ALLOWED_COLOR;
+					ctx.strokeStyle = "#ff0000";
+				} else {
+					ctx.fillStyle = "rgba(0,0,0,0)";
+					ctx.strokeStyle = "#00ff00";
+				}
+				ctx.setLineDash([5, 5]);
+				ctx.lineWidth = 3;
+				ctx.beginPath();
+				ctx.roundRect(x, y, width, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
+				ctx.globalAlpha = .8;
+				ctx.fill();
+				ctx.stroke();
+				ctx.restore();
+			});
+		}
+		finish() {
+			var timeline = this.model.parentTimeline;
+			timeline.playheadPosition += this.moveCols;
+			timeline.deferFrameGapResolve();
+			this._frames.forEach((frame) => {
+				frame._originalLayerIndex = frame.parentLayer.index;
+				frame.remove();
+			});
+			this._frames.forEach((frame) => {
+				frame.start += this.moveCols;
+				frame.end += this.moveCols;
+			});
+			this._frames.forEach((frame) => {
+				var layer = timeline.layers[frame._originalLayerIndex + this.moveRows];
+				delete frame._originalLayerIndex;
+				if (layer) layer.addFrame(frame);
+			});
+			timeline.resolveFrameGaps(this._frames);
+		}
+	};
+	//#endregion
+	//#region src/gui/SelectionBox.js
+	Wick.GUIElement.SelectionBox = class extends Wick.GUIElement.Ghost {
+		constructor(model) {
+			super(model);
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			this.gridStart = {
+				x: Math.floor(this._mouseStart.x / this.gridCellWidth),
+				y: Math.floor(this._mouseStart.y / this.gridCellHeight)
+			};
+			this.gridEnd = {
+				x: Math.floor(this._mouseEnd.x / this.gridCellWidth),
+				y: Math.floor(this._mouseEnd.y / this.gridCellHeight)
+			};
+			if (this.gridStart.x > this.gridEnd.x) {
+				var temp = this.gridEnd.x;
+				this.gridEnd.x = this.gridStart.x;
+				this.gridStart.x = temp;
+			}
+			if (this.gridStart.y > this.gridEnd.y) {
+				var temp = this.gridEnd.y;
+				this.gridEnd.y = this.gridStart.y;
+				this.gridStart.y = temp;
+			}
+			ctx.strokeStyle = "rgba(66, 111, 200, 1.0)";
+			ctx.fillStyle = "rgba(66, 111, 200, 0.4)";
+			ctx.globalAlpha = 1;
+			ctx.setLineDash([5, 5]);
+			ctx.beginPath();
+			ctx.roundRect(this.gridStart.x * this.gridCellWidth, this.gridStart.y * this.gridCellHeight, (this.gridEnd.x - this.gridStart.x + 1) * this.gridCellWidth, (this.gridEnd.y - this.gridStart.y + 1) * this.gridCellHeight, Wick.GUIElement.FRAME_BORDER_RADIUS);
+			ctx.stroke();
+			ctx.fill();
+		}
+		finish() {
+			var playheadRangeStart = this.gridStart.x + 1;
+			var playheadRangeEnd = this.gridEnd.x + 1;
+			var layerRangeStart = this.gridStart.y;
+			var layerRangeEnd = this.gridEnd.y;
+			this.model.getAllFrames().filter((frame) => {
+				return frame.inRange(playheadRangeStart, playheadRangeEnd) && frame.parentLayer.index >= layerRangeStart && frame.parentLayer.index <= layerRangeEnd;
+			}).forEach((frame) => {
+				frame.project.selection.select(frame);
+			});
+		}
+	};
+	//#endregion
+	//#region src/gui/TweenGhost.js
+	Wick.GUIElement.TweenGhost = class extends Wick.GUIElement.Ghost {
+		constructor(model) {
+			super(model);
+			this._mainTween = model;
+			this._tweens = model.project.selection.getSelectedObjects("Tween");
+		}
+		draw() {
+			super.draw();
+			var ctx = this.ctx;
+			this.moveCols = Math.round(this._mouseDiff.x / this.gridCellWidth);
+			this.moveRows = Math.round(this._mouseDiff.y / this.gridCellHeight);
+			this._tweens.forEach((tween) => {
+				var relativePlayhead = tween.playheadPosition - this._mainTween.playheadPosition;
+				relativePlayhead += tween.parentFrame.start - this._mainTween.parentFrame.start;
+				var relativeLayer = tween.parentLayer.index - this._mainTween.parentLayer.index;
+				var x = relativePlayhead * this.gridCellWidth;
+				var y = relativeLayer * this.gridCellHeight;
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.save();
+				ctx.globalAlpha = .3;
+				ctx.translate(this._mouseDiff.x, 0);
+				ctx.rotate(Math.PI / 4);
+				var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
+				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
+				ctx.beginPath();
+				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
+				ctx.fill();
+				ctx.restore();
+				ctx.save();
+				ctx.strokeStyle = "#00ff00";
+				ctx.setLineDash([3, 3]);
+				ctx.translate(this.moveCols * this.gridCellWidth, 0);
+				ctx.rotate(Math.PI / 4);
+				var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
+				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
+				ctx.beginPath();
+				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
+				ctx.stroke();
+				ctx.restore();
+				ctx.restore();
+			});
+		}
+		finish() {
+			var timeline = this._mainTween.project.activeTimeline;
+			timeline.playheadPosition += this.moveCols;
+			this._tweens.forEach((tween) => {
+				tween._originalFrame = tween.parentFrame;
+				tween.remove();
+			});
+			this._tweens.forEach((tween) => {
+				tween.playheadPosition += this.moveCols;
+			});
+			this._tweens.forEach((tween) => {
+				tween._originalFrame.addTween(tween);
+				delete tween._originalFrame;
+			});
+		}
+	};
 	//#endregion
 	//#region ../node_modules/is-var-name/index.mjs
 	var is_var_name_exports = /* @__PURE__ */ __exportAll({ default: () => isVarName$1 });
@@ -22053,7 +25952,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				pathcursor: new Wick.Tools.PathCursor(),
 				pencil: new Wick.Tools.Pencil(),
 				rectangle: new Wick.Tools.Rectangle(),
-				shape: new Wick.Tools.Shape(),
 				text: new Wick.Tools.Text(),
 				zoom: new Wick.Tools.Zoom()
 			};
@@ -22061,7 +25959,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			for (var toolName in this._tools) this._tools[toolName].project = this;
 			this.activeTool = "cursor";
 			this._toolSettings = new Wick.ToolSettings();
-			this._toolSettings.project = this;
 			this._toolSettings.onSettingsChanged((name, value) => {
 				if (name === "fillColor") this.selection.fillColor = value.rgba;
 				else if (name === "strokeColor") this.selection.strokeColor = value.rgba;
@@ -22069,8 +25966,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this._playing = false;
 			this._scriptSchedule = [];
 			this._error = null;
-			this._assetFolders = args.assetFolders || [];
-			this._assetFolderAssignments = args.assetFolderAssignments || {};
 			this.history.project = this;
 			this.history.pushState(Wick.History.StateType.ONLY_VISIBLE_OBJECTS);
 			this.orderedLayers = [];
@@ -22157,8 +26052,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this._renderBlackBars = true;
 			this._hitTestOptions = this.getDefaultHitTestOptions();
 			this.rotation = 0;
-			this._assetFolders = data.assetFolders || [];
-			this._assetFolderAssignments = data.assetFolderAssignments || {};
 		}
 		_serialize(args) {
 			var data = super._serialize(args);
@@ -22172,8 +26065,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			data.onionSkinSeekBackwards = this.onionSkinSeekBackwards;
 			data.focus = this.focus.uuid;
 			data.metadata = Wick.WickFile.generateMetaData();
-			data.assetFolders = this._assetFolders;
-			data.assetFolderAssignments = this._assetFolderAssignments;
 			return data;
 		}
 		getDefaultHitTestOptions() {
@@ -22341,10 +26232,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				this._tools.brush.discard();
 				return true;
 			}
-			if (this._tools.shape.isInProgress()) {
-				this._tools.shape.discard();
-				return true;
-			}
 			this.selection.clear();
 			return this.project.history.popState();
 		}
@@ -22368,130 +26255,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				"FontAsset",
 				"SVGAsset"
 			]);
-		}
-		/**
-		* The folders in the Asset Library.
-		* @type {object[]}
-		*/
-		get assetFolders() {
-			return this._assetFolders;
-		}
-		set assetFolders(assetFolders) {
-			this._assetFolders = assetFolders;
-		}
-		/**
-		* A map of asset UUID to the id of the Asset Library folder it belongs to.
-		* @type {object}
-		*/
-		get assetFolderAssignments() {
-			return this._assetFolderAssignments;
-		}
-		set assetFolderAssignments(assetFolderAssignments) {
-			this._assetFolderAssignments = assetFolderAssignments;
-		}
-		/**
-		* Creates a new Asset Library folder inside another folder (or at the
-		* root if parentFolderId is null/omitted), with a name that's unique
-		* among its siblings.
-		* @param {string} [name] - Desired name. Defaults to "New Folder"
-		*   (or "New Folder 2", etc. if that name is already taken by a sibling).
-		* @param {string} [parentFolderId] - The folder to nest the new folder
-		*   inside. Defaults to null (the Asset Library root).
-		* @return {object} The newly created folder.
-		*/
-		createAssetFolder(name, parentFolderId) {
-			if (parentFolderId === void 0) parentFolderId = null;
-			let baseName = name || "New Folder";
-			let siblingNames = new Set(this._assetFolders.filter((folder) => folder.parentFolderId === parentFolderId).map((folder) => folder.name));
-			let finalName = baseName;
-			let counter = 2;
-			while (siblingNames.has(finalName)) {
-				finalName = baseName + " " + counter;
-				counter++;
-			}
-			let newFolder = {
-				id: "folder-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
-				name: finalName,
-				parentFolderId
-			};
-			this._assetFolders = [...this._assetFolders, newFolder];
-			return newFolder;
-		}
-		/**
-		* Deletes a single Asset Library folder. Its direct contents (both
-		* subfolders and assets) are promoted up to the deleted folder's own
-		* parent, rather than being deleted or bumped all the way to the root.
-		* @param {string} folderId
-		* @return {string} fallbackFolderId - The deleted folder's former
-		*   parent (or null for root), which is now the new home of its
-		*   former contents. Callers can use this to navigate out of the
-		*   deleted folder.
-		*/
-		deleteAssetFolder(folderId) {
-			let deletedFolder = this._assetFolders.find((folder) => folder.id === folderId);
-			let fallbackFolderId = deletedFolder ? deletedFolder.parentFolderId : null;
-			this._assetFolders = this._assetFolders.filter((folder) => folder.id !== folderId).map((folder) => folder.parentFolderId === folderId ? {
-				...folder,
-				parentFolderId: fallbackFolderId
-			} : folder);
-			let assetFolderAssignments = { ...this._assetFolderAssignments };
-			Object.keys(assetFolderAssignments).forEach((assetUuid) => {
-				if (assetFolderAssignments[assetUuid] === folderId) assetFolderAssignments[assetUuid] = fallbackFolderId;
-			});
-			this._assetFolderAssignments = assetFolderAssignments;
-			return fallbackFolderId;
-		}
-		/**
-		* Moves an Asset Library folder to be a child of another folder (or to
-		* the root if targetFolderId is null). No-ops if the move would create
-		* a cycle (e.g. moving a folder into its own descendant).
-		* @param {string} folderId
-		* @param {string} targetFolderId
-		*/
-		moveAssetFolder(folderId, targetFolderId) {
-			if (folderId === targetFolderId) return;
-			let folderById = new Map(this._assetFolders.map((folder) => [folder.id, folder]));
-			let isDescendantOf = (candidateId, ancestorId) => {
-				let current = folderById.get(candidateId);
-				while (current) {
-					if (current.parentFolderId === ancestorId) return true;
-					current = folderById.get(current.parentFolderId);
-				}
-				return false;
-			};
-			if (targetFolderId !== null && isDescendantOf(targetFolderId, folderId)) return;
-			this._assetFolders = this._assetFolders.map((folder) => folder.id === folderId ? {
-				...folder,
-				parentFolderId: targetFolderId
-			} : folder);
-		}
-		/**
-		* Builds a human-readable path for an Asset Library folder from its
-		* ancestor names (e.g. "New Folder / Subfolder").
-		* @param {string} folderId
-		* @return {string}
-		*/
-		getAssetFolderPath(folderId) {
-			let folderById = new Map(this._assetFolders.map((folder) => [folder.id, folder]));
-			let names = [];
-			let current = folderById.get(folderId);
-			while (current) {
-				names.unshift(current.name);
-				current = folderById.get(current.parentFolderId);
-			}
-			return names.join(" / ");
-		}
-		/**
-		* Assigns an asset to an Asset Library folder (or back to the root if
-		* folderId is null).
-		* @param {string} assetUuid
-		* @param {string} folderId
-		*/
-		assignAssetToFolder(assetUuid, folderId) {
-			this._assetFolderAssignments = {
-				...this._assetFolderAssignments,
-				[assetUuid]: folderId
-			};
 		}
 		/**
 		* Adds an asset to the project.
@@ -23752,7 +27515,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			this.hidden = args.hidden === void 0 ? false : args.hidden;
 			this.opacity = args.opacity === void 0 ? 1 : args.opacity;
 			this.name = args.name || null;
-			this._layerColor = args.layerColor || Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR;
 		}
 		_serialize(args) {
 			var data = super._serialize(args);
@@ -23794,16 +27556,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		set opacity(opacity) {
 			if (typeof opacity === "number" && !isNaN(opacity)) this._opacity = Math.max(Math.min(opacity, 1), 0);
 			else this._opacity = 1;
-		}
-		/**
-		* The color of the layer on the timeline.
-		* @type {paper.color}
-		*/
-		get layerColor() {
-			return this._layerColor;
-		}
-		set layerColor(color) {
-			this._layerColor = color;
 		}
 		/**
 		* Set this layer to be the active layer in its timeline.
@@ -24016,7 +27768,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 			if (!args) args = {};
 			super(args);
 			this._selectedObjectsUUIDs = args.selectedObjects || [];
-			this._selectedFolder = null;
 			this._widgetRotation = args.widgetRotation || 0;
 			this._pivotPoint = {
 				x: 0,
@@ -24077,7 +27828,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				"strokeWidth",
 				"fillColor",
 				"strokeColor",
-				"layerColor",
 				"name",
 				"filename",
 				"fontSize",
@@ -24185,28 +27935,9 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		clear(filter) {
 			if (filter === void 0) {
 				this._selectedObjectsUUIDs = [];
-				this._selectedFolder = null;
 				this._resetPositioningValues();
 				this.view.dirty = true;
 			} else this.deselectMultipleObjects(this.project.selection.getSelectedObjects(filter));
-		}
-		/**
-		* The folder currently selected in the Asset Library, if any.
-		* @type {object}
-		*/
-		get selectedFolder() {
-			return this._selectedFolder;
-		}
-		/**
-		* Selects a folder in the Asset Library. Clears any other selection,
-		* since a folder can't be selected alongside canvas/timeline/asset
-		* objects.
-		* @param {object} folder - The folder to select, as tracked by the
-		*   editor's AssetLibrary UI (folders aren't Wick.Base objects).
-		*/
-		selectFolder(folder) {
-			this.clear();
-			this._selectedFolder = folder;
 		}
 		/**
 		* Checks if a given object is selected.
@@ -24259,7 +27990,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		* @type {string}
 		*/
 		get location() {
-			if (this._selectedFolder) return "AssetLibrary";
 			if (this.numObjects === 0) return null;
 			return this._locationOf(this.getSelectedObjects()[0]);
 		}
@@ -24300,8 +28030,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 					else if (selection.getSelectedObjects()[0] instanceof window.Wick.Tween) return "multitween";
 				} else return "multitimeline";
 			} else if (selection.location === "AssetLibrary") {
-				if (selection.selectedFolder) return "folder";
-				else if (selection.getSelectedObjects()[0] instanceof window.Wick.ImageAsset) return "imageasset";
+				if (selection.getSelectedObjects()[0] instanceof window.Wick.ImageAsset) return "imageasset";
 				else if (selection.getSelectedObjects()[0] instanceof window.Wick.SoundAsset) return "soundasset";
 				else if (selection.getSelectedObjects()[0] instanceof window.Wick.SVGAsset) return "svgasset";
 				else if (selection.getSelectedObjects()[0] instanceof window.Wick.FontAsset) return "fontasset";
@@ -24555,14 +28284,9 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		* @type {string}
 		*/
 		get name() {
-			if (this._selectedFolder) return this._selectedFolder.name;
 			return this._getSingleAttribute("name");
 		}
 		set name(name) {
-			if (this._selectedFolder) {
-				this._selectedFolder.name = name;
-				return;
-			}
 			this._setSingleAttribute("name", name);
 		}
 		/**
@@ -24594,16 +28318,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		}
 		set strokeWidth(strokeWidth) {
 			this._setSingleAttribute("strokeWidth", strokeWidth);
-		}
-		/**
-		* The color of the layer.
-		* @type {paper.color}
-		*/
-		get layerColor() {
-			return this._getSingleAttribute("layerColor");
-		}
-		set layerColor(layerColor) {
-			this._setSingleAttribute("layerColor", layerColor);
 		}
 		/**
 		* The font family of the selected object.
@@ -27007,7 +30721,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 	};
 	//#endregion
 	//#region src/base/asset/SoundAsset.js
-	const SCWF = (init_soundcloud_waveform(), __toCommonJS(soundcloud_waveform_exports));
+	const SCWF = require_soundcloud_waveform();
 	Wick.SoundAsset = class extends Wick.FileAsset {
 		/**
 		* Returns valid MIME types for a Sound Asset.
@@ -28256,7 +31970,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		constructor() {
 			super();
 			this.layer = new this.paper.Layer();
-			this._widget = new paper.SelectionWidget({ layer: this.layer });
+			this._widget = new this.paper.SelectionWidget({ layer: this.layer });
 			this.paper.project.selectionWidget = this._widget;
 		}
 		/**
@@ -28590,7 +32304,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				return;
 			}
 			this.importJSON(this.model.json);
-			if (this.model.pathType == "image") this.item.smoothing = this.model.project.toolSettings.getSetting("imageSmoothing");
 			if (this.model.parentFrame && this.model.parentFrame.onionSkinned) this.applyOnionSkinStyles();
 			else if (this.item.data.originalStyle) {
 				this.item.strokeColor = this.item.data.originalStyle.strokeColor;
@@ -28679,4149 +32392,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				if (this.item.fillColor) this.item.fillColor = Wick.Color.average(new Wick.Color(this.item.fillColor.toCSS()), new Wick.Color(onionTintColor)).rgba;
 				if (this.item.strokeColor) this.item.strokeColor = Wick.Color.average(new Wick.Color(this.item.strokeColor.toCSS()), new Wick.Color(onionTintColor)).rgba;
 			}
-		}
-	};
-	//#endregion
-	//#region src/view/paper-ext/Layer.erase.js
-	(function() {
-		function splitCompoundPath(compoundPath) {
-			var holes = [];
-			var parts = [];
-			compoundPath.children.forEach(function(child) {
-				if (!child.clockwise) holes.push(child);
-				else {
-					var part = child.clone({ insert: false });
-					part.fillColor = compoundPath.fillColor;
-					part.insertAbove(compoundPath);
-					parts.push(part);
-				}
-			});
-			var resolvedHoles = [];
-			parts.forEach(function(part) {
-				var cmp;
-				holes.forEach(function(hole) {
-					if (part.bounds.contains(hole.bounds)) {
-						if (!cmp) {
-							cmp = new paper.CompoundPath({ insert: false });
-							cmp.insertAbove(part);
-							cmp.addChild(part.clone({ insert: false }));
-						}
-						cmp.addChild(hole);
-						resolvedHoles.push(hole);
-					}
-					if (cmp) {
-						cmp.fillColor = compoundPath.fillColor;
-						cmp.insertAbove(part);
-						part.remove();
-					}
-				});
-			});
-			holes.filter((hole) => {
-				return resolvedHoles.indexOf(hole) === -1;
-			}).forEach((hole) => {
-				hole.clockwise = !hole.clockwise;
-				paper.project.activeLayer.addChild(hole);
-			});
-			compoundPath.remove();
-		}
-		function eraseFill(path, eraserPath) {
-			if (path.closePath) path.closePath();
-			var res = path.subtract(eraserPath, {
-				insert: false,
-				trace: true
-			});
-			res.fillColor = path.fillColor;
-			if (res.children) {
-				res.insertAbove(path);
-				res.data = {};
-				path.remove();
-				splitCompoundPath(res);
-			} else {
-				if (res.segments.length > 0) {
-					res.data = {};
-					res.insertAbove(path);
-				}
-				path.remove();
-			}
-			path.remove();
-		}
-		function eraseStroke(path, eraserPath) {
-			if (path.children) {
-				var children = [];
-				path.children.forEach(function(child) {
-					child.data = {};
-					children.push(child);
-					child.name = null;
-				});
-				children.forEach(function(child) {
-					child.insertAbove(path);
-					child.style = path.style;
-					eraseStroke(child, eraserPath);
-				});
-			} else {
-				if (path instanceof paper.Path && path.closed && eraserPath.contains(path.firstSegment.point)) {
-					var start = path.firstSegment, end = start.clone();
-					start.handleIn = [0, 0];
-					end.handleOut = [0, 0];
-					path.addSegment(end);
-					path.closed = false;
-				}
-				var res = path.subtract(eraserPath, {
-					insert: false,
-					trace: false
-				});
-				if (res.children) {
-					var children = [];
-					res.children.forEach(function(child) {
-						child.data = {};
-						children.push(child);
-						child.name = null;
-					});
-					children.forEach(function(child) {
-						child.insertAbove(path);
-					});
-					res.remove();
-				} else {
-					res.remove();
-					if (res.segments.length > 0) res.insertAbove(path);
-				}
-			}
-			path.remove();
-		}
-		function splitPath(path) {
-			var fill = path.clone({ insert: false });
-			fill.name = null;
-			fill.strokeColor = null;
-			fill.strokeWidth = 1;
-			var stroke = path.clone({ insert: false });
-			stroke.name = null;
-			stroke.fillColor = null;
-			fill.insertAbove(path);
-			stroke.insertAbove(fill);
-			path.remove();
-			return {
-				fill,
-				stroke
-			};
-		}
-		function eraseWithPath(eraserPath) {
-			this.children.filter((path) => {
-				return path instanceof paper.Path || path instanceof paper.CompoundPath;
-			});
-			this.children.filter(function(child) {
-				return eraserPath.bounds.intersects(child.bounds);
-			}).forEach((path) => {
-				if (path.strokeColor && path.fillColor) {
-					var res = splitPath(path);
-					eraseFill(res.fill, eraserPath);
-					eraseStroke(res.stroke, eraserPath);
-				} else if (path.fillColor) eraseFill(path, eraserPath);
-				else if (path.strokeColor) eraseStroke(path, eraserPath);
-			});
-		}
-		paper.Layer.inject({ erase: eraseWithPath });
-	})();
-	//#endregion
-	//#region src/view/paper-ext/Paper.hole.js
-	(function() {
-		var N_RASTER_CLONE = 1;
-		var RASTER_BASE_RESOLUTION = 3;
-		var FILL_TOLERANCE = 0;
-		var EXPAND_AMT = .85;
-		var onError;
-		var onFinish;
-		var layers;
-		var floodFillX;
-		var floodFillY;
-		var bgColor;
-		var gapFillAmount;
-		function rasterizePaths(callback) {
-			var layerGroup = new paper.Group({ insert: false });
-			layers.reverse().forEach((layer) => {
-				layer.children.forEach(function(child) {
-					if (child._class !== "Path" && child._class !== "CompoundPath") return;
-					for (var i = 0; i < N_RASTER_CLONE; i++) {
-						var clone = child.clone({ insert: false });
-						if (!clone.strokeColor && clone.fillColor) {
-							clone.strokeColor = clone.fillColor;
-							clone.strokeWidth = gapFillAmount / RASTER_BASE_RESOLUTION;
-						} else if (clone.strokeWidth) clone.strokeWidth += gapFillAmount / RASTER_BASE_RESOLUTION;
-						layerGroup.addChild(clone);
-					}
-				});
-			});
-			if (layerGroup.children.length === 0) {
-				onError("NO_PATHS");
-				return;
-			}
-			var rasterResolution = paper.view.resolution * RASTER_BASE_RESOLUTION / window.devicePixelRatio;
-			var layerPathsRaster = layerGroup.rasterize(rasterResolution, { insert: false });
-			var zoomFactor = RASTER_BASE_RESOLUTION * layerPathsRaster.bounds.width / layerPathsRaster.width;
-			var rasterCtx = layerPathsRaster.canvas.getContext("2d");
-			var layerPathsImageData = rasterCtx.getImageData(0, 0, layerPathsRaster.width, layerPathsRaster.height);
-			var layerPathsImageDataRaw = layerPathsImageData.data;
-			for (var i = 0; i < layerPathsImageDataRaw.length; i += 4) if (layerPathsImageDataRaw[i + 3] === 0) {
-				layerPathsImageDataRaw[i] = bgColor.red;
-				layerPathsImageDataRaw[i + 1] = bgColor.green;
-				layerPathsImageDataRaw[i + 2] = bgColor.blue;
-				layerPathsImageDataRaw[i + 3] = 255;
-			}
-			rasterCtx.putImageData(layerPathsImageData, 0, 0);
-			layerPathsImageData = rasterCtx.getImageData(0, 0, layerPathsRaster.width, layerPathsRaster.height);
-			var rasterPosition = layerPathsRaster.bounds.topLeft;
-			var x = (floodFillX - rasterPosition.x) * RASTER_BASE_RESOLUTION / zoomFactor;
-			var y = (floodFillY - rasterPosition.y) * RASTER_BASE_RESOLUTION / zoomFactor;
-			x = Math.round(x);
-			y = Math.round(y);
-			var floodFillCanvas = document.createElement("canvas");
-			floodFillCanvas.width = layerPathsRaster.canvas.width;
-			floodFillCanvas.height = layerPathsRaster.canvas.height;
-			if (x < 0 || y < 0 || x >= floodFillCanvas.width || y >= floodFillCanvas.height) {
-				onError("OUT_OF_BOUNDS");
-				return;
-			}
-			var floodFillCtx = floodFillCanvas.getContext("2d");
-			floodFillCtx.putImageData(layerPathsImageData, 0, 0);
-			floodFillCtx.fillStyle = "rgba(123,124,125,255)";
-			floodFillCtx.fillFlood(x, y, FILL_TOLERANCE);
-			var floodFillImageData = floodFillCtx.getImageData(0, 0, floodFillCanvas.width, floodFillCanvas.height);
-			var imageDataRaw = floodFillImageData.data;
-			for (var i = 0; i < imageDataRaw.length; i += 4) if (imageDataRaw[i] === 123 && imageDataRaw[i + 1] === 124 && imageDataRaw[i + 2] === 125) {
-				imageDataRaw[i] = 0;
-				imageDataRaw[i + 1] = 0;
-				imageDataRaw[i + 2] = 0;
-				imageDataRaw[i + 3] = 255;
-			} else {
-				imageDataRaw[i] = 255;
-				imageDataRaw[i + 1] = 255;
-				imageDataRaw[i + 2] = 255;
-				imageDataRaw[i + 3] = 0;
-			}
-			floodFillCtx.putImageData(floodFillImageData, 0, 0);
-			var floodFillProcessedImage = new Image();
-			floodFillProcessedImage.onload = function() {
-				var xmlString = potrace.fromImage(floodFillProcessedImage).toSVG(1), doc = new DOMParser().parseFromString(xmlString, "text/xml");
-				var resultHolePath = paper.project.importSVG(doc, { insert: true });
-				resultHolePath.remove();
-				resultHolePath = resultHolePath.children[0];
-				resultHolePath.scale(1 / RASTER_BASE_RESOLUTION, new paper.Point(0, 0));
-				var rasterPosition = layerPathsRaster.bounds.topLeft;
-				resultHolePath.position.x += rasterPosition.x;
-				resultHolePath.position.y += rasterPosition.y;
-				resultHolePath.applyMatrix = true;
-				var w = floodFillProcessedImage.width;
-				var h = floodFillProcessedImage.height;
-				for (var x = 0; x < floodFillProcessedImage.width; x++) if (getPixelAt(x, 0, w, h, floodFillImageData.data).r === 0 && getPixelAt(x, 0, w, h, floodFillImageData.data).a === 255) {
-					onError("LEAKY_HOLE");
-					return;
-				}
-				expandHole(resultHolePath);
-				resultHolePath.scale(zoomFactor, layerPathsRaster.bounds.topLeft);
-				callback(resultHolePath);
-			};
-			floodFillProcessedImage.src = floodFillCanvas.toDataURL();
-		}
-		function expandHole(path) {
-			if (path instanceof paper.Group) path = path.children[0];
-			var children;
-			if (path instanceof paper.Path) children = [path];
-			else if (path instanceof paper.CompoundPath) children = path.children;
-			children.forEach(function(hole) {
-				var normals = [];
-				hole.closePath();
-				hole.segments.forEach(function(segment) {
-					var a = segment.previous.point;
-					var b = segment.point;
-					var c = segment.next.point;
-					var ab = {
-						x: b.x - a.x,
-						y: b.y - a.y
-					};
-					var cb = {
-						x: b.x - c.x,
-						y: b.y - c.y
-					};
-					var d = {
-						x: ab.x - cb.x,
-						y: ab.y - cb.y
-					};
-					d.h = Math.sqrt(d.x * d.x + d.y * d.y);
-					d.x /= d.h;
-					d.y /= d.h;
-					d = rotate_point(d.x, d.y, 0, 0, 90);
-					normals.push({
-						x: d.x,
-						y: d.y
-					});
-				});
-				for (var i = 0; i < hole.segments.length; i++) {
-					var segment = hole.segments[i];
-					var normal = normals[i];
-					segment.point.x += normal.x * EXPAND_AMT;
-					segment.point.y += normal.y * EXPAND_AMT;
-				}
-			});
-		}
-		function rotate_point(pointX, pointY, originX, originY, angle) {
-			angle = angle * Math.PI / 180;
-			return {
-				x: Math.cos(angle) * (pointX - originX) - Math.sin(angle) * (pointY - originY) + originX,
-				y: Math.sin(angle) * (pointX - originX) + Math.cos(angle) * (pointY - originY) + originY
-			};
-		}
-		function getPixelAt(x, y, width, height, imageData) {
-			if (x < 0 || y < 0 || x >= width || y >= height) return null;
-			var offset = (y * width + x) * 4;
-			return {
-				r: imageData[offset],
-				g: imageData[offset + 1],
-				b: imageData[offset + 2],
-				a: imageData[offset + 3]
-			};
-		}
-		paper.PaperScope.inject({ hole: function(args) {
-			if (!args) console.error("paper.hole: args is required");
-			if (!args.point) console.error("paper.hole: args.point is required");
-			if (!args.onFinish) console.error("paper.hole: args.onFinish is required");
-			if (!args.onError) console.error("paper.hole: args.onError is required");
-			if (!args.bgColor) console.error("paper.hole: args.bgColor is required");
-			if (!args.layers) console.error("paper.hole: args.layers is required");
-			onFinish = args.onFinish;
-			onError = args.onError;
-			layers = args.layers;
-			floodFillX = args.point.x;
-			floodFillY = args.point.y;
-			gapFillAmount = args.gapFillAmount === void 0 ? 1 : args.gapFillAmount;
-			bgColor = args.bgColor;
-			rasterizePaths(onFinish);
-		} });
-	})();
-	//#endregion
-	//#region src/view/paper-ext/Paper.OrderingUtils.js
-	var PaperJSOrderingUtils = class PaperJSOrderingUtils {
-		/**
-		* Moves the selected items forwards.
-		*/
-		static moveForwards(items) {
-			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
-				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).reverse().forEach((item) => {
-					if (item.nextSibling && items.indexOf(item.nextSibling) === -1) item.insertAbove(item.nextSibling);
-				});
-			});
-		}
-		/**
-		* Moves the selected items backwards.
-		*/
-		static moveBackwards(items) {
-			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
-				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).forEach((item) => {
-					if (item.previousSibling && items.indexOf(item.previousSibling) === -1) item.insertBelow(item.previousSibling);
-				});
-			});
-		}
-		/**
-		* Brings the selected objects to the front.
-		*/
-		static bringToFront(items) {
-			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
-				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).forEach((item) => {
-					item.bringToFront();
-				});
-			});
-		}
-		/**
-		* Sends the selected objects to the back.
-		*/
-		static sendToBack(items) {
-			PaperJSOrderingUtils._sortItemsByLayer(items).forEach((layerItems) => {
-				PaperJSOrderingUtils._sortItemsByZIndex(layerItems).reverse().forEach((item) => {
-					item.sendToBack();
-				});
-			});
-		}
-		static _sortItemsByLayer(items) {
-			var layerLists = {};
-			items.forEach((item) => {
-				var layerID = item.layer.id;
-				if (!layerLists[layerID]) layerLists[layerID] = [];
-				layerLists[layerID].push(item);
-			});
-			var layerItemsArrays = [];
-			for (var layerID in layerLists) layerItemsArrays.push(layerLists[layerID]);
-			return layerItemsArrays;
-		}
-		static _sortItemsByZIndex(items) {
-			return items.sort(function(a, b) {
-				return a.index - b.index;
-			});
-		}
-	};
-	paper.PaperScope.inject({ OrderingUtils: PaperJSOrderingUtils });
-	//#endregion
-	//#region src/view/paper-ext/Paper.SelectionWidget.js
-	var SelectionWidget = class SelectionWidget {
-		/**
-		* Creates a SelectionWidget
-		*/
-		constructor(args) {
-			if (!args) args = {};
-			if (!args.layer) args.layer = paper.project.activeLayer;
-			this._layer = args.layer;
-			this._item = new paper.Group({ insert: false });
-			let startPath = new paper.Path.Circle({
-				radius: SelectionWidget.ENDPOINT_RADIUS,
-				fillColor: SelectionWidget.BOX_STROKE_COLOR,
-				insert: false,
-				applyMatrix: false,
-				data: {
-					handleType: "gradient-point",
-					handleEdge: "start"
-				}
-			});
-			let endPath = new paper.Path.Circle({
-				radius: SelectionWidget.ENDPOINT_RADIUS,
-				fillColor: SelectionWidget.BOX_STROKE_COLOR,
-				insert: false,
-				applyMatrix: false,
-				data: {
-					handleType: "gradient-point",
-					handleEdge: "end"
-				}
-			});
-			let linePath = new paper.Path.Line({
-				from: [0, 0],
-				to: [0, 0],
-				insert: false,
-				strokeColor: SelectionWidget.BOX_STROKE_COLOR,
-				strokeWidth: SelectionWidget.BOX_STROKE_WIDTH,
-				strokeScaling: false,
-				applyMatrix: false
-			});
-			let hoverStop = this._buildGradientStop(true);
-			this._gradientGUI = {
-				container: new paper.Group({
-					applyMatrix: false,
-					data: { isSelectionBoxGUI: true }
-				}),
-				startPath,
-				endPath,
-				linePath,
-				stops: [],
-				selectedStop: null,
-				hoverStop,
-				createdStopOnDown: false,
-				stroke: false,
-				radial: false,
-				startpoint: new paper.Point(0, 0),
-				endpoint: new paper.Point(0, 0),
-				lineVector: new paper.Point(0, 0)
-			};
-		}
-		/**
-		* The item containing the widget GUI
-		*/
-		get item() {
-			return this._item;
-		}
-		/**
-		* The layer to add the widget GUI item to.
-		*/
-		get layer() {
-			return this._layer;
-		}
-		set layer(layer) {
-			this._layer = layer;
-		}
-		/**
-		* The rotation of the selection box GUI.
-		*/
-		get boxRotation() {
-			return this._boxRotation;
-		}
-		set boxRotation(boxRotation) {
-			this._boxRotation = boxRotation;
-		}
-		/**
-		* The items currently inside the selection widget
-		*/
-		get itemsInSelection() {
-			return this._itemsInSelection;
-		}
-		/**
-		* The point to rotate/scale the widget around.
-		*/
-		get pivot() {
-			return this._pivot;
-		}
-		set pivot(pivot) {
-			this._pivot = pivot;
-		}
-		/**
-		* The position of the top left corner of the selection box.
-		*/
-		get position() {
-			return this._boundingBox.topLeft.rotate(this.rotation, this.pivot);
-		}
-		set position(position) {
-			var d = position.subtract(this.position);
-			this.translateSelection(d);
-		}
-		/**
-		* The width of the selection.
-		*/
-		get width() {
-			return this._boundingBox.width;
-		}
-		set width(width) {
-			var d = width / this.width;
-			if (d === 0) d = .001;
-			this.scaleSelection(new paper.Point(d, 1));
-		}
-		/**
-		* The height of the selection.
-		*/
-		get height() {
-			return this._boundingBox.height;
-		}
-		set height(height) {
-			var d = height / this.height;
-			this.scaleSelection(new paper.Point(1, d));
-		}
-		/**
-		* The rotation of the selection.
-		*/
-		get rotation() {
-			return this._boxRotation;
-		}
-		set rotation(rotation) {
-			var d = rotation - this.rotation;
-			this.rotateSelection(d);
-		}
-		/**
-		* Flip the selected items horizontally.
-		*/
-		flipHorizontally() {
-			this.scaleSelection(new paper.Point(-1, 1));
-		}
-		/**
-		* Flip the selected items vertically.
-		*/
-		flipVertically() {
-			this.scaleSelection(new paper.Point(1, -1));
-		}
-		/**
-		* The bounding box of the widget.
-		*/
-		get boundingBox() {
-			return this._boundingBox;
-		}
-		/**
-		* The current transformation being done to the selection widget.
-		* @type {string}
-		*/
-		get currentTransformation() {
-			return this._currentTransformation;
-		}
-		set currentTransformation(currentTransformation) {
-			if ([
-				"translate",
-				"scale",
-				"rotate",
-				"gradient-stop",
-				"gradient-point",
-				"gradient-none"
-			].indexOf(currentTransformation) === -1) {
-				console.error("Paper.SelectionWidget: Invalid transformation type: " + currentTransformation);
-				currentTransformation = null;
-			} else this._currentTransformation = currentTransformation;
-		}
-		/**
-		* Build a new SelectionWidget GUI around some items.
-		* @param {number} boxRotation - the rotation of the selection GUI. Optional, defaults to 0
-		* @param {paper.Item[]} items - the items to build the GUI around
-		* @param {paper.Point} pivot - the pivot point that the selection rotates around. Defaults to (0,0)
-		* @param {string|boolean} useGradientGUI - whether to use a gradient editing GUI. Defaults to false
-		*/
-		build(args) {
-			if (!args) args = {};
-			if (!args.boxRotation) args.boxRotation = 0;
-			if (!args.items) args.items = [];
-			if (!args.pivot) args.pivot = new paper.Point();
-			this._itemsInSelection = args.items;
-			this._boxRotation = args.boxRotation;
-			this._pivot = args.pivot;
-			this._useGradientGUI = args.useGradientGUI;
-			this._boundingBox = this._calculateBoundingBox();
-			this.item.remove();
-			this.item.removeChildren();
-			if (this._ghost) this._ghost.remove();
-			if (this._pivotPointHandle) this._pivotPointHandle.remove();
-			if (this._itemsInSelection.length > 0) {
-				this._center = this._calculateBoundingBoxOfItems(this._itemsInSelection).center;
-				if (args.useGradientGUI) this._buildGradientGUI(args.selectedStopIndex);
-				else this._buildGUI();
-				this.layer.addChild(this.item);
-			}
-		}
-		/**
-		*
-		*/
-		startTransformation(item, e) {
-			if (this._useGradientGUI) return this.startGradientTransformation(item, e);
-			this._ghost = this._buildGhost();
-			this._layer.addChild(this._ghost);
-			if (item.data.handleType === "rotation") this.currentTransformation = "rotate";
-			else if (item.data.handleType === "scale") this.currentTransformation = "scale";
-			else this.currentTransformation = "translate";
-			this._ghost.data.initialPosition = this._ghost.position;
-			this._ghost.data.scale = new paper.Point(1, 1);
-		}
-		/**
-		*
-		*/
-		updateTransformation(item, e) {
-			if (this.currentTransformation.substring(0, 8) === "gradient") return this.updateGradientTransformation(item, e);
-			if (!this.mod || !this.mod.initiated) {
-				this.mod = { initiated: true };
-				this.mod.onePoint = new paper.Point(1, 1);
-				this.mod.initialPoint = e.point;
-				this.mod.truePivot = this.pivot;
-				if (this.currentTransformation === "translate") {
-					this.mod.action = "translate";
-					this.mod.initialPosition = this._ghost.position;
-				} else if (this.currentTransformation === "rotate") {
-					this.mod.action = "rotate";
-					this.mod.rotateDelta = 0;
-					this.mod.initialAngle = this.mod.initialPoint.subtract(this.pivot).angle;
-					this.mod.initialBoxRotation = this.boxRotation || 0;
-				} else if (item.data.handleEdge.includes("Center")) {
-					this.mod.action = "move-edge";
-					this.mod.topLeft = item.data.handleEdge === "topCenter" || item.data.handleEdge === "leftCenter";
-					this.mod.vertical = item.data.handleEdge === "topCenter" || item.data.handleEdge === "bottomCenter";
-					this.mod.transformMatrix = new paper.Matrix();
-				} else {
-					this.mod.action = "move-corner";
-					this.mod.scaleFactor = this.mod.onePoint;
-				}
-			}
-			this.mod.modifiers = {
-				skew: e.modifiers.command,
-				center: !e.modifiers.alt,
-				freescale: !e.modifiers.shift
-			};
-			if (this.mod.action === "translate") {
-				var initialDelta = e.point.subtract(this.mod.initialPoint);
-				if (!this.mod.modifiers.freescale) {
-					var angle = initialDelta.angle;
-					angle = Math.round(Math.round(angle / 45) * 45) * Math.PI / 180;
-					var angleVector = new paper.Point(Math.cos(angle), Math.sin(angle));
-					initialDelta = initialDelta.project(angleVector);
-				}
-				this.mod.offset = initialDelta;
-				this._ghost.position = this.mod.initialPosition.add(initialDelta);
-			} else if (this.mod.action === "rotate") {
-				this._ghost.rotate(-this.mod.rotateDelta, this.pivot);
-				var rotateDelta = e.point.subtract(this.pivot).angle - this.mod.initialAngle;
-				if (!this.mod.modifiers.freescale) rotateDelta = Math.round(Math.round(rotateDelta / 45) * 45);
-				this.mod.rotateDelta = rotateDelta;
-				this.boxRotation = this.mod.initialBoxRotation + rotateDelta;
-				this._ghost.rotate(this.mod.rotateDelta, this.pivot);
-			} else if (this.mod.action === "move-corner") {
-				this._ghost.rotate(-this.boxRotation, this.pivot);
-				this._ghost.scale(this.mod.onePoint.divide(this.mod.scaleFactor), this.mod.truePivot);
-				if (this.mod.modifiers.center) this.mod.truePivot = this.pivot;
-				else {
-					let bounds = this._ghost.bounds;
-					switch (item.data.handleEdge) {
-						case "topRight":
-							this.mod.truePivot = bounds.bottomLeft;
-							break;
-						case "topLeft":
-							this.mod.truePivot = bounds.bottomRight;
-							break;
-						case "bottomRight":
-							this.mod.truePivot = bounds.topLeft;
-							break;
-						case "bottomLeft": this.mod.truePivot = bounds.topRight;
-					}
-				}
-				var currentPointRelative = e.point.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
-				var initialPointRelative = this.mod.initialPoint.rotate(-this.boxRotation, this.pivot).subtract(this.mod.truePivot);
-				var scaleFactor = currentPointRelative.divide(initialPointRelative);
-				if (!this.mod.modifiers.freescale) {
-					if (Math.abs(scaleFactor.x) < Math.abs(scaleFactor.y)) scaleFactor.x = Math.sign(scaleFactor.x) * Math.abs(scaleFactor.y);
-					else scaleFactor.y = Math.sign(scaleFactor.y) * Math.abs(scaleFactor.x);
-				}
-				this.mod.scaleFactor = scaleFactor;
-				this._ghost.scale(this.mod.scaleFactor, this.mod.truePivot);
-				this._ghost.rotate(this.boxRotation, this.pivot);
-			} else {
-				this._ghost.rotate(-this.boxRotation, this.pivot);
-				this._ghost.translate(this.mod.truePivot.multiply(-1)).transform(this.mod.transformMatrix.inverted()).translate(this.mod.truePivot);
-				if (this.mod.modifiers.center) this.mod.truePivot = this.pivot;
-				else if (this.mod.topLeft) this.mod.truePivot = this._ghost.bounds.bottomRight;
-				else this.mod.truePivot = this._ghost.bounds.topLeft;
-				this.mod.transformMatrix.reset();
-				var currentPointRelative = e.point.rotate(-this.boxRotation, this.pivot);
-				var initialPointRelative = this.mod.initialPoint.rotate(-this.boxRotation, this.pivot);
-				if (!this.mod.modifiers.skew || this.mod.modifiers.skew && e.modifiers.shift) {
-					var scaleFactor = currentPointRelative.subtract(this.mod.truePivot).divide(initialPointRelative.subtract(this.mod.truePivot));
-					if (this.mod.vertical) scaleFactor.x = 1;
-					else scaleFactor.y = 1;
-					this.mod.transformMatrix.scale(scaleFactor);
-				}
-				if (this.mod.modifiers.skew) {
-					var shearFactor = currentPointRelative.subtract(initialPointRelative).divide(this._ghost.bounds.height, this._ghost.bounds.width);
-					if (this.mod.vertical) shearFactor.y = 0;
-					else shearFactor.x = 0;
-					if (this.mod.modifiers.center) shearFactor = shearFactor.multiply(2);
-					if (this.mod.topLeft) shearFactor = shearFactor.multiply(-1);
-					this.mod.transformMatrix.shear(shearFactor.transform(this.mod.transformMatrix.inverted()));
-				}
-				this._ghost.translate(this.mod.truePivot.multiply(-1)).transform(this.mod.transformMatrix).translate(this.mod.truePivot);
-				this._ghost.rotate(this.boxRotation, this.pivot);
-			}
-		}
-		/**
-		*
-		*/
-		finishTransformation(item) {
-			if (!this._currentTransformation) return;
-			if (this.currentTransformation.substring(0, 8) === "gradient") return this.finishGradientTransformation();
-			this._ghost.remove();
-			if (this.mod.action === "translate") this.translateSelection(this.mod.offset);
-			else if (this.mod.action === "rotate") this.rotateSelection(this._ghost.rotation);
-			else if (this.mod.action === "move-corner") this.scaleSelection(this.mod.scaleFactor, this.mod.truePivot);
-			else this.transformSelection(this.mod.transformMatrix, this.mod.truePivot);
-			this._currentTransformation = null;
-			this.mod.initiated = false;
-		}
-		/**
-		*
-		*/
-		translateSelection(delta) {
-			this._itemsInSelection.forEach((item) => {
-				item.position = item.position.add(delta);
-			});
-			this.pivot = this.pivot.add(delta);
-		}
-		/**
-		*
-		*/
-		rotateSelection(angle) {
-			this._itemsInSelection.forEach((item) => {
-				item.rotate(angle, this.pivot);
-			});
-		}
-		/**
-		*
-		*/
-		scaleSelection(scale, pivot = this.pivot) {
-			this._itemsInSelection.forEach((item) => {
-				item.rotate(-this.boxRotation, this.pivot);
-				item.scale(scale, pivot);
-				item.rotate(this.boxRotation, this.pivot);
-			});
-			var newPivot = pivot.add(this.pivot.subtract(pivot).multiply(scale));
-			this.pivot = newPivot.rotate(this.boxRotation, this.pivot);
-		}
-		/**
-		*
-		*/
-		transformSelection(matrix, pivot = this.pivot) {
-			this._itemsInSelection.forEach((item) => {
-				item.rotate(-this.boxRotation, this.pivot);
-				item.translate(pivot.multiply(-1)).transform(matrix).translate(pivot);
-				item.rotate(this.boxRotation, this.pivot);
-			});
-			var newPivot = pivot.add(this.pivot.subtract(pivot).transform(matrix));
-			this.pivot = newPivot.rotate(this.boxRotation, this.pivot);
-		}
-		_buildGUI() {
-			this.item.addChild(this._buildBorder());
-			if (this._itemsInSelection.length > 1) this.item.addChildren(this._buildItemOutlines());
-			let guiElements = [];
-			guiElements.push(this._buildRotationHotspot("topLeft"));
-			guiElements.push(this._buildRotationHotspot("topRight"));
-			guiElements.push(this._buildRotationHotspot("bottomLeft"));
-			guiElements.push(this._buildRotationHotspot("bottomRight"));
-			guiElements.push(this._buildScalingHandle("topLeft"));
-			guiElements.push(this._buildScalingHandle("topRight"));
-			guiElements.push(this._buildScalingHandle("bottomLeft"));
-			guiElements.push(this._buildScalingHandle("bottomRight"));
-			guiElements.push(this._buildScalingHandle("topCenter"));
-			guiElements.push(this._buildScalingHandle("bottomCenter"));
-			guiElements.push(this._buildScalingHandle("leftCenter"));
-			guiElements.push(this._buildScalingHandle("rightCenter"));
-			this.item.addChildren(guiElements);
-			this._pivotPointHandle = this._buildPivotPointHandle();
-			this.layer.addChild(this._pivotPointHandle);
-			this.item.rotate(this.boxRotation, this._center);
-			this.item.children.forEach((child) => {
-				child.data.isSelectionBoxGUI = true;
-			});
-		}
-		_buildBorder() {
-			var border = new paper.Path.Rectangle({
-				name: "border",
-				from: this.boundingBox.topLeft,
-				to: this.boundingBox.bottomRight,
-				strokeWidth: SelectionWidget.BOX_STROKE_WIDTH / paper.view.zoom,
-				strokeColor: SelectionWidget.BOX_STROKE_COLOR,
-				insert: false
-			});
-			border.data.isBorder = true;
-			return border;
-		}
-		_buildItemOutlines() {
-			return this._itemsInSelection.map((item) => {
-				var clone = item.clone({ insert: false });
-				clone.rotate(-this.boxRotation, this._center);
-				var bounds = clone.bounds;
-				var border = new paper.Path.Rectangle({
-					from: bounds.topLeft,
-					to: bounds.bottomRight,
-					strokeWidth: SelectionWidget.BOX_STROKE_WIDTH / paper.view.zoom,
-					strokeColor: SelectionWidget.BOX_STROKE_COLOR
-				});
-				border.remove();
-				return border;
-			});
-		}
-		_buildScalingHandle(edge) {
-			return this._buildHandle({
-				name: edge,
-				type: "scale",
-				center: this.boundingBox[edge],
-				fillColor: SelectionWidget.HANDLE_FILL_COLOR,
-				strokeColor: SelectionWidget.HANDLE_STROKE_COLOR
-			});
-		}
-		_buildPivotPointHandle() {
-			var handle = this._buildHandle({
-				name: "pivot",
-				type: "pivot",
-				center: this.pivot,
-				fillColor: SelectionWidget.PIVOT_FILL_COLOR,
-				strokeColor: SelectionWidget.PIVOT_STROKE_COLOR
-			});
-			handle.locked = true;
-			return handle;
-		}
-		_buildHandle(args) {
-			if (!args) console.error("_createHandle: args is required");
-			if (!args.name) console.error("_createHandle: args.name is required");
-			if (!args.type) console.error("_createHandle: args.type is required");
-			if (!args.center) console.error("_createHandle: args.center is required");
-			if (!args.fillColor) console.error("_createHandle: args.fillColor is required");
-			if (!args.strokeColor) console.error("_createHandle: args.strokeColor is required");
-			var circle = new paper.Path.Circle({
-				center: args.center,
-				radius: SelectionWidget.HANDLE_RADIUS / paper.view.zoom,
-				strokeWidth: SelectionWidget.HANDLE_STROKE_WIDTH / paper.view.zoom,
-				strokeColor: args.strokeColor,
-				fillColor: args.fillColor,
-				insert: false
-			});
-			circle.applyMatrix = false;
-			circle.data.isSelectionBoxGUI = true;
-			circle.data.handleType = args.type;
-			circle.data.handleEdge = args.name;
-			return circle;
-		}
-		_buildRotationHotspot(cornerName) {
-			var r = SelectionWidget.ROTATION_HOTSPOT_RADIUS / paper.view.zoom;
-			var hotspot = new paper.Path([
-				new paper.Point(0, 0),
-				new paper.Point(0, r),
-				new paper.Point(r, r),
-				new paper.Point(r, -r),
-				new paper.Point(-r, -r),
-				new paper.Point(-r, 0)
-			]);
-			hotspot.fillColor = SelectionWidget.ROTATION_HOTSPOT_FILLCOLOR;
-			hotspot.position.x = this.boundingBox[cornerName].x;
-			hotspot.position.y = this.boundingBox[cornerName].y;
-			hotspot.rotate({
-				"topRight": 0,
-				"bottomRight": 90,
-				"bottomLeft": 180,
-				"topLeft": 270
-			}[cornerName]);
-			hotspot.data.handleType = "rotation";
-			hotspot.data.handleEdge = cornerName;
-			return hotspot;
-		}
-		_buildGhost() {
-			var ghost = new paper.Group({
-				insert: false,
-				applyMatrix: false
-			});
-			this._itemsInSelection.forEach((item) => {
-				var outline = item.clone();
-				outline.remove();
-				outline.fillColor = "rgba(0,0,0,0)";
-				outline.strokeColor = SelectionWidget.GHOST_STROKE_COLOR;
-				outline.strokeWidth = SelectionWidget.GHOST_STROKE_WIDTH * 2 / paper.view.zoom;
-				ghost.addChild(outline);
-				var outline2 = outline.clone();
-				outline2.remove();
-				outline2.fillColor = "rgba(0,0,0,0)";
-				outline2.strokeColor = "#ffffff";
-				outline2.strokeWidth = SelectionWidget.GHOST_STROKE_WIDTH / paper.view.zoom;
-				ghost.addChild(outline2);
-			});
-			var boundsOutline = new paper.Path.Rectangle({
-				from: this.boundingBox.topLeft,
-				to: this.boundingBox.bottomRight,
-				fillColor: "rgba(0,0,0,0)",
-				strokeColor: SelectionWidget.GHOST_STROKE_COLOR,
-				strokeWidth: SelectionWidget.GHOST_STROKE_WIDTH / paper.view.zoom,
-				applyMatrix: false
-			});
-			boundsOutline.rotate(this.boxRotation, this._center);
-			ghost.addChild(boundsOutline);
-			ghost.opacity = .5;
-			return ghost;
-		}
-		_calculateBoundingBox() {
-			if (this._itemsInSelection.length === 0) return new paper.Rectangle();
-			var center = this._calculateBoundingBoxOfItems(this._itemsInSelection).center;
-			var itemsForBoundsCalc = this._itemsInSelection.map((item) => {
-				var clone = item.clone();
-				clone.rotate(-this.boxRotation, center);
-				clone.remove();
-				return clone;
-			});
-			return this._calculateBoundingBoxOfItems(itemsForBoundsCalc);
-		}
-		_calculateBoundingBoxOfItems(items) {
-			var bounds = null;
-			items.forEach((item) => {
-				bounds = bounds ? bounds.unite(item.bounds) : item.bounds;
-			});
-			return bounds || new paper.Rectangle();
-		}
-		_buildGradientGUI(selectedStopIndex) {
-			let item = this._itemsInSelection[0];
-			let color, stops, startpoint, endpoint;
-			if (this._useGradientGUI === "stroke") {
-				color = item.strokeColor;
-				this._gradientGUI.stroke = true;
-			} else {
-				color = item.fillColor;
-				this._gradientGUI.stroke = false;
-			}
-			if (!color) color = new paper.Color(0, 0, 0);
-			if (color.gradient) {
-				this._gradientGUI.radial = color.gradient.radial;
-				stops = color.gradient.stops;
-				startpoint = color.origin;
-				endpoint = color.destination;
-			} else {
-				this._gradientGUI.radial = false;
-				stops = [{
-					color: color.clone(),
-					offset: 0
-				}, {
-					color: color.clone(),
-					offset: 1
-				}];
-				let bounds = this._calculateBoundingBoxOfItems(this._itemsInSelection);
-				startpoint = bounds.topCenter;
-				endpoint = bounds.bottomCenter;
-			}
-			this._gradientGUI.startpoint = startpoint;
-			this._gradientGUI.endpoint = endpoint;
-			this._gradientGUI.lineVector = endpoint.subtract(startpoint);
-			let container = this._gradientGUI.container;
-			container.removeChildren();
-			this._transformContainer();
-			container.addChildren(this._buildGradientLine());
-			container.addChildren(this._buildGradientStops(stops));
-			container.addChild(this._buildHoverStop());
-			this._selectStop(this._gradientGUI.stops[selectedStopIndex]);
-			this.item.addChild(container);
-			container.children.forEach((child) => {
-				child.data.isSelectionBoxGUI = true;
-			});
-		}
-		/**
-		* Update the gradient line GUI.
-		* @param {paper.Color} color The paper.js gradient color object.
-		* @returns {paper.Path[]} The start point, end point, and connecting line paths.
-		*/
-		_buildGradientLine() {
-			let length = this._gradientGUI.lineVector.length;
-			this._gradientGUI.endPath.position.x = length;
-			this._gradientGUI.linePath.segments[1].point.x = length;
-			const scaling = 1 / paper.view.zoom;
-			this._gradientGUI.startPath.scaling = scaling;
-			this._gradientGUI.endPath.scaling = scaling;
-			return [
-				this._gradientGUI.linePath,
-				this._gradientGUI.startPath,
-				this._gradientGUI.endPath
-			];
-		}
-		/**
-		* Update the gradient stops GUI.
-		* @param {paper.Color} color The paper.js gradient color object.
-		* @returns {paper.Path[]} The list of color stop paths.
-		*/
-		_buildGradientStops(paperStops) {
-			let stopList = this._gradientGUI.stops;
-			paperStops.forEach((paperStop, idx) => {
-				if (idx >= stopList.length) stopList.push(this._buildGradientStop());
-				let stop = stopList[idx];
-				stop.data.setColor(paperStop.color);
-				stop.data.setOffset(paperStop.offset);
-				stop.data.setScaling();
-			});
-			stopList.length = paperStops.length;
-			return stopList;
-		}
-		_buildGradientStop(isHover) {
-			const ARROW_HEIGHT = SelectionWidget.COLOR_STOP_RECT_RADIUS / 5;
-			const COLOR_BOX_CENTER = [0, -(SelectionWidget.COLOR_STOP_RECT_RADIUS + ARROW_HEIGHT)];
-			const COLOR_BOX_INNER_SIZE = 2 * (SelectionWidget.COLOR_STOP_RECT_RADIUS - SelectionWidget.COLOR_STOP_RECT_PADDING);
-			const COLOR_BOX_OUTER_SIZE = 2 * SelectionWidget.COLOR_STOP_RECT_RADIUS;
-			const CHECKER_SIZE = 8;
-			let stopObj = new paper.Group({
-				pivot: [0, 0],
-				position: [0, -SelectionWidget.ENDPOINT_RADIUS],
-				applyMatrix: false,
-				insert: false,
-				data: {
-					handleType: "gradient-stop",
-					color: "black",
-					offset: 0,
-					selected: false
-				}
-			});
-			let colorBox = new paper.Path.Rectangle({
-				center: COLOR_BOX_CENTER,
-				size: [COLOR_BOX_INNER_SIZE, COLOR_BOX_INNER_SIZE],
-				fillColor: "red",
-				strokeWidth: 0,
-				data: {
-					isSelectionBoxGUI: true,
-					parentItem: stopObj
-				}
-			});
-			let opaqueColorBox = new paper.Path.Rectangle({
-				center: [-COLOR_BOX_INNER_SIZE / 4, COLOR_BOX_CENTER[1]],
-				size: [COLOR_BOX_INNER_SIZE / 2, COLOR_BOX_INNER_SIZE],
-				fillColor: "red",
-				strokeWidth: 0,
-				data: {
-					isSelectionBoxGUI: true,
-					parentItem: stopObj,
-					isBorder: true
-				}
-			});
-			let outerBox = new paper.Path.Rectangle({
-				center: COLOR_BOX_CENTER,
-				size: [COLOR_BOX_OUTER_SIZE, COLOR_BOX_OUTER_SIZE],
-				fillColor: "#ffffff",
-				strokeWidth: SelectionWidget.COLOR_STOP_OUTLINE_WIDTH,
-				data: {
-					isSelectionBoxGUI: true,
-					parentItem: stopObj
-				}
-			});
-			let checker = new paper.Group({
-				children: [
-					new paper.Path.Rectangle({
-						position: [0, 0],
-						size: 24,
-						fillColor: "#e6e6e6",
-						data: {
-							isSelectionBoxGUI: true,
-							parentItem: stopObj,
-							isBorder: true
-						}
-					}),
-					new paper.Path.Rectangle({
-						position: [0, -8],
-						size: CHECKER_SIZE,
-						fillColor: "#d4d4d4",
-						data: {
-							isSelectionBoxGUI: true,
-							parentItem: stopObj,
-							isBorder: true
-						}
-					}),
-					new paper.Path.Rectangle({
-						position: [-8, 0],
-						size: CHECKER_SIZE,
-						fillColor: "#d4d4d4",
-						data: {
-							isSelectionBoxGUI: true,
-							parentItem: stopObj,
-							isBorder: true
-						}
-					}),
-					new paper.Path.Rectangle({
-						position: [0, CHECKER_SIZE],
-						size: CHECKER_SIZE,
-						fillColor: "#d4d4d4",
-						data: {
-							isSelectionBoxGUI: true,
-							parentItem: stopObj,
-							isBorder: true
-						}
-					}),
-					new paper.Path.Rectangle({
-						position: [CHECKER_SIZE, 0],
-						size: CHECKER_SIZE,
-						fillColor: "#d4d4d4",
-						data: {
-							isSelectionBoxGUI: true,
-							parentItem: stopObj,
-							isBorder: true
-						}
-					})
-				],
-				strokeWidth: 0
-			});
-			outerBox.addTo(stopObj);
-			checker.position = COLOR_BOX_CENTER;
-			checker.scaling = COLOR_BOX_INNER_SIZE / 24;
-			checker.addTo(stopObj);
-			colorBox.addTo(stopObj);
-			opaqueColorBox.addTo(stopObj);
-			let arrow;
-			if (!isHover) {
-				arrow = new paper.Path({
-					segments: [
-						[-ARROW_HEIGHT, -ARROW_HEIGHT],
-						[0, 0],
-						[ARROW_HEIGHT, -ARROW_HEIGHT]
-					],
-					closed: true,
-					fillColor: SelectionWidget.DESELECTED_COLOR,
-					strokeWidth: SelectionWidget.COLOR_STOP_OUTLINE_WIDTH,
-					data: {
-						isSelectionBoxGUI: true,
-						parentItem: stopObj
-					}
-				});
-				arrow.addTo(stopObj);
-			}
-			stopObj.strokeColor = SelectionWidget.DESELECTED_COLOR;
-			if (isHover) {
-				stopObj.data.isBorder = true;
-				outerBox.data.isBorder = true;
-				colorBox.data.isBorder = true;
-			}
-			stopObj.data.setColor = (color) => {
-				colorBox.fillColor = color || "black";
-				opaqueColorBox.fillColor = color || "black";
-				opaqueColorBox.fillColor.alpha = 1;
-				stopObj.data.color = color;
-			};
-			stopObj.data.setOffset = (offset) => {
-				stopObj.position.x = this._gradientGUI.lineVector.length * offset;
-				stopObj.data.offset = offset;
-			};
-			stopObj.data.setSelected = (selected) => {
-				stopObj.strokeColor = selected ? SelectionWidget.SELECTED_COLOR : SelectionWidget.DESELECTED_COLOR;
-				if (arrow) arrow.fillColor = selected ? SelectionWidget.SELECTED_COLOR : SelectionWidget.DESELECTED_COLOR;
-				stopObj.data.selected = selected;
-			};
-			stopObj.data.setScaling = () => {
-				const scaling = 1 / paper.view.zoom;
-				stopObj.scaling = scaling;
-				stopObj.position.y = -SelectionWidget.ENDPOINT_RADIUS * scaling;
-			};
-			stopObj.data.setScaling();
-			return stopObj;
-		}
-		_buildHoverStop(point) {
-			this._gradientGUI.hoverStop.visible = false;
-			if (point) {
-				let offset = this._calculateValidOffset(point);
-				if (offset !== null) {
-					this._interpolateStop(this._gradientGUI.hoverStop, offset);
-					this._gradientGUI.hoverStop.visible = true;
-					this._gradientGUI.hoverStop.data.setScaling();
-				}
-			}
-			return this._gradientGUI.hoverStop;
-		}
-		startGradientTransformation(item, e) {
-			if (item && item.data.parentItem) item = item.data.parentItem;
-			this._gradientGUI.hoverStop.remove();
-			if (item && item.data.handleType === "gradient-stop") this.currentTransformation = "gradient-stop";
-			else if (item && item.data.handleType === "gradient-point") {
-				this.currentTransformation = "gradient-point";
-				this._gradientGUI.initialStartpoint = this._gradientGUI.startpoint;
-				this._gradientGUI.initialEndpoint = this._gradientGUI.endpoint;
-				this._gradientGUI.initialLineVector = this._gradientGUI.lineVector;
-			} else if (this._gradientGUI.createdStopOnDown) {
-				this.currentTransformation = "gradient-stop";
-				this._gradientGUI.createdStopOnDown = false;
-			} else this.currentTransformation = "gradient-none";
-		}
-		updateGradientTransformation(item, e) {
-			if (item && item.data.parentItem) item = item.data.parentItem;
-			if (this.currentTransformation === "gradient-stop") {
-				let offset = this._calculateOffset(e.point);
-				if (offset < 0) offset = 0;
-				if (offset > 1) offset = 1;
-				this._gradientGUI.selectedStop.data.setOffset(offset);
-			} else if (this.currentTransformation === "gradient-point") {
-				if (item.data.handleEdge === "start") this._gradientGUI.startpoint = e.point;
-				else this._gradientGUI.endpoint = e.point;
-				if (e.modifiers.shift) {
-					this._gradientGUI.lineVector = this._gradientGUI.initialLineVector;
-					if (item.data.handleEdge === "start") this._gradientGUI.endpoint = e.point.add(this._gradientGUI.lineVector);
-					else this._gradientGUI.startpoint = e.point.subtract(this._gradientGUI.lineVector);
-				} else {
-					if (item.data.handleEdge === "start") this._gradientGUI.endpoint = this._gradientGUI.initialEndpoint;
-					else this._gradientGUI.startpoint = this._gradientGUI.initialStartpoint;
-					this._gradientGUI.lineVector = this._gradientGUI.endpoint.subtract(this._gradientGUI.startpoint);
-				}
-				this._transformContainer();
-				this._buildGradientLine();
-				this._gradientGUI.stops.forEach((stopObj) => {
-					stopObj.data.setOffset(stopObj.data.offset);
-					stopObj.data.setScaling();
-				});
-			}
-			if (this.currentTransformation !== "gradient-none") this._updateItems();
-		}
-		finishGradientTransformation(item, e) {
-			if (!this._currentTransformation) return;
-			if (this.currentTransformation !== "gradient-none") this._updateItems();
-			this._currentTransformation = null;
-		}
-		_updateItems() {
-			let colorObj = {
-				origin: this._gradientGUI.startpoint,
-				destination: this._gradientGUI.endpoint,
-				stops: this._gradientGUI.stops.map((stopPath) => {
-					return {
-						color: stopPath.data.color,
-						offset: stopPath.data.offset
-					};
-				}),
-				radial: this._gradientGUI.radial
-			};
-			if (this._gradientGUI.stroke) this._itemsInSelection.forEach((item) => {
-				item.strokeColor = colorObj;
-			});
-			else this._itemsInSelection.forEach((item) => {
-				item.fillColor = colorObj;
-			});
-		}
-		_selectStop(stopObj) {
-			if (this._gradientGUI.selectedStop) this._gradientGUI.selectedStop.data.setSelected(false);
-			this._gradientGUI.selectedStop = stopObj;
-			stopObj.data.setSelected(true);
-		}
-		_createStopFromPoint(point) {
-			let offset = this._calculateValidOffset(point);
-			if (offset !== null) {
-				let newStop = this._buildGradientStop();
-				this._interpolateStop(newStop, offset);
-				this._gradientGUI.stops.push(newStop);
-				this._gradientGUI.container.addChild(newStop);
-				this._selectStop(newStop);
-				this._updateItems();
-				return this._gradientGUI.stops.length - 1;
-			}
-			return null;
-		}
-		_interpolateStop(stop, offset) {
-			let stops = this._gradientGUI.stops;
-			let stop1, stop2;
-			let index1 = 0;
-			let index2 = 1;
-			stops.forEach((stop) => {
-				let stopOffset = stop.data.offset;
-				if (index1 <= stopOffset && stopOffset <= offset) {
-					stop1 = stop;
-					index1 = stopOffset;
-				} else if (offset <= stopOffset && stopOffset <= index2) {
-					stop2 = stop;
-					index2 = stopOffset;
-				}
-			});
-			let color;
-			if (!stop1) color = stop2.data.color ? stop2.data.color.clone() : new paper.Color("black");
-			else if (!stop2) color = stop1.data.color ? stop1.data.color.clone() : new paper.Color("black");
-			else {
-				let offsetRelative = (offset - index1) / (index2 - index1);
-				let color1 = stop1.data.color || new paper.Color("black");
-				let color2 = stop2.data.color || new paper.Color("black");
-				color = color1.add(color2.subtract(color1).multiply(offsetRelative));
-				color.alpha = color1.alpha + (color2.alpha - color1.alpha) * offsetRelative;
-			}
-			stop.data.setColor(color);
-			stop.data.setOffset(offset);
-		}
-		_transformContainer() {
-			let container = this._gradientGUI.container;
-			container.matrix.reset();
-			container.translate(this._gradientGUI.startpoint);
-			container.rotate(this._gradientGUI.lineVector.angle, this._gradientGUI.startpoint);
-		}
-		_calculateDistanceFromLine(point) {
-			let pointVector = point.subtract(this._gradientGUI.startpoint);
-			return this._gradientGUI.lineVector.normalize().cross(pointVector);
-		}
-		_calculateOffset(point) {
-			let pointVector = point.subtract(this._gradientGUI.startpoint);
-			let lineVector = this._gradientGUI.lineVector;
-			return lineVector.dot(pointVector) / (lineVector.length * lineVector.length);
-		}
-		_calculateValidOffset(point) {
-			let distance = -this._calculateDistanceFromLine(point);
-			if (distance < 0 || distance > SelectionWidget.COLOR_STOP_CREATION_DISTANCE / paper.view.zoom) return null;
-			let offset = this._calculateOffset(point);
-			return 0 <= offset && offset <= 1 ? offset : null;
-		}
-	};
-	SelectionWidget.BOX_STROKE_WIDTH = 1;
-	SelectionWidget.BOX_STROKE_COLOR = "rgba(100,150,255,1.0)";
-	SelectionWidget.HANDLE_RADIUS = 5;
-	SelectionWidget.HANDLE_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
-	SelectionWidget.HANDLE_STROKE_COLOR = SelectionWidget.BOX_STROKE_COLOR;
-	SelectionWidget.HANDLE_FILL_COLOR = "rgba(255,255,255,0.3)";
-	SelectionWidget.PIVOT_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
-	SelectionWidget.PIVOT_FILL_COLOR = "rgba(255,255,255,0.5)";
-	SelectionWidget.PIVOT_STROKE_COLOR = "rgba(0,0,0,1)";
-	SelectionWidget.PIVOT_RADIUS = SelectionWidget.HANDLE_RADIUS;
-	SelectionWidget.ROTATION_HOTSPOT_RADIUS = 20;
-	SelectionWidget.ROTATION_HOTSPOT_FILLCOLOR = "rgba(100,150,255,0.5)";
-	SelectionWidget.GHOST_STROKE_COLOR = "rgba(0, 0, 0, 1.0)";
-	SelectionWidget.GHOST_STROKE_WIDTH = 1;
-	SelectionWidget.ENDPOINT_RADIUS = 8;
-	SelectionWidget.COLOR_STOP_RECT_RADIUS = 12;
-	SelectionWidget.COLOR_STOP_RECT_PADDING = 2;
-	SelectionWidget.COLOR_STOP_OUTLINE_WIDTH = 2;
-	SelectionWidget.COLOR_STOP_CREATION_DISTANCE = SelectionWidget.ENDPOINT_RADIUS + 2.2 * SelectionWidget.COLOR_STOP_RECT_RADIUS;
-	SelectionWidget.SELECTED_COLOR = "#0c8ce9";
-	SelectionWidget.DESELECTED_COLOR = "#cccccc";
-	paper.PaperScope.inject({ SelectionWidget });
-	//#endregion
-	//#region src/view/paper-ext/Paper.SelectionBox.js
-	paper.SelectionBox = class {
-		constructor(paperContext) {
-			this.paper = paperContext;
-			this._start = new this.paper.Point();
-			this._end = new this.paper.Point();
-			this._items = [];
-			this._active = false;
-			this._box = new this.paper.Path.Rectangle({ insert: false });
-			this._mode = "intersects";
-		}
-		start(point) {
-			this._active = true;
-			this._start = point;
-			this._end = point;
-			this._rebuildBox();
-		}
-		drag(point) {
-			this._end = point;
-			this._rebuildBox();
-		}
-		end(point) {
-			this._end = point;
-			this._active = false;
-			this._rebuildBox();
-			this._box.remove();
-			this._items = this._itemsInBox(this._box);
-		}
-		get items() {
-			return this._items;
-		}
-		get active() {
-			return this._active;
-		}
-		get mode() {
-			return this._mode;
-		}
-		set mode(mode) {
-			if (mode !== "contains" && mode !== "intersects") throw new Error("SelectionBox.mode: invalid mode");
-			this._mode = mode;
-		}
-		_rebuildBox() {
-			this._box.remove();
-			this._box = new this.paper.Path.Rectangle({
-				from: this._start,
-				to: this._end,
-				strokeWidth: 1 / this.paper.view.zoom,
-				strokeColor: "black"
-			});
-		}
-		_itemsInBox(box) {
-			var checkItems = [];
-			this._getSelectableLayers().forEach((layer) => {
-				layer.children.forEach((child) => {
-					checkItems.push(child);
-				});
-			});
-			var items = [];
-			checkItems.forEach((item) => {
-				if (this.mode === "contains") {
-					if (this._box.bounds.contains(item.bounds)) items.push(item);
-				} else if (this.mode === "intersects") {
-					if (this._shapesIntersect(item, this._box)) items.push(item);
-				}
-			});
-			return items;
-		}
-		_shapesIntersect(itemA, itemB) {
-			if (itemA instanceof this.paper.Group) {
-				var intersects = false;
-				var itemBClone = itemB.clone();
-				itemBClone.transform(itemA.matrix.inverted());
-				itemA.children.forEach((child) => {
-					if (!intersects && this._shapesIntersect(child, itemBClone)) intersects = true;
-				});
-				return intersects;
-			} else {
-				var shapesDoIntersect = itemB.intersects(itemA);
-				var boundsContain = itemB.bounds.contains(itemA.bounds);
-				if (shapesDoIntersect || boundsContain) return true;
-			}
-		}
-		_getSelectableLayers() {
-			return this.paper.project.layers.filter((layer) => {
-				return !layer.locked;
-			});
-		}
-	};
-	paper.PaperScope.inject({ SelectionBox: paper.SelectionBox });
-	//#endregion
-	//#region src/view/paper-ext/Path.potrace.js
-	paper.Path.inject({ potrace: function(args) {
-		var self = this;
-		if (!args) throw new Error("Path.potrace: args is required.");
-		if (!args.resolution) throw new Error("Path.potrace: args.resolution is required.");
-		if (!args.done) throw new Error("Path.potrace: args.done is required.");
-		var finalRasterResolution = paper.view.resolution * args.resolution / window.devicePixelRatio;
-		var raster = this.rasterize(finalRasterResolution);
-		var zoomFactor = args.resolution * raster.bounds.width / raster.width;
-		raster.remove();
-		var rasterDataURL = raster.toDataURL();
-		if (rasterDataURL === "data:,") args.done(null);
-		var img = new Image();
-		img.onload = function() {
-			var svg = potrace.fromImage(img).toSVG(1 / args.resolution);
-			var potracePath = paper.project.importSVG(svg);
-			potracePath.position.x = self.position.x;
-			potracePath.position.y = self.position.y;
-			potracePath.remove();
-			potracePath.closed = true;
-			potracePath.children[0].closed = true;
-			potracePath.children[0].scale(zoomFactor);
-			args.done(potracePath.children[0]);
-		};
-		img.src = rasterDataURL;
-	} });
-	new function() {
-		var errorThreshold = .1;
-		geomEpsilon = 1e-8, abs = Math.abs, enforeArcs = false;
-		function offsetPath(path, offset, dontMerge) {
-			var result = new Path({ insert: false }), curves = path.getCurves(), strokeJoin = path.getStrokeJoin(), miterLimit = path.getMiterLimit();
-			for (var i = 0, l = curves.length; i < l; i++) {
-				var curve = curves[i];
-				if (curve.hasLength(geomEpsilon)) {
-					var segments = getOffsetSegments(curve, offset);
-					if (!result.isEmpty()) connect(result, segments.shift(), curve.segment1, offset, strokeJoin, miterLimit, true);
-					result.addSegments(segments);
-				}
-			}
-			if (path.isClosed() && !result.isEmpty()) {
-				connect(result, result.firstSegment, path.firstSegment, offset, strokeJoin, miterLimit);
-				if (dontMerge) result.setClosed(true);
-				else result.closePath();
-			}
-			return result;
-		}
-		function connect(path, dest, originSegment, offset, type, miterLimit, addLine) {
-			function fixHandles(seg) {
-				var handleIn = seg.handleIn, handleOut = seg.handleOut;
-				if (handleIn.length < handleOut.length) seg.handleIn = handleIn.project(handleOut);
-				else seg.handleOut = handleOut.project(handleIn);
-			}
-			function addPoint(point) {
-				if (!point.equals(path.lastSegment.point)) path.add(point);
-			}
-			var center = originSegment.point, start = path.lastSegment, pt1 = start.point, pt2 = dest.point, connected = false;
-			if (!pt1.isClose(pt2, geomEpsilon)) {
-				if (enforeArcs || new Line(pt1, pt2).getSignedDistance(center) * offset <= geomEpsilon) {
-					var radius = abs(offset);
-					switch (type) {
-						case "round":
-							var v1 = pt1.subtract(center), v2 = pt2.subtract(center), v = v1.add(v2), through = v.getLength() < geomEpsilon ? v2.rotate(90).add(center) : center.add(v.normalize(radius));
-							path.arcTo(through, pt2);
-							break;
-						case "miter":
-							Path._addBevelJoin(originSegment, "miter", radius, 4, null, null, addPoint);
-							break;
-						case "square":
-							Path._addSquareCap(originSegment, "square", radius, null, null, addPoint);
-							break;
-						default: path.lineTo(pt2);
-					}
-					connected = true;
-				} else if (addLine) {
-					path.lineTo(pt2);
-					connected = true;
-				}
-				if (connected) {
-					fixHandles(start);
-					var last = path.lastSegment;
-					fixHandles(last);
-					if (dest !== path.firstSegment) last.handleOut = dest.handleOut;
-				}
-			}
-			return connected;
-		}
-		function joinOffsets(outerPath, innerPath, originPath, offset) {
-			outerPath.closed = innerPath.closed = false;
-			var path = outerPath, open = !originPath.closed, strokeCap = originPath.strokeCap;
-			path.reverse();
-			if (open) connect(path, innerPath.firstSegment, originPath.firstSegment, offset, strokeCap);
-			path.join(innerPath);
-			if (open) connect(path, path.firstSegment, originPath.lastSegment, offset, strokeCap);
-			path.closePath();
-			return path;
-		}
-		function cleanupPath(path) {
-			path.children.forEach(function(child) {
-				if (Math.abs(child.area) < errorThreshold) child.remove();
-			});
-		}
-		/**
-		* Creates an offset for the specified curve and returns the segments of
-		* that offset path.
-		*
-		* @param {Curve} curve the curve to be offset
-		* @param {Number} offset the offset distance
-		* @returns {Segment[]} an array of segments describing the offset path
-		*/
-		function getOffsetSegments(curve, offset) {
-			if (curve.isStraight()) {
-				var n = curve.getNormalAtTime(.5).multiply(offset), p1 = curve.point1.add(n), p2 = curve.point2.add(n);
-				return [new Segment(p1), new Segment(p2)];
-			} else {
-				var curves = splitCurveForOffseting(curve), segments = [];
-				for (var i = 0, l = curves.length; i < l; i++) {
-					var offsetCurves = getOffsetCurves(curves[i], offset, 0), prevSegment;
-					for (var j = 0, m = offsetCurves.length; j < m; j++) {
-						var curve = offsetCurves[j], segment = curve.segment1;
-						if (prevSegment) prevSegment.handleOut = segment.handleOut.project(prevSegment.handleIn);
-						else segments.push(segment);
-						segments.push(prevSegment = curve.segment2);
-					}
-				}
-				return segments;
-			}
-		}
-		function getOffsetCurves(curve, offset) {
-			var radius = abs(offset);
-			function getOffsetPoint(v, t) {
-				return Curve.getPoint(v, t).add(Curve.getNormal(v, t).multiply(offset));
-			}
-			/**
-			* Approach for Curve Offsetting based on:
-			*   "A New Shape Control and Classification for Cubic Bézier Curves"
-			*   Shi-Nine Yang and Ming-Liang Huang
-			*/
-			function offsetAndSubdivide(curve, curves) {
-				var v = curve.getValues(), ps = [getOffsetPoint(v, 0), getOffsetPoint(v, 1)], ts = [Curve.getTangent(v, 0), Curve.getTangent(v, 1)], pt = getOffsetPoint(v, .5), div = ts[0].cross(ts[1]) * 3 / 4, d = pt.add(pt).subtract(ps[0].add(ps[1])), a = d.cross(ts[1]) / div, b = d.cross(ts[0]) / div, hs = [ts[0].multiply(a), ts[1].multiply(-b)];
-				if (a < 0 && b > 0 || a > 0 && b < 0) {
-					var i1 = abs(a) > abs(b) ? 0 : 1, i2 = i1 ^ 1, p = ps[i1], h = hs[i1], cross = new Line(p, h, true).intersect(new Line(ps[i2], ts[i2], true), true);
-					hs[i2] = null;
-					if (cross) {
-						var nh = cross.subtract(p), scale = nh.dot(h) / h.dot(h);
-						if (0 < scale && scale < 1) hs[i1] = nh;
-					}
-				}
-				var offsetCurve = new Curve(ps[0], hs[0], hs[1], ps[1]);
-				if (getOffsetError(v, offsetCurve.getValues(), radius) > errorThreshold && offsetCurve.getLength() > errorThreshold) {
-					var curve2 = curve.divideAtTime(getAverageTangentTime(v));
-					offsetAndSubdivide(curve, curves);
-					offsetAndSubdivide(curve2, curves);
-				} else curves.push(offsetCurve);
-				return curves;
-			}
-			return offsetAndSubdivide(curve, []);
-		}
-		function getOffsetError(cv, ov, radius) {
-			var count = 16, error = 0;
-			for (var i = 1; i < count; i++) {
-				var t = i / count, p = Curve.getPoint(cv, t), n = Curve.getNormal(cv, t), roots = Curve.getCurveLineIntersections(ov, p.x, p.y, n.x, n.y), dist = 2 * radius;
-				for (var j = 0, l = roots.length; j < l; j++) {
-					var d = Curve.getPoint(ov, roots[j]).getDistance(p);
-					if (d < dist) dist = d;
-				}
-				var err = abs(radius - dist);
-				if (err > error) error = err;
-			}
-			return error;
-		}
-		/**
-		* Split curve into sections that can then be treated individually by an
-		* offset algorithm.
-		*/
-		function splitCurveForOffseting(curve) {
-			var curves = [curve.clone()];
-			if (curve.isStraight()) return curves;
-			function splitAtRoots(index, roots, noHandles) {
-				for (var i = 0, prevT, l = roots && roots.length; i < l; i++) {
-					var t = roots[i];
-					var curve = curves[index].divideAtTime(i ? (t - prevT) / (1 - prevT) : t);
-					prevT = t;
-					if (curve) curves.splice(++index, 0, curve);
-				}
-			}
-			function splitLargeAngles(index, recursion) {
-				var curve = curves[index], v = curve.getValues(), n1 = Curve.getNormal(v, 0), n2 = Curve.getNormal(v, 1).negate();
-				if (n1.dot(n2) > -.5 && ++recursion < 4) {
-					curves.splice(index + 1, 0, curve.divideAtTime(getAverageTangentTime(v)));
-					splitLargeAngles(index + 1, recursion);
-					splitLargeAngles(index, recursion);
-				}
-			}
-			var info = curve.classify(), roots = info.roots;
-			if (roots && info.type !== "loop") splitAtRoots(0, roots);
-			var getPeaks = Curve.getPeaks;
-			for (var i = curves.length - 1; i >= 0; i--) splitAtRoots(i, getPeaks(curves[i].getValues()));
-			for (var i = curves.length - 1; i >= 0; i--) splitLargeAngles(i, 0);
-			return curves;
-		}
-		/**
-		* Returns the first curve-time where the curve has its tangent in the same
-		* direction as the average of the tangents at its beginning and end.
-		*/
-		function getAverageTangentTime(v) {
-			var tan = Curve.getTangent(v, 0).add(Curve.getTangent(v, .5)).add(Curve.getTangent(v, 1)), tx = tan.x, ty = tan.y, flip = abs(ty) < abs(tx), s = flip ? ty / tx : tx / ty, ia = flip ? 1 : 0, io = ia ^ 1, a0 = v[ia + 0], o0 = v[io + 0], a1 = v[ia + 2], o1 = v[io + 2], a2 = v[ia + 4], o2 = v[io + 4], a3 = v[ia + 6], o3 = v[io + 6], aA = -a0 + 3 * a1 - 3 * a2 + a3, aB = 3 * a0 - 6 * a1 + 3 * a2, aC = -3 * a0 + 3 * a1, oA = -o0 + 3 * o1 - 3 * o2 + o3, oB = 3 * o0 - 6 * o1 + 3 * o2, oC = -3 * o0 + 3 * o1, roots = [], epsilon = Numerical.CURVETIME_EPSILON;
-			return Numerical.solveQuadratic(3 * (aA - s * oA), 2 * (aB - s * oB), aC - s * oC, roots, epsilon, 1 - epsilon) > 0 ? roots[0] : .5;
-		}
-		return {
-			offsetPath,
-			joinOffsets,
-			cleanupPath
-		};
-	}();
-	//#endregion
-	//#region src/view/paper-ext/Path.flatten.js
-	paper.Path.inject({ flatten: function() {
-		var offset = this.strokeWidth / 2;
-		var outerPath = OffsetUtils.offsetPath(this, offset, true);
-		var innerPath = OffsetUtils.offsetPath(this, -offset, true);
-		var flatPath = OffsetUtils.joinOffsets(outerPath.clone(), innerPath.clone(), this, offset);
-		flatPath = flatPath.unite();
-		return flatPath;
-	} });
-	//#endregion
-	//#region src/view/paper-ext/TextItem.edit.js
-	(function() {
-		var editElem = $("<textarea style=\"resize: none;\">");
-		editElem.css("position", "absolute");
-		editElem.css("overflow", "hidden");
-		editElem.css("width", "100px");
-		editElem.css("height", "100px");
-		editElem.css("left", "0px");
-		editElem.css("top", "0px");
-		editElem.css("resize", "none");
-		editElem.css("line-height", "1.2");
-		editElem.css("background-color", "#ffffff");
-		editElem.css("box-sizing", "content-box");
-		editElem.css("-moz-box-sizing", "content-box");
-		editElem.css("-webkit-box-sizing", "content-box");
-		editElem.css("border", "none");
-		paper.TextItem.inject({
-			attachTextArea: function(paper) {
-				if (editElem) editElem.remove();
-				$(paper.view.element.offsetParent).append(editElem);
-				editElem.focus();
-				var clone = this.clone();
-				clone.rotation = 0;
-				clone.scaling = new paper.Point(1, 1);
-				clone.remove();
-				var extraPadding = 3;
-				var width = clone.bounds.width * paper.view.zoom + extraPadding;
-				var height = clone.bounds.height * paper.view.zoom + extraPadding;
-				editElem.css("width", width + "px");
-				editElem.css("height", height + "px");
-				var outlineWidth = 1;
-				editElem.css("outline", outlineWidth * paper.view.zoom + "px dashed black");
-				var position = paper.view.projectToView(clone.bounds.topLeft.x, clone.bounds.topLeft.y);
-				position.x -= extraPadding / 2 + outlineWidth;
-				position.y -= extraPadding / 2 + outlineWidth;
-				var scale = this.scaling;
-				var rotation = this.rotation;
-				var fontSize = this.fontSize * paper.view.zoom;
-				var fontFamily = this.fontFamily;
-				var content = this.content;
-				editElem.css("font-family", fontFamily);
-				editElem.css("font-size", fontSize);
-				editElem.val(content);
-				var transformString = "";
-				transformString += "translate(" + position.x + "px," + position.y + "px) ";
-				transformString += "rotate(" + rotation + "deg) ";
-				transformString += "scale(" + scale.x + "," + scale.y + ") ";
-				editElem.css("transform", transformString);
-			},
-			edit: function(paper) {
-				this.attachTextArea(paper);
-				var self = this;
-				editElem[0].oninput = function() {
-					self.content = editElem[0].value;
-					self.attachTextArea(paper);
-				};
-			},
-			finishEditing: function() {
-				editElem.remove();
-			}
-		});
-	})();
-	//#endregion
-	//#region src/view/paper-ext/View.pressure.js
-	paper.View.inject({
-		pressure: 1,
-		enablePressure: function(args) {
-			let self = this;
-			$(this.element.parentElement).pressure({
-				change: function(force, event) {
-					self.pressure = force;
-				},
-				end: function() {
-					self.pressure = 0;
-				}
-			}, { polyfill: false });
-		}
-	});
-	//#endregion
-	//#region src/view/paper-ext/View.gestures.js
-	paper.View.inject({ enableGestures: function(args) {} });
-	//#endregion
-	//#region src/view/paper-ext/View.scrollToZoom.js
-	paper.View.inject({ enableScrollToZoom: function(args) {} });
-	//#endregion
-	//#region src/gui/GUIElement.js
-	Wick.GUIElement = class {
-		/**
-		* Create a new GUIElement
-		* @param {Wick.Base} model - The object containing the data to use to draw this GUIElement
-		*/
-		constructor(model) {
-			this.model = model;
-			this.canAutoScrollY = false;
-			this.canAutoScrollY = false;
-			this.cursor = "default";
-		}
-		/**
-		* The object to use the data from to create this GUIElement
-		* @type {Wick.Base}
-		*/
-		set model(model) {
-			this._model = model;
-		}
-		get model() {
-			return this._model;
-		}
-		/**
-		* The root GUIElement.
-		* @type {Wick.GUIElement}
-		*/
-		get project() {
-			if (!this._root) this._root = this.model.project.guiElement;
-			return this._root;
-		}
-		/**
-		* The canvas that this GUIElement belongs to.
-		*/
-		get canvas() {
-			return this.project._canvas;
-		}
-		/**
-		* The context of the canvas that this GUIElement belongs to.
-		*/
-		get ctx() {
-			return this.model.project.guiElement._ctx;
-		}
-		/**
-		* The current translation of the canvas. NOTE: This won't work without the following polyfill:
-		* https://github.com/goessner/canvas-currentTransform
-		* @type {object}
-		*/
-		get currentTranslation() {
-			var transform = this.ctx.currentTransform;
-			return {
-				x: transform.e,
-				y: transform.f
-			};
-		}
-		/**
-		* A copy of the transformation of the canvas when this object was drawn.
-		* @type {object}
-		*/
-		get localTranslation() {
-			return this._localTranslation;
-		}
-		/**
-		* The current grid cell width that all GUIElements are based off of.
-		* @type {number}
-		*/
-		get gridCellWidth() {
-			return Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH;
-		}
-		/**
-		* The current grid cell height that all GUIElements are based off of.
-		* @type {number}
-		*/
-		get gridCellHeight() {
-			return Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT;
-		}
-		/**
-		* The bounding box of the hit area for mouse interactions.
-		* @type {object}
-		*/
-		get bounds() {
-			return null;
-		}
-		/**
-		* The position of the mouse relative to this elements translation.
-		* @type {object}
-		*/
-		get localMouse() {
-			var translation = this.localTranslation;
-			return {
-				x: this.project._mouse.x - translation.x,
-				y: this.project._mouse.y - translation.y
-			};
-		}
-		/**
-		* Checks if this object is touching the mouse.
-		* @returns {boolean}
-		*/
-		mouseInBounds(mouse) {
-			if (!this.bounds) return false;
-			var localMouse = this.localMouse;
-			var bounds = this.bounds;
-			return localMouse.x > bounds.x && localMouse.y > bounds.y && localMouse.x < bounds.x + bounds.width && localMouse.y < bounds.y + bounds.height;
-		}
-		/**
-		* Check if the mouse is hovering or clicking this element.
-		* @type {string}
-		*/
-		get mouseState() {
-			if (this === this.project._getTopMouseTarget()) {
-				if (this.project._isDragging) return "down";
-				else return "over";
-			} else return "out";
-		}
-		/**
-		* Draw this GUIElement
-		*/
-		draw() {
-			this._localTranslation = this.currentTranslation;
-			this.project.markElementAsDrawn(this);
-		}
-		/**
-		* The function to call when the mouse clicks this element.
-		*/
-		onMouseDown(e) {}
-		/**
-		* The function to call when the mouse drags this element.
-		*/
-		onMouseDrag(e) {}
-		/**
-		* The function to call when the mouse finishes a click on this element.
-		*/
-		onMouseUp(e) {}
-		/**
-		* Causes the project to call it's onProjectModified function. Call this after modifying the project.
-		*/
-		projectWasModified() {
-			this.project._onProjectModified();
-		}
-		/**
-		* Causes the project to call it's onProjectSoftModified function. Call this after modifying the project.
-		*/
-		projectWasSoftModified() {
-			this.project._onProjectSoftModified();
-		}
-	};
-	Wick.GUIElement.IS_MOBILE = window.innerWidth < 600;
-	Wick.GUIElement.GRID_SMALL_CELL_WIDTH = 22;
-	Wick.GUIElement.GRID_SMALL_CELL_HEIGHT = 32;
-	Wick.GUIElement.GRID_NORMAL_CELL_WIDTH = 38;
-	Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT = 42;
-	Wick.GUIElement.GRID_LARGE_CELL_WIDTH = 62;
-	Wick.GUIElement.GRID_LARGE_CELL_HEIGHT = 52;
-	const userAgent = navigator.userAgent.toLowerCase();
-	if (/(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(userAgent)) {
-		Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
-		Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
-	} else {
-		Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
-		Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
-	}
-	const _savedFrameSize = localStorage.getItem("wickEditorFrameSizeMode");
-	if (_savedFrameSize) switch (_savedFrameSize) {
-		case "small":
-			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
-			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_SMALL_CELL_HEIGHT;
-			break;
-		case "large":
-			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
-			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
-			break;
-		case "normal":
-		default:
-			Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
-			Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
-	}
-	Wick.GUIElement.GRID_MARGIN = 1;
-	Wick.GUIElement.TIMELINE_BACKGROUND_COLOR = "#2A2E30";
-	Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR = "#00ADEF";
-	Wick.GUIElement.BREADCRUMBS_HEIGHT = 30;
-	Wick.GUIElement.BREADCRUMBS_BG_COLOR = "#202122";
-	Wick.GUIElement.BREADCRUMBS_ACTIVE_BUTTON_FILL_COLOR = "#2A2E30";
-	Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR = "#202122";
-	Wick.GUIElement.BREADCRUMBS_HOVER_BUTTON_FILL_COLOR = "#6F6F6F";
-	Wick.GUIElement.BREADCRUMBS_SHADOW_COLOR = "#000000";
-	Wick.GUIElement.BREADCRUMBS_DROP_SHADOW_DEPTH = 2;
-	Wick.GUIElement.BREADCRUMBS_ACTIVE_BORDER_COLOR = "#1EE29A";
-	Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT = 3;
-	Wick.GUIElement.BREADCRUMBS_PADDING = 5;
-	Wick.GUIElement.LAYERS_CONTAINER_LARGE = 160;
-	Wick.GUIElement.LAYERS_CONTAINER_SMALL = 100;
-	Wick.GUIElement.LAYERS_CONTAINER_WIDTH = Wick.GUIElement.IS_MOBILE ? Wick.GUIElement.LAYERS_CONTAINER_SMALL : Wick.GUIElement.LAYERS_CONTAINER_LARGE;
-	Wick.GUIElement.NUMBER_LINE_HEIGHT = 35;
-	Wick.GUIElement.NUMBER_LINE_NUMBERS_HIGHLIGHT_COLOR = "#ffffff";
-	Wick.GUIElement.NUMBER_LINE_NUMBERS_COMMON_COLOR = "#494949";
-	Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_FAMILY = "PT Mono";
-	Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_SIZE = "18";
-	Wick.GUIElement.FRAME_HEIGHT = Wick.GUIElement.FRAMES_STRIP_HEIGHT;
-	Wick.GUIElement.FRAME_HOVERED_OVER = "#1EE29A";
-	Wick.GUIElement.FRAME_TWEENED_HOVERED_OVER = "#ddddff";
-	Wick.GUIElement.FRAME_CONTENTFUL_FILL_COLOR = "#ffffff";
-	Wick.GUIElement.FRAME_AUDIO_FILL_COLOR = "#ccffff";
-	Wick.GUIElement.FRAME_UNCONTENTFUL_FILL_COLOR = "rgba(233,233,233,0.8)";
-	Wick.GUIElement.FRAME_TWEENED_FILL_COLOR = "#ffffff";
-	Wick.GUIElement.FRAME_BORDER_RADIUS = 5;
-	Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS = 7;
-	Wick.GUIElement.FRAME_CONTENT_DOT_STROKE_WIDTH = 3;
-	Wick.GUIElement.FRAME_CONTENT_DOT_COLOR = "#1EE29A";
-	Wick.GUIElement.FRAME_MARGIN = .5;
-	Wick.GUIElement.FRAME_DROP_SHADOW_DEPTH = 2;
-	Wick.GUIElement.FRAME_DROP_SHADOW_FILL = "rgba(0,0,0,1)";
-	Wick.GUIElement.FRAME_SCRIPT_DOT_COLOR = "#F5A623";
-	Wick.GUIElement.FRAME_HANDLE_HOVER_FILL_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-	Wick.GUIElement.FRAME_HANDLE_WIDTH = 12;
-	Wick.GUIElement.TWEEN_DIAMOND_RADIUS = 7;
-	Wick.GUIElement.TWEEN_STROKE_WIDTH = 3;
-	Wick.GUIElement.TWEEN_FILL_COLOR_1 = "#494949";
-	Wick.GUIElement.TWEEN_FILL_COLOR_2 = "#8E8E8E";
-	Wick.GUIElement.TWEEN_HOVER_COLOR_1 = "#09C07D";
-	Wick.GUIElement.TWEEN_HOVER_COLOR_2 = "#1EE29A";
-	Wick.GUIElement.TWEEN_STROKE_COLOR = "#222244";
-	Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH = 2;
-	Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR = "#8E8E8E";
-	Wick.GUIElement.FRAME_GHOST_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-	Wick.GUIElement.FRAME_GHOST_NOT_ALLOWED_COLOR = "#ff0000";
-	Wick.GUIElement.FRAME_GHOST_OPACITY = .45;
-	Wick.GUIElement.FRAME_GHOST_STROKE_WIDTH = 5;
-	Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH = 3;
-	Wick.GUIElement.FRAMES_STRIP_VERTICAL_MARGIN = 4;
-	Wick.GUIElement.FRAMES_STRIP_ACTIVE_FILL_COLOR = "rgba(216, 216, 216, 0.31)";
-	Wick.GUIElement.FRAMES_STRIP_INACTIVE_FILL_COLOR = "rgba(95, 97, 99, 0.31)";
-	Wick.GUIElement.FRAMES_STRIP_BORDER_RADIUS = 4;
-	Wick.GUIElement.ADD_FRAME_OVERLAY_FILL_COLOR = "#9E9E9E";
-	Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR = "#191919";
-	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR = "rgba(0,0,0,0.2)";
-	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_HIGHLIGHT_STROKE_COLOR = "rgba(255,255,255,0.3)";
-	Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_WIDTH = 2.5;
-	Wick.GUIElement.PLAYHEAD_FILL_COLOR = "#FF5C5C";
-	Wick.GUIElement.PLAYHEAD_STROKE_COLOR = "#D83333";
-	Wick.GUIElement.PLAYHEAD_STROKE_WIDTH = 3;
-	Wick.GUIElement.PLAYHEAD_MARGIN = 8;
-	Wick.GUIElement.LAYER_LABEL_ACTIVE_FILL_COLOR = "#1EE29A";
-	Wick.GUIElement.LAYER_LABEL_INACTIVE_FILL_COLOR = "#B7B7B7";
-	Wick.GUIElement.LAYER_LABEL_HIDDEN_FILL_COLOR = "rgba(183, 183, 183, .1)";
-	Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS = 3;
-	Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM = 4;
-	Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES = 4;
-	Wick.GUIElement.LAYER_LABEL_FONT_FAMILY = "Nunito Sans";
-	Wick.GUIElement.LAYER_LABEL_FONT_SIZE = 18;
-	Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR = "#40002D";
-	Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR = "#322E2E";
-	Wick.GUIElement.LAYER_LABEL_FONT_WEIGHT = "600";
-	Wick.GUIElement.LAYER_LABEL_FONT_FAMILY = "Nunito Sans";
-	Wick.GUIElement.LAYER_LABEL_GHOST_COLOR = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-	Wick.GUIElement.LAYER_LABEL_HOVER_COLOR = "#F5A623";
-	Wick.GUIElement.LAYER_BUTTON_ICON_COLOR = "#000000";
-	Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS = 10;
-	Wick.GUIElement.LAYER_BUTTON_ICON_OPACITY = .3;
-	Wick.GUIElement.LAYER_BUTTON_HOVER_COLOR = "#00ADEF";
-	Wick.GUIElement.LAYER_BUTTON_MOUSEDOWN_COLOR = "#0198D1";
-	Wick.GUIElement.LAYER_BUTTON_TOGGLE_ACTIVE_COLOR = "rgba(255,255,255,0.7)";
-	Wick.GUIElement.LAYER_BUTTON_TOGGLE_INACTIVE_COLOR = "rgba(255,255,255,0.01)";
-	Wick.GUIElement.ACTION_BUTTON_HOVER_COLOR = "#979797";
-	Wick.GUIElement.ACTION_BUTTON_COLOR = "#979797";
-	Wick.GUIElement.ACTION_BUTTON_RADIUS = 14;
-	Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH = 100;
-	Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH = 50;
-	Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR = "#191919";
-	Wick.GUIElement.SCROLLBAR_FILL_COLOR = "#B7B7B7";
-	Wick.GUIElement.SCROLLBAR_ACTIVE_FILL_COLOR = "#cccccc";
-	Wick.GUIElement.SCROLLBAR_SIZE = 18;
-	Wick.GUIElement.SCROLLBAR_MARGIN = 3;
-	Wick.GUIElement.SCROLLBAR_BORDER_RADIUS = 6;
-	Wick.GUIElement.AUTO_SCROLL_SPEED = .17;
-	//#endregion
-	//#region src/gui/Ghost.js
-	Wick.GUIElement.Ghost = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-		}
-		draw() {
-			super.draw();
-			this._mouseStart = this._mouseStart || {
-				x: this.localMouse.x,
-				y: this.localMouse.y
-			};
-			this._mouseEnd = {
-				x: this.localMouse.x,
-				y: this.localMouse.y
-			};
-			this._mouseDiff = {
-				x: this._mouseEnd.x - this._mouseStart.x,
-				y: this._mouseEnd.y - this._mouseStart.y
-			};
-			var moveRowCols = this._roundToGrid(this._mouseDiff.x, this._mouseDiff.y);
-			this.moveCols = moveRowCols.col;
-			this.moveRows = moveRowCols.row;
-			var startRowCols = this._roundToGrid(this._mouseStart.x, this._mouseStart.y);
-			this.startCol = startRowCols.col;
-			this.startRow = startRowCols.row;
-			var endRowCols = this._roundToGrid(this._mouseEnd.x, this._mouseEnd.y);
-			this.endCol = endRowCols.col;
-			this.endRow = endRowCols.row;
-		}
-		finish() {}
-		_roundToGrid(x, y) {
-			return {
-				col: Math.round(x / this.gridCellWidth),
-				row: Math.round(y / this.gridCellHeight)
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/Button.js
-	Wick.GUIElement.Button = class extends Wick.GUIElement {
-		/**
-		* Create a new button.
-		* @param {Wick.Base} model - See Wick.GUIElement constructor
-		* @param {function} clickFn - The function to call when the button is clicked
-		* @param {string} tooltip - (Optional) The title of the tooltip
-		*/
-		constructor(model, args) {
-			super(model);
-			if (!args) args = {};
-			this._clickFn = args.clickFn;
-			this._tooltip = args.tooltip;
-			this.tooltip = new Wick.GUIElement.Tooltip(this.model, this._tooltip);
-			this.cursor = "pointer";
-			this.lastPressed = 0;
-		}
-		draw() {
-			super.draw();
-		}
-		onMouseDown(e) {
-			let now = Date.now();
-			if (now - this.lastPressed > 150) {
-				this._clickFn(e);
-				this.lastPressed = now;
-			}
-		}
-	};
-	//#endregion
-	//#region src/gui/Icons.js
-	Wick.GUIElement.Icons = class {
-		static get dummyIcon() {
-			if (!this._dummyIcon) {
-				this._dummyIcon = new Image();
-				this._dummyIcon.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAEGWlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPrtzZyMkzlNsNIV0qD8NJQ2TVjShtLp/3d02bpZJNtoi6GT27s6Yyc44M7v9oU9FUHwx6psUxL+3gCAo9Q/bPrQvlQol2tQgKD60+INQ6Ium65k7M5lpurHeZe58853vnnvuuWfvBei5qliWkRQBFpquLRcy4nOHj4g9K5CEh6AXBqFXUR0rXalMAjZPC3e1W99Dwntf2dXd/p+tt0YdFSBxH2Kz5qgLiI8B8KdVy3YBevqRHz/qWh72Yui3MUDEL3q44WPXw3M+fo1pZuQs4tOIBVVTaoiXEI/MxfhGDPsxsNZfoE1q66ro5aJim3XdoLFw72H+n23BaIXzbcOnz5mfPoTvYVz7KzUl5+FRxEuqkp9G/Ajia219thzg25abkRE/BpDc3pqvphHvRFys2weqvp+krbWKIX7nhDbzLOItiM8358pTwdirqpPFnMF2xLc1WvLyOwTAibpbmvHHcvttU57y5+XqNZrLe3lE/Pq8eUj2fXKfOe3pfOjzhJYtB/yll5SDFcSDiH+hRkH25+L+sdxKEAMZahrlSX8ukqMOWy/jXW2m6M9LDBc31B9LFuv6gVKg/0Szi3KAr1kGq1GMjU/aLbnq6/lRxc4XfJ98hTargX++DbMJBSiYMIe9Ck1YAxFkKEAG3xbYaKmDDgYyFK0UGYpfoWYXG+fAPPI6tJnNwb7ClP7IyF+D+bjOtCpkhz6CFrIa/I6sFtNl8auFXGMTP34sNwI/JhkgEtmDz14ySfaRcTIBInmKPE32kxyyE2Tv+thKbEVePDfW/byMM1Kmm0XdObS7oGD/MypMXFPXrCwOtoYjyyn7BV29/MZfsVzpLDdRtuIZnbpXzvlf+ev8MvYr/Gqk4H/kV/G3csdazLuyTMPsbFhzd1UabQbjFvDRmcWJxR3zcfHkVw9GfpbJmeev9F08WW8uDkaslwX6avlWGU6NRKz0g/SHtCy9J30o/ca9zX3Kfc19zn3BXQKRO8ud477hLnAfc1/G9mrzGlrfexZ5GLdn6ZZrrEohI2wVHhZywjbhUWEy8icMCGNCUdiBlq3r+xafL549HQ5jH+an+1y+LlYBifuxAvRN/lVVVOlwlCkdVm9NOL5BE4wkQ2SMlDZU97hX86EilU/lUmkQUztTE6mx1EEPh7OmdqBtAvv8HdWpbrJS6tJj3n0CWdM6busNzRV3S9KTYhqvNiqWmuroiKgYhshMjmhTh9ptWhsF7970j/SbMrsPE1suR5z7DMC+P/Hs+y7ijrQAlhyAgccjbhjPygfeBTjzhNqy28EdkUh8C+DU9+z2v/oyeH791OncxHOs5y2AtTc7nb/f73TWPkD/qwBnjX8BoJ98VQNcC+8AAAALSURBVAgdY/gPBAAJ+wP9DLtb5wAAAABJRU5ErkJggg==";
-			}
-			return this._dummyIcon;
-		}
-		static get icons() {
-			if (!this._icons) this._icons = {};
-			return this._icons;
-		}
-		static loadIcon(name, src) {
-			Wick.GUIElement.Icons.dummyIcon;
-			if (this.icons && this.icons[name]) return;
-			this.icons[name] = new Image();
-			this.icons[name].src = src;
-		}
-		static getIcon(name) {
-			var icon = this.icons[name];
-			if (!icon) return Wick.GUIElement.Icons.dummyIcon;
-			return icon;
-		}
-	};
-	//#endregion
-	//#region src/gui/FramesContainer.js
-	Wick.GUIElement.FramesContainer = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.canAutoScrollX = true;
-			this.canAutoScrollY = true;
-			this._frameStrips = {};
-			this._frameGhost = null;
-			this._selectionBox = null;
-		}
-		draw() {
-			super.draw();
-			this.addFrameCol = Math.floor(this.localMouse.x / this.gridCellWidth);
-			this.addFrameRow = Math.floor(this.localMouse.y / this.gridCellHeight);
-			var ctx = this.ctx;
-			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
-			ctx.beginPath();
-			ctx.rect(this.project.scrollX, this.project.scrollY, this.canvas.width, this.canvas.height);
-			ctx.fill();
-			ctx.save();
-			ctx.translate(2, 2);
-			this.model.layers.forEach((layer) => {
-				var i = layer.index;
-				ctx.save();
-				ctx.translate(0, i * this.gridCellHeight);
-				if (layer.isActive) ctx.fillStyle = Wick.GUIElement.FRAMES_STRIP_ACTIVE_FILL_COLOR;
-				else ctx.fillStyle = Wick.GUIElement.FRAMES_STRIP_INACTIVE_FILL_COLOR;
-				var width = this.canvas.width;
-				var height = Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT - 2;
-				ctx.beginPath();
-				ctx.rect(this.project.scrollX, 0, width, height);
-				ctx.fill();
-				ctx.restore();
-			});
-			ctx.lineWidth = 1;
-			ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR;
-			var skip = Math.round(this.project.scrollX / this.gridCellWidth);
-			for (var i = -1; i < this.canvas.width / this.gridCellWidth + 1; i++) {
-				ctx.beginPath();
-				var x = (i + skip) * this.gridCellWidth;
-				ctx.moveTo(x, this.project.scrollY);
-				ctx.lineTo(x, this.project.scrollY + this.canvas.height);
-				ctx.stroke();
-			}
-			var frames = this.model.getAllFrames();
-			var draggingFrames = frames.filter((frame) => {
-				if (frame.guiElement._ghost) return true;
-				if (frame.tweens.find((tween) => {
-					return tween.guiElement._ghost;
-				})) return true;
-				return false;
-			});
-			frames.forEach((frame) => {
-				if (draggingFrames.indexOf(frame) !== -1) return;
-				this._drawFrame(frame, true);
-			});
-			draggingFrames.forEach((frame) => {
-				this._drawFrame(frame, false);
-			});
-			if (this.mouseState === "over" && !this._selectionBox && this._addFrameOverlayIsActive()) {
-				this.cursor = "pointer";
-				var x = this.addFrameCol * this.gridCellWidth;
-				var y = this.addFrameRow * this.gridCellHeight;
-				ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_FILL_COLOR;
-				ctx.beginPath();
-				ctx.roundRect(x, y, this.gridCellWidth, this.gridCellHeight, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				ctx.fill();
-				ctx.font = "30px bold Courier New";
-				ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR;
-				ctx.globalAlpha = .5;
-				ctx.fillText("+", x + this.gridCellWidth / 2 - 8, y + this.gridCellHeight / 2 + 8);
-				ctx.globalAlpha = 1;
-			} else this.cursor = "default";
-			if (this._selectionBox) this._selectionBox.draw();
-			ctx.fillStyle = "rgba(0,0,0,0.2)";
-			ctx.beginPath();
-			ctx.rect(this.project.scrollX - 2, this.project.scrollY - 2, this.canvas.width, 2);
-			ctx.fill();
-			ctx.beginPath();
-			ctx.rect(this.project.scrollX - 2, this.project.scrollY - 2, this.canvas.width, 1);
-			ctx.fill();
-			ctx.restore();
-		}
-		_drawFrame(frame, enableCull) {
-			var ctx = this.ctx;
-			var frameStartX = (frame.start - 1) * this.gridCellWidth;
-			var frameStartY = frame.parentLayer.index * this.gridCellHeight;
-			var frameEndX = frameStartX + frame.length * this.gridCellWidth;
-			var frameEndY = frameStartY + this.gridCellHeight;
-			var framesContainerWidth = this.canvas.width - Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
-			var framesContainerHeight = this.canvas.height - Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.NUMBER_LINE_HEIGHT;
-			if (enableCull) {
-				var scrollX = this.project.scrollX;
-				var scrollY = this.project.scrollY;
-				if (frameEndX < scrollX || frameEndY < scrollY) return;
-				if (frameStartX > scrollX + framesContainerWidth || frameStartY > scrollY + framesContainerHeight) return;
-			}
-			ctx.save();
-			ctx.translate(frameStartX, frameStartY);
-			frame.guiElement.draw();
-			ctx.restore();
-		}
-		onMouseDrag() {
-			if (!this._selectionBox) this._selectionBox = new Wick.GUIElement.SelectionBox(this.model);
-			var newPlayhead = this.addFrameCol + 1;
-			if (this.model.playheadPosition !== newPlayhead) {
-				this.model.playheadPosition = newPlayhead;
-				this.projectWasSoftModified();
-			}
-		}
-		onMouseUp(e) {
-			if (this._selectionBox) {
-				if (!e.shiftKey) this.model.project.selection.clear();
-				this._selectionBox.finish();
-			} else if (this._addFrameOverlayIsActive()) {
-				var playheadPosition = this.addFrameCol + 1;
-				var layerIndex = this.addFrameRow;
-				var newFrame = new Wick.Frame({ start: playheadPosition });
-				this.model.layers[layerIndex].addFrame(newFrame);
-				this.model.project.selection.clear();
-				this.model.project.selection.select(newFrame);
-				newFrame.parentLayer.activate();
-				this.model.project.activeTimeline.playheadPosition = playheadPosition;
-				this.projectWasModified();
-			} else {
-				this.model.project.selection.clear();
-				this.projectWasModified();
-			}
-			this._selectionBox = null;
-		}
-		get bounds() {
-			return {
-				x: this.project.scrollX,
-				y: this.project.scrollY,
-				width: this.canvas.width,
-				height: this.canvas.height
-			};
-		}
-		_addFrameOverlayIsActive() {
-			return this.addFrameCol >= 0 && this.addFrameRow >= 0 && this.addFrameRow < this.model.layers.length && !this.model.layers[this.addFrameRow].getFrameAtPlayheadPosition(this.addFrameCol + 1);
-		}
-	};
-	//#endregion
-	//#region src/gui/Layer.js
-	Wick.GUIElement.Layer = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.cursor = "pointer";
-			this.canAutoScrollY = true;
-			this.hideButton = new Wick.GUIElement.LayerButton(model, {
-				toggledTooltip: "Show Layer",
-				untoggledTooltip: "Hide Layer",
-				toggledIcon: "show_layer",
-				untoggledIcon: "hide_layer",
-				isToggledFn: () => {
-					return this.model.hidden;
-				},
-				clickFn: () => {
-					this.model.hidden = !this.model.hidden;
-					this.model.activate();
-					this.projectWasModified();
-				}
-			});
-			this.lockButton = new Wick.GUIElement.LayerButton(model, {
-				toggledTooltip: "Unlock Layer",
-				untoggledTooltip: "Lock Layer",
-				toggledIcon: "unlock_layer",
-				untoggledIcon: "lock_layer",
-				isToggledFn: () => {
-					return this.model.locked;
-				},
-				clickFn: () => {
-					this.model.locked = !this.model.locked;
-					this.model.activate();
-					this.projectWasModified();
-				}
-			});
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			var mouseY = this.localMouse.y + this.model.index * this.gridCellHeight;
-			this.mouseLayerIndex = Math.round(mouseY / this.gridCellHeight) + 1;
-			this.mouseLayerIndex = Math.max(1, this.mouseLayerIndex);
-			this.mouseLayerIndex = Math.min(this.model.parentTimeline.layers.length + 1, this.mouseLayerIndex);
-			this.mouseLayerIndex -= this.model.index;
-			var width = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES * 2;
-			var height = this.gridCellHeight - Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM * 2;
-			if (this.model.hidden) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_HIDDEN_FILL_COLOR;
-			else if (this.model.isActive) ctx.fillStyle = this.model.layerColor;
-			else {
-				let color = this.model.layerColor;
-				let red, green, blue;
-				if (color.includes("#")) {
-					red = parseRGB(color)[0];
-					green = parseRGB(color)[1];
-					blue = parseRGB(color)[2];
-				} else {
-					color = color.replace(/[^\d.,]/g, "").split(",").map(Number);
-					red = color[0];
-					green = color[1];
-					blue = color[2];
-				}
-				let overlayAlpha = 200 / 255;
-				let overlay = 183;
-				red = Math.round(overlay * overlayAlpha + red * .21568627450980393);
-				green = Math.round(overlay * overlayAlpha + green * .21568627450980393);
-				blue = Math.round(overlay * overlayAlpha + blue * .21568627450980393);
-				ctx.fillStyle = "#" + toHex(red) + toHex(green) + toHex(blue);
-			}
-			function toHex(n) {
-				return n.toString(16).padStart(2, "0");
-			}
-			function parseRGB(color) {
-				let red, green, blue, alpha;
-				if (color.includes("#")) {
-					color = color.replace(/^#/, "");
-					red = parseInt(color.substring(0, 2), 16);
-					green = parseInt(color.substring(2, 4), 16);
-					blue = parseInt(color.substring(4, 6), 16);
-					alpha = parseInt(color.substring(6, 8));
-					return [
-						red,
-						green,
-						blue,
-						alpha
-					];
-				} else {
-					color = color.match(/[\d.]+/g).map(Number);
-					return color;
-				}
-			}
-			if (this.model.isSelected) {
-				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-				ctx.lineWidth = 3;
-			} else if (this.mouseState === "over" || this.mouseState === "down") {
-				ctx.lineWidth = 3;
-				ctx.strokeStyle = Wick.GUIElement.LAYER_LABEL_HOVER_COLOR;
-			} else {
-				ctx.strokeStyle = "rgba(0,0,0,0)";
-				ctx.lineWidth = 0;
-			}
-			ctx.save();
-			ctx.translate(Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES, Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM);
-			ctx.beginPath();
-			ctx.roundRect(0, 0, width, height, Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS);
-			ctx.fill();
-			ctx.stroke();
-			ctx.restore();
-			let color = this.model.layerColor;
-			let warm = false;
-			let rgb = parseRGB(color);
-			if (rgb[0] - rgb[2] > 0 && rgb[1] < 113) warm = true;
-			var maxWidth = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - 10;
-			ctx.save();
-			ctx.beginPath();
-			ctx.rect(0, 0, maxWidth, this.gridCellHeight);
-			ctx.clip();
-			ctx.font = "16px " + Wick.GUIElement.LAYER_LABEL_FONT_FAMILY;
-			if (this.model.isActive == true) {
-				if (warm == false) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_ACTIVE_FONT_COLOR;
-				else ctx.fillStyle = "#ffffff";
-			} else if (warm == false) ctx.fillStyle = Wick.GUIElement.LAYER_LABEL_INACTIVE_FONT_COLOR;
-			else ctx.fillStyle = "#c5c5c5";
-			ctx.fillText(this.model.name, 57, this.gridCellHeight / 2 + 6);
-			ctx.restore();
-			ctx.save();
-			ctx.translate(20, this.gridCellHeight / 2);
-			this.hideButton.draw(this.model.hidden ? "eye_closed" : "eye_open", this.model.hidden);
-			ctx.restore();
-			ctx.save();
-			ctx.translate(40, this.gridCellHeight / 2);
-			this.lockButton.draw(this.model.locked ? "lock_closed" : "lock_open", this.model.locked);
-			ctx.restore();
-			if (this.mouseState === "down") {
-				ctx.fillStyle = "red";
-				ctx.save();
-				ctx.translate(0, (this.mouseLayerIndex - 1) * this.gridCellHeight);
-				ctx.beginPath();
-				ctx.moveTo(0, 0);
-				ctx.lineTo(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
-				ctx.stroke();
-				ctx.restore();
-			}
-		}
-		get bounds() {
-			return {
-				x: 0,
-				y: 0,
-				width: Wick.GUIElement.LAYERS_CONTAINER_WIDTH,
-				height: this.gridCellHeight
-			};
-		}
-		onMouseDown(e) {
-			this.model.activate();
-			this.model.project.selection.clear();
-			this.model.project.selection.select(this.model);
-			this.projectWasModified();
-		}
-		onMouseDrag(e) {}
-		onMouseUp(e) {
-			var moveIndex = this.mouseLayerIndex - 1 + this.model.index;
-			if (moveIndex === this.model.index) return;
-			if (moveIndex > this.model.index) moveIndex--;
-			this.model.move(moveIndex);
-			this.model.activate();
-			this.projectWasModified();
-		}
-	};
-	//#endregion
-	//#region src/gui/LayerCreateLabel.js
-	Wick.GUIElement.LayerCreateLabel = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.cursor = "pointer";
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			ctx.fillStyle = this.mouseState === "over" ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)";
-			var width = Wick.GUIElement.LAYERS_CONTAINER_WIDTH - Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES * 2;
-			var height = this.gridCellHeight - Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM * 2;
-			ctx.save();
-			ctx.translate(Wick.GUIElement.LAYER_LABEL_MARGIN_SIDES, Wick.GUIElement.LAYER_LABEL_MARGIN_TOP_BOTTOM);
-			ctx.beginPath();
-			ctx.roundRect(0, 0, width, height, Wick.GUIElement.LAYER_LABEL_BORDER_RADIUS);
-			ctx.fill();
-			ctx.restore();
-			ctx.font = "20px " + Wick.GUIElement.LAYER_LABEL_FONT_FAMILY;
-			ctx.fillStyle = Wick.GUIElement.ADD_FRAME_OVERLAY_PLUS_COLOR;
-			ctx.fillText("+", Wick.GUIElement.LAYERS_CONTAINER_WIDTH / 2 - 5, this.gridCellHeight / 2 + 5);
-		}
-		get bounds() {
-			return {
-				x: 0,
-				y: 0,
-				width: Wick.GUIElement.LAYERS_CONTAINER_WIDTH,
-				height: this.gridCellHeight
-			};
-		}
-		onMouseDown(e) {
-			var newLayer = new Wick.Layer();
-			this.model.project.activeTimeline.addLayer(newLayer);
-			newLayer.activate();
-			this.model.project.selection.clear();
-			this.model.project.selection.select(newLayer);
-			this.projectWasModified();
-		}
-	};
-	//#endregion
-	//#region src/gui/LayersContainer.js
-	Wick.GUIElement.LayersContainer = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.layerCreateLabel = new Wick.GUIElement.LayerCreateLabel(model);
-		}
-		draw() {
-			var ctx = this.ctx;
-			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
-			ctx.beginPath();
-			ctx.rect(0, this.project.scrollY, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, this.canvas.height);
-			ctx.fill();
-			this.model.layers.forEach((layer) => {
-				ctx.save();
-				ctx.translate(0, layer.index * this.gridCellHeight);
-				layer.guiElement.draw();
-				ctx.restore();
-			});
-			ctx.save();
-			ctx.translate(0, this.model.layers.length * this.gridCellHeight);
-			this.layerCreateLabel.draw();
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/NumberLine.js
-	Wick.GUIElement.NumberLine = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.cursor = "grab";
-			this.canAutoScrollX = true;
-			this.playhead = new Wick.GUIElement.Playhead(model);
-			this.onionSkinRangeLeft = new Wick.GUIElement.OnionSkinRange(model, "left");
-			this.onionSkinRangeRight = new Wick.GUIElement.OnionSkinRange(model, "right");
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			ctx.save();
-			ctx.translate(2, 0);
-			this.mousePlayheadPosition = Math.floor(this.localMouse.x / this.gridCellWidth) + 1;
-			var width = this.canvas.width - Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
-			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT;
-			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
-			ctx.beginPath();
-			ctx.rect(this.project.scrollX - 2, 0, width, height);
-			ctx.fill();
-			for (var i = -1; i < width / this.gridCellWidth + 1; i++) {
-				var skip = Math.round(this.project.scrollX / this.gridCellWidth);
-				this._drawCell(i + skip);
-			}
-			if (this.model.project.onionSkinEnabled) {
-				ctx.save();
-				ctx.translate((this.model.playheadPosition - 1) * this.gridCellWidth + this.gridCellWidth / 2, 0);
-				this.onionSkinRangeLeft.draw();
-				this.onionSkinRangeRight.draw();
-				ctx.restore();
-			}
-			this.playhead.draw();
-			ctx.restore();
-		}
-		_drawCell(i) {
-			var ctx = this.ctx;
-			var highlight = i === 0 || i % 5 === 4;
-			if (this.project.frameSizeMode !== "small" || highlight) {
-				var fontSize = i >= 99 ? 13 : 16;
-				var fontFamily = Wick.GUIElement.NUMBER_LINE_NUMBERS_FONT_FAMILY;
-				ctx.font = fontSize + "px " + fontFamily;
-				if (highlight) ctx.fillStyle = Wick.GUIElement.NUMBER_LINE_NUMBERS_HIGHLIGHT_COLOR;
-				else ctx.fillStyle = Wick.GUIElement.NUMBER_LINE_NUMBERS_COMMON_COLOR;
-				var textContent = "" + (i + 1);
-				var textWidth = ctx.measureText(textContent).width;
-				ctx.fillText(textContent, i * this.gridCellWidth + this.gridCellWidth / 2 - textWidth / 2, Wick.GUIElement.NUMBER_LINE_HEIGHT - 5);
-			}
-			ctx.lineWidth = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_WIDTH;
-			if (highlight) ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_HIGHLIGHT_STROKE_COLOR;
-			else ctx.strokeStyle = Wick.GUIElement.FRAMES_CONTAINER_VERTICAL_GRID_STROKE_COLOR;
-			ctx.beginPath();
-			var wallX = i * this.gridCellWidth;
-			ctx.moveTo(wallX, 0);
-			ctx.lineTo(wallX, Wick.GUIElement.NUMBER_LINE_HEIGHT);
-			ctx.stroke();
-		}
-		onMouseDown(e) {
-			this._movePlayhead();
-		}
-		onMouseDrag(e) {
-			this._movePlayhead();
-		}
-		onMouseUp(e) {
-			this.projectWasModified();
-		}
-		get bounds() {
-			return {
-				x: this.project.scrollX,
-				y: 0,
-				width: this.canvas.width,
-				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
-			};
-		}
-		_movePlayhead() {
-			var timeline = this.project.model.activeTimeline;
-			if (timeline.playheadPosition !== this.mousePlayheadPosition) {
-				timeline.playheadPosition = this.mousePlayheadPosition;
-				this.projectWasSoftModified();
-			}
-		}
-	};
-	//#endregion
-	//#region src/gui/OnionSkinRange.js
-	Wick.GUIElement.OnionSkinRange = class extends Wick.GUIElement {
-		constructor(model, direction) {
-			super(model);
-			this.cursor = "grab";
-			this.canAutoScrollX = true;
-			this.direction = direction;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			this.mousePlayheadPosition = Math.round(this.localMouse.x / this.gridCellWidth);
-			var seek = this.direction === "right" ? this.model.project.onionSkinSeekForwards : this.model.project.onionSkinSeekBackwards;
-			var width = Math.max(seek * this.gridCellWidth, this.gridCellWidth / 2);
-			var edgeWidth = this.gridCellWidth - Wick.GUIElement.PLAYHEAD_MARGIN * 2;
-			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT * .9;
-			var grd = ctx.createLinearGradient(0, 0, width + edgeWidth, 0);
-			grd.addColorStop(0, "rgba(255,92,92,0.2)");
-			grd.addColorStop(1, "rgba(255,92,92,1)");
-			ctx.fillStyle = grd;
-			ctx.lineWidth = 1, ctx.save();
-			ctx.globalAlpha = this.mouseState === "over" ? .5 : 1;
-			if (this.direction == "left") ctx.scale(-1, 1);
-			ctx.beginPath();
-			ctx.moveTo(0, 0);
-			ctx.lineTo(width, 0);
-			ctx.lineTo(width + edgeWidth / 2, 0);
-			ctx.lineTo(width + edgeWidth / 2, height * 2 / 3);
-			ctx.lineTo(width, height);
-			ctx.lineTo(0, height);
-			ctx.lineTo(0, 0);
-			ctx.fill();
-			ctx.restore();
-		}
-		onMouseDrag(e) {
-			if (this.direction === "right") this.model.project.onionSkinSeekForwards = Math.max(0, this.mousePlayheadPosition);
-			else if (this.direction === "left") this.model.project.onionSkinSeekBackwards = Math.max(0, -this.mousePlayheadPosition);
-			this.projectWasSoftModified();
-		}
-		get bounds() {
-			if (this.direction === "right") return {
-				x: this.gridCellWidth / 2,
-				y: 0,
-				width: Math.max(this.model.project.onionSkinSeekForwards * this.gridCellWidth, this.gridCellWidth / 3),
-				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
-			};
-			else if (this.direction === "left") return {
-				x: -this.model.project.onionSkinSeekBackwards * this.gridCellWidth - this.gridCellWidth / 2,
-				y: 0,
-				width: Math.max(this.model.project.onionSkinSeekBackwards * this.gridCellWidth, this.gridCellWidth / 3),
-				height: Wick.GUIElement.NUMBER_LINE_HEIGHT
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/Playhead.js
-	Wick.GUIElement.Playhead = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			var margin = 0;
-			if (this.project.frameSizeMode === "small") margin = 2;
-			else if (this.project.frameSizeMode === "normal") margin = 8;
-			else if (this.project.frameSizeMode === "large") margin = 20;
-			var height = Wick.GUIElement.NUMBER_LINE_HEIGHT - 2;
-			var width = this.gridCellWidth - margin * 2;
-			ctx.fillStyle = Wick.GUIElement.PLAYHEAD_FILL_COLOR;
-			ctx.strokeStyle = Wick.GUIElement.PLAYHEAD_FILL_COLOR;
-			ctx.lineWidth = 5, ctx.save();
-			ctx.translate((this.model.playheadPosition - 1) * this.gridCellWidth, 0);
-			var playheadX = this.gridCellWidth / 2 - Wick.GUIElement.PLAYHEAD_STROKE_WIDTH / 2 + 1.5;
-			ctx.strokeStyle = "Wick.GUIElement.PLAYHEAD_FILL_COLOR";
-			ctx.lineWidth = Wick.GUIElement.PLAYHEAD_STROKE_WIDTH;
-			ctx.beginPath();
-			ctx.moveTo(playheadX, 0);
-			ctx.lineTo(playheadX, this.canvas.height);
-			ctx.stroke();
-			ctx.save();
-			ctx.translate(margin, 0);
-			ctx.beginPath();
-			ctx.moveTo(0, 0);
-			ctx.lineTo(width, 0);
-			ctx.lineTo(width, height * 2 / 3);
-			ctx.lineTo(width / 2, height);
-			ctx.lineTo(0, height * 2 / 3);
-			ctx.lineTo(0, 0);
-			ctx.fill();
-			ctx.stroke();
-			var handleMargin = 3;
-			var handleSpacing = 4;
-			var handleLeft = handleMargin;
-			var handleRight = handleLeft + width - handleMargin * 2;
-			ctx.strokeStyle = Wick.GUIElement.PLAYHEAD_STROKE_COLOR;
-			ctx.lineWidth = 2;
-			for (var i = 0; i < 3; i++) {
-				ctx.beginPath();
-				ctx.moveTo(handleLeft, handleSpacing * (i + 1));
-				ctx.lineTo(handleRight, handleSpacing * (i + 1));
-				ctx.stroke();
-			}
-			ctx.restore();
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/PopupMenu.js
-	Wick.GUIElement.PopupMenu = class extends Wick.GUIElement {
-		constructor(model, args) {
-			super(model, args);
-			this.x = args.x;
-			this.y = args.y;
-			this.height = 40;
-			this.mode = args.mode;
-			this.extendFramesButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Extend Frames",
-				icon: "gap_fill_extend_frames",
-				clickFn: () => {
-					this.project.model.activeTimeline.fillGapsMethod = "auto_extend";
-					localStorage.setItem("wickEditorFillGapsMethod", "auto_extend");
-					this.projectWasModified();
-				}
-			});
-			this.emptyFramesButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Add Blank Frames",
-				icon: "gap_fill_empty_frames",
-				clickFn: () => {
-					this.project.model.activeTimeline.fillGapsMethod = "blank_frames";
-					localStorage.setItem("wickEditorFillGapsMethod", "blank_frames");
-					this.projectWasModified();
-				}
-			});
-			this.smallFramesButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Small",
-				icon: "small_frames",
-				clickFn: () => {
-					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
-					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_SMALL_CELL_HEIGHT;
-					localStorage.setItem("wickEditorFrameSizeMode", "small");
-				}
-			});
-			this.normalFramesButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Medium",
-				icon: "normal_frames",
-				clickFn: () => {
-					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
-					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_NORMAL_CELL_HEIGHT;
-					localStorage.setItem("wickEditorFrameSizeMode", "normal");
-				}
-			});
-			this.largeFramesButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Large",
-				icon: "large_frames",
-				clickFn: () => {
-					Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
-					Wick.GUIElement.GRID_DEFAULT_CELL_HEIGHT = Wick.GUIElement.GRID_LARGE_CELL_HEIGHT;
-					localStorage.setItem("wickEditorFrameSizeMode", "large");
-				}
-			});
-		}
-		draw(isActive) {
-			super.draw();
-			if (this.mode === "gapfill") this._drawFrameGapsButtons();
-			else if (this.mode === "framesize") this._drawFrameSizeButtons();
-		}
-		_drawFrameGapsButtons() {
-			var ctx = this.ctx;
-			var method = this.project.model.activeTimeline.fillGapsMethod;
-			ctx.save();
-			ctx.translate(this.x, this.y - this.height);
-			ctx.fillStyle = "#111";
-			ctx.beginPath();
-			ctx.roundRect(0, 0, 80, 40, 3);
-			ctx.fill();
-			ctx.save();
-			ctx.translate(20, 20);
-			this.extendFramesButton.toggled = method === "auto_extend";
-			this.extendFramesButton.draw(method !== "auto_extend");
-			ctx.restore();
-			ctx.save();
-			ctx.translate(57, 20);
-			this.emptyFramesButton.toggled = method === "blank_frames";
-			this.emptyFramesButton.draw(method !== "blank_frames");
-			ctx.restore();
-			ctx.restore();
-		}
-		_drawFrameSizeButtons() {
-			var ctx = this.ctx;
-			var currentSize = Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH;
-			var smallSize = Wick.GUIElement.GRID_SMALL_CELL_WIDTH;
-			var normalSize = Wick.GUIElement.GRID_NORMAL_CELL_WIDTH;
-			var largeSize = Wick.GUIElement.GRID_LARGE_CELL_WIDTH;
-			ctx.save();
-			ctx.translate(this.x, this.y - this.height);
-			ctx.fillStyle = "#111";
-			ctx.beginPath();
-			ctx.roundRect(0, 0, 120, 40, 3);
-			ctx.fill();
-			ctx.save();
-			ctx.translate(20, 20);
-			this.smallFramesButton.toggled = currentSize === smallSize;
-			this.smallFramesButton.draw(currentSize !== smallSize);
-			ctx.restore();
-			ctx.save();
-			ctx.translate(57, 20);
-			this.normalFramesButton.toggled = currentSize === normalSize;
-			this.normalFramesButton.draw(currentSize !== normalSize);
-			ctx.restore();
-			ctx.save();
-			ctx.translate(94, 20);
-			this.largeFramesButton.toggled = currentSize === largeSize;
-			this.largeFramesButton.draw(currentSize !== largeSize);
-			ctx.restore();
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/Project.js
-	/**
-	* The Project GUIElement handles the creation of the canvas and drawing the rest of the GUIElements.
-	*/
-	Wick.GUIElement.Project = class extends Wick.GUIElement {
-		/**
-		* Create a new GUIElement and build the canvas.
-		*/
-		constructor(model) {
-			super(model);
-			this._canvas = document.createElement("canvas");
-			this._ctx = this._canvas.getContext("2d");
-			this._canvasContainer = document.createElement("div");
-			this._canvasContainer.style.width = "100%";
-			this._canvasContainer.style.height = "100%";
-			this._canvasContainer.appendChild(this._canvas);
-			this._drawnElements = [];
-			this._mouse = {
-				x: 0,
-				y: 0
-			};
-			this._mouseHoverTargets = [];
-			this._scrollX = 0;
-			this._scrollY = 0;
-			this._popupMenu = null;
-			this._onProjectModified = () => {};
-			this._onProjectSoftModified = () => {};
-			this._attachedDocumentEvents = [];
-			this._attachedCanvasEvents = [];
-		}
-		/**
-		* Create an event on the document. Saves a reference to the event internally.
-		*/
-		createDocumentEvent(event, callback, c) {
-			document.addEventListener(event, callback, c);
-			this._attachedDocumentEvents.push({
-				event,
-				fn: callback
-			});
-		}
-		/**
-		* Create an event on the canvas. Saves a reference to the event internally.
-		*/
-		createCanvasEvent(event, callback, c) {
-			this._canvas.addEventListener(event, callback, c);
-			this._attachedCanvasEvents.push({
-				event,
-				fn: callback
-			});
-		}
-		/**
-		* Removes all events from the document and canvas.
-		*/
-		removeAllEventListeners() {
-			this._attachedDocumentEvents.forEach((evt) => {
-				document.removeEventListener(evt.event, evt.fn);
-			});
-			this._attachedCanvasEvents.forEach((evt) => {
-				this._canvas.removeEventListener(evt.event, evt.fn);
-			});
-		}
-		/**
-		* The div containing the GUI canvas
-		*/
-		get canvasContainer() {
-			return this._canvasContainer;
-		}
-		set canvasContainer(canvasContainer) {
-			this._canvasContainer = canvasContainer;
-			if (this._canvas !== this._canvasContainer.children[0]) {
-				this._canvasContainer.innerHTML = "";
-				this._canvasContainer.appendChild(this._canvas);
-			}
-			if (!this._mouseEventsAttached) {
-				this.createDocumentEvent("mousemove", (e) => {
-					if (e.touches) return;
-					this._onMouseMove(e);
-				}, false);
-				this.createDocumentEvent("mouseup", (e) => {
-					if (e.touches) return;
-					this._onMouseUp(e);
-				}, false);
-				this.createCanvasEvent("mousedown", (e) => {
-					if (e.touches) return;
-					this._timeline_onMouseDown(e);
-				}, false);
-				this.createDocumentEvent("mousedown", (e) => {
-					if (e.touches) return;
-					if (e.target !== this._canvas) {
-						this.closePopupMenu();
-						this.draw();
-					}
-				}, false);
-				$(this._canvas).on("mousewheel", this._onMouseWheel.bind(this));
-				this.createCanvasEvent("touchstart", (e) => {
-					e.buttons = 0;
-					e.clientX = e.touches[0].clientX;
-					e.clientY = e.touches[0].clientY;
-					this._touchStartX = e.clientX;
-					this._touchStartY = e.clientY;
-					e.movementX = e.touches[0].movementX;
-					e.movementY = e.touches[0].movementY;
-					this._onMouseMove(e);
-					this._timeline_onMouseDown(e);
-				}, false);
-				this.createDocumentEvent("touchmove", (e) => {
-					e.buttons = 1;
-					e.clientX = e.touches[0].clientX;
-					e.clientY = e.touches[0].clientY;
-					e.movementX = e.clientX - this._touchStartX;
-					e.movementY = e.clientY - this._touchStartY;
-					this._touchStartX = e.clientX;
-					this._touchStartY = e.clientY;
-					this._onMouseMove(e);
-				}, false);
-				this.createDocumentEvent("touchend", (e) => {
-					this._onMouseUp(e);
-				}, false);
-				this._mouseEventsAttached = true;
-			}
-		}
-		/**
-		* Resize the canvas so that it fits inside the canvas container, call this when the size of the canvas container changes.
-		*/
-		resize() {
-			if (!this._canvasContainer || !this._canvas) return;
-			var containerWidth = this.canvasContainer.offsetWidth;
-			var containerHeight = this.canvasContainer.offsetHeight;
-			containerWidth = Math.floor(containerWidth) - 2;
-			containerHeight = Math.floor(containerHeight) - 1;
-			if (this._canvas.width !== containerWidth) this._canvas.width = containerWidth;
-			if (this._canvas.height !== containerHeight) this._canvas.height = containerHeight;
-		}
-		/**
-		* Draw this GUIElement and update the mouse state
-		*/
-		draw() {
-			var ctx = this.ctx;
-			this.resize();
-			this._drawnElements = [];
-			ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-			this.model.activeTimeline.guiElement.draw();
-			if (this._popupMenu) this._popupMenu.draw();
-			this._mouseHoverTargets.forEach((target) => {
-				if (target.tooltip) target.tooltip.draw(target.localTranslation.x, target.localTranslation.y);
-			});
-		}
-		/**
-		* Give a function to call when the timeline modifies the project.
-		* @param {function} fn - the function to call
-		*/
-		onProjectModified(fn) {
-			this._onProjectModified = fn;
-		}
-		/**
-		* Give a function to call when the timeline "soft modifies" the project (moving the playhead, etc).
-		* @param {function} fn - the function to call
-		*/
-		onProjectSoftModified(fn) {
-			this._onProjectSoftModified = fn;
-		}
-		/**
-		* Add a GUIElement to the list of objects that were drawn in the last draw call.
-		* @param {Wick.GUIElement} elem - the GUIElement to add
-		*/
-		markElementAsDrawn(elem) {
-			this._drawnElements.push(elem);
-		}
-		/**
-		* The amount the timeline is scrolled horizontally.
-		* @type {number}
-		*/
-		get scrollX() {
-			return this._scrollX;
-		}
-		set scrollX(scrollX) {
-			if (scrollX < 0) scrollX = 0;
-			if (scrollX > this.horizontalScrollSpace) scrollX = this.horizontalScrollSpace;
-			this._scrollX = scrollX;
-		}
-		/**
-		* The amount the timeline is scrolled vertically.
-		* @type {number}
-		*/
-		get scrollY() {
-			return this._scrollY;
-		}
-		set scrollY(scrollY) {
-			if (scrollY < 0) scrollY = 0;
-			if (scrollY > this.verticalScrollSpace) scrollY = this.verticalScrollSpace;
-			this._scrollY = scrollY;
-		}
-		/**
-		* The amount of distance the timeline can be scrolled horizontally. Depends on the number of frames.
-		* @type {number}
-		*/
-		get horizontalScrollSpace() {
-			return this.model.activeTimeline.length * this.gridCellWidth * 3 + 500;
-		}
-		/**
-		* The amount of distance the timeline can be scrolled vertically. Depends on the number of layers.
-		* @type {number}
-		*/
-		get verticalScrollSpace() {
-			return this.model.activeTimeline.layers.length * this.gridCellHeight + this.gridCellHeight * 2;
-		}
-		/**
-		* Open a popup menu
-		* @param {Wick.GUIElement.PopupMenu} popupMenu - the PopupMenu to open
-		*/
-		openPopupMenu(popupMenu) {
-			this._popupMenu = popupMenu;
-			this.draw();
-		}
-		/**
-		* Close the current popup menu
-		*/
-		closePopupMenu() {
-			this._popupMenu = null;
-			this.draw();
-		}
-		/**
-		* String representation of the current frame size, can be "small", "normal", or "large".
-		* @type {string}
-		*/
-		get frameSizeMode() {
-			if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_SMALL_CELL_WIDTH) return "small";
-			else if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_NORMAL_CELL_WIDTH) return "normal";
-			else if (Wick.GUIElement.GRID_DEFAULT_CELL_WIDTH === Wick.GUIElement.GRID_LARGE_CELL_WIDTH) return "large";
-		}
-		/**
-		* Drop an asset onto the timeline.
-		* @param {string} uuid - The UUID of the desired asset.
-		* @param {number} x - The x location of the image after creation in relation to the window.
-		* @param {number} y - The y location of the image after creation in relation to the window.
-		* @param {boolean} drop - If true, will drop the asset with the uuid onto the hovered frame, modifying the frame.
-		*/
-		dragAssetAtPosition(uuid, x, y, drop) {
-			this._onMouseMove({
-				clientX: x,
-				clientY: y,
-				buttons: 0
-			});
-			var target = this._getTopMouseTarget();
-			if (!target || !(target.model instanceof Wick.Frame)) return;
-			var frame = target.model;
-			var asset = target.project.model.getAssetByUUID(uuid);
-			var oldSound = frame.sound;
-			frame.sound = asset;
-			if (drop) this.projectWasModified();
-			else {
-				this.draw();
-				if (oldSound) frame.sound = oldSound;
-				else frame.removeSound();
-			}
-		}
-		/**
-		* Auto scrolls the timeline if the playhead is considered off-screen.
-		* This is built specifically for moving the playead with hotkeys.
-		*/
-		checkForPlayheadAutoscroll() {
-			var scrollWidth = this.canvas.width;
-			scrollWidth -= Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
-			scrollWidth -= Wick.GUIElement.SCROLLBAR_SIZE;
-			scrollWidth -= this.gridCellWidth;
-			var scrollMin = this.scrollX;
-			var scrollMax = this.scrollX + scrollWidth;
-			var playheadX = (this.model.activeTimeline.playheadPosition - 1) * this.gridCellWidth;
-			if (playheadX < scrollMin) {
-				this.scrollX = playheadX;
-				this.draw();
-			}
-			if (playheadX > scrollMax) {
-				this.scrollX = playheadX - scrollWidth;
-				this.draw();
-			}
-		}
-		_onMouseMove(e) {
-			var rect = this._canvas.getBoundingClientRect();
-			this._mouse = {
-				x: e.clientX - rect.left,
-				y: e.clientY - rect.top
-			};
-			var mouseOffCanvas = this._mouse.x < 0 || this._mouse.y < 0 || this._mouse.x > this.canvas.width || this._mouse.y > this.canvas.height;
-			if (e.buttons === 0 && !this.canvasClicked && mouseOffCanvas) {
-				if (this._mouseHoverTargets.length > 0) {
-					this._mouseHoverTargets = [];
-					this.draw();
-				}
-				return;
-			}
-			if (e.buttons === 0) {
-				this._mouseHoverTargets = this._drawnElements.filter((elem) => {
-					return elem.model.project && elem.mouseInBounds(this._mouse);
-				});
-				var top = this._getTopMouseTarget();
-				if (top) this.canvas.style.cursor = top.cursor;
-				else this.canvas.style.cursor = "default";
-			} else if (!this.canvasClicked) {} else if (!this._mouseHasMoved(this._clickXY, {
-				x: e.clientX,
-				y: e.clientY
-			}, 5)) {} else this._onMouseDrag(e);
-			this.draw();
-		}
-		_timeline_onMouseDown(e) {
-			this.closePopupMenu();
-			this.canvasClicked = true;
-			this._clickXY = {
-				x: e.clientX,
-				y: e.clientY
-			};
-			if (this._mouseHoverTargets.length === 0) this.model.selection.clear();
-			else {
-				this._lastClickedElem = this._getTopMouseTarget();
-				this._lastClickedElem.onMouseDown(e);
-			}
-			this.draw();
-		}
-		_onMouseUp(e) {
-			var target = this._getTopMouseTarget();
-			if (this.canvasClicked && this._isDragging) target && target.onMouseUp(e);
-			else if (this.canvasClicked && this._lastClickedElem === target) target && target.onMouseUp(e);
-			this.canvasClicked = false;
-			this._isDragging = false;
-			this.draw();
-			this._onMouseMove(e);
-			clearInterval(this.autoscrollInterval);
-			this.autoscrollInterval = null;
-		}
-		_onMouseDrag(e) {
-			this._isDragging = true;
-			var target = this._getTopMouseTarget();
-			if (target) {
-				this.canvas.style.cursor = "grabbing";
-				target.onMouseDrag(e);
-				this._doAutoScroll(target);
-			}
-		}
-		/**
-		* Refers to mousewheel events on the timeline.
-		* @param {*} e 
-		*/
-		_onMouseWheel(e) {
-			e.preventDefault();
-			if (!this.model.isPublished) {
-				var dx = e.deltaX * e.deltaFactor * .5;
-				var dy = e.deltaY * e.deltaFactor * .5;
-				this.scrollX += dx;
-				this.scrollY -= dy;
-				this.draw();
-			}
-		}
-		_getTopMouseTarget() {
-			var l = this._mouseHoverTargets.length - 1;
-			return this._mouseHoverTargets[l];
-		}
-		_doAutoScroll(target) {
-			if (this.autoscrollInterval) return;
-			this.autoscrollInterval = setInterval(() => {
-				var left = Wick.GUIElement.LAYERS_CONTAINER_WIDTH;
-				var right = this.canvas.width - Wick.GUIElement.SCROLLBAR_SIZE;
-				var top = Wick.GUIElement.NUMBER_LINE_HEIGHT + Wick.GUIElement.BREADCRUMBS_HEIGHT;
-				var bottom = this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE;
-				var distFromLeft = this._mouse.x - left;
-				var distFromRight = this._mouse.x - right;
-				var distFromTop = this._mouse.y - top;
-				var distFromBottom = this._mouse.y - bottom;
-				if (target.canAutoScrollX) {
-					if (this._mouse.x > right) this.scrollX += distFromRight * Wick.GUIElement.AUTO_SCROLL_SPEED;
-					if (this._mouse.x < left) this.scrollX += distFromLeft * Wick.GUIElement.AUTO_SCROLL_SPEED;
-				}
-				if (target.canAutoScrollY) {
-					if (this._mouse.y > bottom) this.scrollY += distFromBottom * Wick.GUIElement.AUTO_SCROLL_SPEED;
-					if (this._mouse.y < top) this.scrollY += distFromTop * Wick.GUIElement.AUTO_SCROLL_SPEED;
-				}
-				this.draw();
-			}, 16);
-		}
-		_mouseHasMoved(origMouse, currMouse, amount) {
-			var d = {
-				x: Math.abs(origMouse.x - currMouse.x),
-				y: Math.abs(origMouse.y - currMouse.y)
-			};
-			return d.x > amount || d.y > amount;
-		}
-	};
-	//#endregion
-	//#region src/gui/Scrollbar.js
-	Wick.GUIElement.Scrollbar = class extends Wick.GUIElement {
-		constructor(model, direction) {
-			super(model);
-			this.grabber = new Wick.GUIElement.ScrollbarGrabber(this.model, direction);
-			this.direction = direction;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			this.maxWidth = this.canvas.width - this.localTranslation.x - Wick.GUIElement.SCROLLBAR_SIZE;
-			this.maxHeight = this.canvas.height - this.localTranslation.y - Wick.GUIElement.SCROLLBAR_SIZE;
-			var size = Wick.GUIElement.SCROLLBAR_SIZE;
-			if (!this._canScrollVertically() && this.direction === "vertical") {
-				this.project.scrollY = 0;
-				return;
-			}
-			ctx.fillStyle = Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR;
-			ctx.beginPath();
-			if (this.direction === "horizontal") ctx.rect(0, 0, this.maxWidth, size);
-			else if (this.direction === "vertical") ctx.rect(0, 0, size, this.maxHeight);
-			ctx.fill();
-			if (this.direction === "horizontal") {
-				ctx.fillStyle = Wick.GUIElement.SCROLLBAR_BACKGROUND_COLOR;
-				ctx.beginPath();
-				ctx.roundRect(this.maxWidth, 0, this.maxWidth + size, size, 0);
-				ctx.fill();
-			}
-			ctx.save();
-			var pos = this._getScrollbarPosition();
-			if (this.direction === "horizontal") ctx.translate(pos.x, 0);
-			else if (this.direction === "vertical") ctx.translate(0, pos.y);
-			this.grabber.scrollRatioX = this.project.horizontalScrollSpace / (this.maxWidth - Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH);
-			this.grabber.scrollRatioY = this.project.verticalScrollSpace / (this.maxHeight - Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH);
-			this.grabber.draw();
-			ctx.restore();
-		}
-		_canScrollVertically() {
-			return this.model.project.activeTimeline.layers.length > 1;
-		}
-		_getScrollbarPosition() {
-			return {
-				x: this.project.scrollX / this.project.horizontalScrollSpace * (this.maxWidth - Wick.GUIElement.SCROLLBAR_HORIZONTAL_LENGTH),
-				y: this.project.scrollY / this.project.verticalScrollSpace * (this.maxHeight - Wick.GUIElement.SCROLLBAR_VERTICAL_LENGTH)
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/ScrollbarGrabber.js
-	Wick.GUIElement.ScrollbarGrabber = class extends Wick.GUIElement {
-		constructor(model, direction) {
-			super(model);
-			this.cursor = "grab";
-			this.direction = direction;
-			this.horizontalLength = 100;
-			this.verticalLength = 50;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			var fillColor = this.mouseState === "over" ? Wick.GUIElement.SCROLLBAR_ACTIVE_FILL_COLOR : Wick.GUIElement.SCROLLBAR_FILL_COLOR;
-			var r = Wick.GUIElement.SCROLLBAR_BORDER_RADIUS;
-			var s = Wick.GUIElement.SCROLLBAR_SIZE - Wick.GUIElement.SCROLLBAR_MARGIN;
-			ctx.fillStyle = fillColor;
-			ctx.save();
-			ctx.translate(Wick.GUIElement.SCROLLBAR_MARGIN / 2, Wick.GUIElement.SCROLLBAR_MARGIN / 2);
-			if (this.direction === "horizontal") {
-				ctx.beginPath();
-				ctx.roundRect(0, 0, this.horizontalLength, s, r);
-				ctx.fill();
-			} else if (this.direction === "vertical") {
-				ctx.beginPath();
-				ctx.roundRect(0, 0, s, this.verticalLength, r);
-				ctx.fill();
-			}
-			ctx.restore();
-		}
-		onMouseDrag(e) {
-			if (this.direction === "horizontal") this.project.scrollX += e.movementX * this.scrollRatioX;
-			else if (this.direction === "vertical") this.project.scrollY += e.movementY * this.scrollRatioY;
-		}
-		get bounds() {
-			if (this.direction === "horizontal") return {
-				x: 0,
-				y: 0,
-				width: this.horizontalLength,
-				height: Wick.GUIElement.SCROLLBAR_SIZE
-			};
-			else if (this.direction === "vertical") return {
-				x: 0,
-				y: 0,
-				width: Wick.GUIElement.SCROLLBAR_SIZE,
-				height: this.verticalLength
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/Timeline.js
-	/**
-	* The Timeline is responsible for drawing the following GUI elements:
-	* - Breadcrumbs
-	* - Frames Container
-	* - Layers Container
-	* - Horizontal + Vertical Scrollbars
-	* - Number Line
-	*/
-	Wick.GUIElement.Timeline = class extends Wick.GUIElement {
-		/**
-		* Create a new GUIElement
-		*/
-		constructor(model) {
-			super(model);
-			this.breadcrumbs = new Wick.GUIElement.Breadcrumbs(model);
-			this.actionButtonsContainer = new Wick.GUIElement.ActionButtonsContainer(model);
-			this.layersContainer = new Wick.GUIElement.LayersContainer(model);
-			this.framesContainer = new Wick.GUIElement.FramesContainer(model);
-			this.numberLine = new Wick.GUIElement.NumberLine(model);
-			this.horizontalScrollbar = new Wick.GUIElement.Scrollbar(model, "horizontal");
-			this.verticalScrollbar = new Wick.GUIElement.Scrollbar(model, "vertical");
-		}
-		/**
-		* Draw this GUIElement
-		*/
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			ctx.save();
-			ctx.translate(0, Wick.GUIElement.BREADCRUMBS_HEIGHT);
-			ctx.save();
-			ctx.translate(0, Wick.GUIElement.NUMBER_LINE_HEIGHT);
-			ctx.save();
-			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
-			ctx.save();
-			ctx.translate(-this.project.scrollX, -this.project.scrollY);
-			this.framesContainer.draw();
-			ctx.restore();
-			ctx.restore();
-			ctx.restore();
-			ctx.save();
-			ctx.translate(-this.project.scrollX + Wick.GUIElement.LAYERS_CONTAINER_WIDTH, 0);
-			this.numberLine.draw();
-			ctx.restore();
-			ctx.save();
-			ctx.translate(0, Wick.GUIElement.NUMBER_LINE_HEIGHT);
-			ctx.save();
-			ctx.translate(0, -this.project.scrollY);
-			this.layersContainer.draw();
-			ctx.restore();
-			ctx.restore();
-			this.actionButtonsContainer.draw();
-			ctx.restore();
-			ctx.save();
-			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.BREADCRUMBS_HEIGHT + Wick.GUIElement.NUMBER_LINE_HEIGHT);
-			ctx.save();
-			ctx.translate(0, this.canvas.height - this.currentTranslation.y - Wick.GUIElement.SCROLLBAR_SIZE);
-			this.horizontalScrollbar.draw();
-			ctx.restore();
-			ctx.save();
-			ctx.translate(this.canvas.width - this.currentTranslation.x - Wick.GUIElement.SCROLLBAR_SIZE, 0);
-			this.verticalScrollbar.draw();
-			ctx.restore();
-			ctx.restore();
-			this.breadcrumbs.draw();
-			ctx.save();
-			ctx.translate(Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.BREADCRUMBS_HEIGHT);
-			ctx.fillStyle = "rgba(0,0,0,0.2)";
-			ctx.beginPath();
-			ctx.rect(0, 0, 2, this.canvas.height);
-			ctx.fill();
-			ctx.beginPath();
-			ctx.rect(0, 0, 1, this.canvas.height);
-			ctx.fill();
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/Tooltip.js
-	Wick.GUIElement.Tooltip = class extends Wick.GUIElement {
-		constructor(model, label) {
-			super(model);
-			this.label = label;
-		}
-		draw(x, y) {
-			super.draw();
-			if (!this.label) return;
-			var ctx = this.ctx;
-			ctx.font = "14px Nunito Sans";
-			var textContent = this.label;
-			var textWidth = ctx.measureText(textContent).width;
-			var textHeight = 14;
-			ctx.save();
-			var tx = x - textWidth / 2;
-			var ty = y + textHeight;
-			var xMin = 3;
-			if (tx < xMin) tx = xMin;
-			if (ty > this.canvas.height) ty = this.canvas.height - 35;
-			else if (ty > this.canvas.height - 25) ty = this.canvas.height - 20;
-			ctx.translate(tx, ty);
-			var margin = 4;
-			var r = Wick.GUIElement.FRAME_BORDER_RADIUS;
-			ctx.fillStyle = "#3878AF";
-			ctx.beginPath();
-			ctx.roundRect(-margin / 2, -margin / 2, textWidth + margin, textHeight + margin, r);
-			ctx.fill();
-			ctx.fillStyle = "#FFFFFF";
-			ctx.fillText(textContent, 0, 12);
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/Tween.js
-	Wick.GUIElement.Tween = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.cursor = "grab";
-			this.canAutoScrollX = true;
-			this._ghost = null;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
-			if (this.project.frameSizeMode === "large") r *= 1.25;
-			ctx.save();
-			ctx.rotate(Math.PI / 4);
-			if (this.mouseState === "over") ctx.fillStyle = Wick.GUIElement.TWEEN_HOVER_COLOR_1;
-			else ctx.fillStyle = Wick.GUIElement.TWEEN_FILL_COLOR_1;
-			ctx.beginPath();
-			ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-			ctx.fill();
-			ctx.restore();
-			ctx.save();
-			ctx.beginPath();
-			ctx.rect(0, -30, 30, 60);
-			ctx.clip();
-			ctx.rotate(Math.PI / 4);
-			if (this.mouseState === "over") ctx.fillStyle = Wick.GUIElement.TWEEN_HOVER_COLOR_2;
-			else ctx.fillStyle = Wick.GUIElement.TWEEN_FILL_COLOR_2;
-			ctx.beginPath();
-			ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-			ctx.fill();
-			ctx.restore();
-			if (this.model.isSelected) {
-				ctx.save();
-				ctx.rotate(Math.PI / 4);
-				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-				ctx.lineWidth = Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH;
-				ctx.beginPath();
-				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-				ctx.stroke();
-				ctx.restore();
-			}
-			var linePadding = 18;
-			var nextTween = this.model.getNextTween();
-			if (nextTween) {
-				var nextTweenPosition = (nextTween.playheadPosition - this.model.playheadPosition) * this.gridCellWidth;
-				var arrowSize = 5;
-				ctx.strokeStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
-				ctx.lineWidth = Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH;
-				ctx.beginPath();
-				ctx.moveTo(linePadding, 0);
-				ctx.lineTo(nextTweenPosition - linePadding, 0);
-				ctx.stroke();
-				ctx.fillStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
-				ctx.beginPath();
-				ctx.moveTo(nextTweenPosition - linePadding, 0);
-				ctx.lineTo(nextTweenPosition - linePadding - arrowSize, -arrowSize);
-				ctx.stroke();
-				ctx.beginPath();
-				ctx.moveTo(nextTweenPosition - linePadding, 0);
-				ctx.lineTo(nextTweenPosition - linePadding - arrowSize, arrowSize);
-				ctx.stroke();
-			} else if (this.model.playheadPosition !== this.model.parentFrame.length) {
-				var tweenPos = this.model.playheadPosition * this.gridCellWidth;
-				var frameRightEdge = this.model.parentFrame.length * this.gridCellWidth - tweenPos + this.gridCellWidth / 2;
-				ctx.save();
-				ctx.strokeStyle = Wick.GUIElement.TWEEN_ARROW_STROKE_COLOR;
-				ctx.lineWidth = Wick.GUIElement.TWEEN_ARROW_STROKE_WIDTH;
-				ctx.setLineDash([5, 5]);
-				ctx.beginPath();
-				ctx.moveTo(linePadding, 0);
-				ctx.lineTo(frameRightEdge - 2, 0);
-				ctx.stroke();
-				ctx.restore();
-			}
-			if (this._ghost) this._ghost.draw();
-		}
-		get bounds() {
-			var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS * 1.25;
-			return {
-				x: -r,
-				y: -r,
-				width: r * 2,
-				height: r * 2
-			};
-		}
-		onMouseDown(e) {
-			var playheadPosition = this.model.playheadPosition + this.model.parentFrame.start - 1;
-			this.model.project.activeTimeline.playheadPosition = playheadPosition;
-			if (this.model.isSelected) {
-				if (e.shiftKey) this.model.project.selection.deselect(this.model);
-			} else {
-				if (!e.shiftKey) this.model.project.selection.clear();
-				this.model.project.selection.select(this.model);
-				this.model.parentLayer.activate();
-				this.projectWasModified();
-			}
-		}
-		onMouseDrag(e) {
-			if (!this._ghost) this._ghost = new Wick.GUIElement.TweenGhost(this.model);
-		}
-		onMouseUp(e) {
-			if (this._ghost) {
-				this._ghost.finish();
-				this._ghost = null;
-				this.projectWasModified();
-			}
-		}
-	};
-	//#endregion
-	//#region src/gui/ActionButtonsContainer.js
-	Wick.GUIElement.ActionButtonsContainer = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.deleteFrameButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Delete",
-				icon: "delete_frame",
-				clickFn: () => {
-					this.model.project.deleteSelectedObjects();
-					this.projectWasModified();
-				}
-			});
-			this.insertBlankFrameButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Add Frame",
-				icon: "cut_frame",
-				clickFn: () => {
-					this.model.project.insertBlankFrame();
-					this.projectWasModified();
-				}
-			});
-			this.addTweenButton = new Wick.GUIElement.ActionButton(this.model, {
-				tooltip: "Add Tween",
-				icon: "add_tween",
-				clickFn: () => {
-					this.model.project.createTween();
-					this.projectWasModified();
-				}
-			});
-			if (!Wick.GUIElement.IS_MOBILE) {
-				this.fillGapsModeButton = new Wick.GUIElement.ActionButton(this.model, {
-					tooltip: "Gap Fill Mode",
-					icon: "gap_fill_menu_blank_frames",
-					height: 8,
-					width: 16,
-					clickFn: () => {
-						this.project.openPopupMenu(new Wick.GUIElement.PopupMenu(this.model, {
-							x: 0,
-							y: this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE,
-							mode: "gapfill"
-						}));
-					}
-				});
-				this.gridSizeButton = new Wick.GUIElement.ActionButton(this.model, {
-					tooltip: "Frame Size",
-					icon: "frame_size_menu",
-					height: 8,
-					width: 16,
-					clickFn: () => {
-						this.project.openPopupMenu(new Wick.GUIElement.PopupMenu(this.model, {
-							x: 20,
-							y: this.canvas.height - Wick.GUIElement.SCROLLBAR_SIZE,
-							mode: "framesize"
-						}));
-					}
-				});
-			}
-		}
-		draw() {
-			var ctx = this.ctx;
-			ctx.fillStyle = Wick.GUIElement.TIMELINE_BACKGROUND_COLOR;
-			ctx.beginPath();
-			ctx.rect(0, 0, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.NUMBER_LINE_HEIGHT);
-			ctx.fill();
-			ctx.fillStyle = "#111";
-			ctx.beginPath();
-			ctx.rect(0, this.canvas.height - Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.SCROLLBAR_SIZE, Wick.GUIElement.LAYERS_CONTAINER_WIDTH, Wick.GUIElement.SCROLLBAR_SIZE);
-			ctx.fill();
-			if (!Wick.GUIElement.IS_MOBILE) {
-				ctx.save();
-				var method = this.project.model.activeTimeline.fillGapsMethod;
-				if (method === "auto_extend") this.fillGapsModeButton.icon = "gap_fill_menu_extend_frames";
-				else if (method === "blank_frames") this.fillGapsModeButton.icon = "gap_fill_menu_blank_frames";
-				ctx.translate(18, this.canvas.height - Wick.GUIElement.NUMBER_LINE_HEIGHT - 4);
-				this.fillGapsModeButton.draw(true);
-				ctx.restore();
-				ctx.save();
-				ctx.translate(54, this.canvas.height - Wick.GUIElement.NUMBER_LINE_HEIGHT - 4);
-				this.gridSizeButton.draw(true);
-				ctx.restore();
-			}
-			var tweenButtonIsActive = this.model.project.canCreateTween;
-			var deleteButtonIsActive = this.model.project.selection.getSelectedObjects("Timeline").length > 0;
-			ctx.save();
-			ctx.save();
-			var leftOfContainer = Wick.GUIElement.LAYERS_CONTAINER_WIDTH + 10 - 90;
-			ctx.translate(leftOfContainer, 0);
-			ctx.save();
-			ctx.globalAlpha = deleteButtonIsActive ? 1 : .3;
-			ctx.translate(0, 20);
-			this.deleteFrameButton.draw(deleteButtonIsActive);
-			ctx.restore();
-			ctx.save();
-			ctx.globalAlpha = 1;
-			ctx.translate(30, 20);
-			this.insertBlankFrameButton.draw(true);
-			ctx.restore();
-			ctx.save();
-			ctx.globalAlpha = tweenButtonIsActive ? 1 : .3;
-			ctx.translate(60, 20);
-			this.addTweenButton.draw(tweenButtonIsActive);
-			ctx.restore();
-			ctx.restore();
-			ctx.restore();
-		}
-	};
-	//#endregion
-	//#region src/gui/Breadcrumbs.js
-	Wick.GUIElement.Breadcrumbs = class extends Wick.GUIElement {
-		/**
-		* Create a new GUIElement
-		*/
-		constructor(model) {
-			super(model);
-			this._buttons = {};
-		}
-		/**
-		* Draw this GUIElement
-		*/
-		draw() {
-			var ctx = this.ctx;
-			ctx.fillStyle = Wick.GUIElement.BREADCRUMBS_BG_COLOR;
-			ctx.beginPath();
-			ctx.rect(0, 0, this.canvas.width, Wick.GUIElement.BREADCRUMBS_HEIGHT);
-			ctx.fill();
-			var totalWidth = 0;
-			this.model.project.focus.lineage.reverse().forEach((clip) => {
-				var button = this._buttons[clip.uuid];
-				if (!button) {
-					button = new Wick.GUIElement.BreadcrumbsButton(clip);
-					this._buttons[clip.uuid] = button;
-				}
-				ctx.save();
-				ctx.translate(totalWidth, 0);
-				button.draw();
-				ctx.restore();
-				totalWidth += button.buttonWidth;
-			});
-		}
-	};
-	//#endregion
-	//#region src/gui/Frame.js
-	Wick.GUIElement.Frame = class extends Wick.GUIElement {
-		constructor(model) {
-			super(model);
-			this.canAutoScrollX = true;
-			this.canAutoScrollY = true;
-			this._ghost = null;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			if (this.model.parentLayer.hidden) ctx.globalAlpha = .3;
-			var widthPx = this.model.length * this.gridCellWidth - 1;
-			var heightPx = this.gridCellHeight - 1;
-			var edge = this._mouseOverFrameEdge();
-			if (this.model.contentful || this.model.tweens.length > 0 || this.model.sound) ctx.fillStyle = Wick.GUIElement.FRAME_CONTENTFUL_FILL_COLOR;
-			else ctx.fillStyle = Wick.GUIElement.FRAME_UNCONTENTFUL_FILL_COLOR;
-			ctx.beginPath();
-			ctx.roundRect(0, 0, widthPx, heightPx, Wick.GUIElement.FRAME_BORDER_RADIUS);
-			ctx.fill();
-			if (!edge && this.mouseState === "over" || this.mouseState === "down") {
-				ctx.lineWidth = 3;
-				ctx.strokeStyle = Wick.GUIElement.FRAME_HOVERED_OVER;
-				ctx.stroke();
-			}
-			if (this.model.isSelected) {
-				ctx.strokeStyle = Wick.GUIElement.SELECTED_ITEM_BORDER_COLOR;
-				ctx.lineWidth = Wick.GUIElement.FRAME_HIGHLIGHT_STROKEWIDTH;
-				ctx.stroke();
-			}
-			if (edge) {
-				this.cursor = "ew-resize";
-				var edgeGradient = ctx.createLinearGradient(widthPx - Wick.GUIElement.FRAME_HANDLE_WIDTH, 0, widthPx, 0);
-				edgeGradient.addColorStop(0, "rgba(255,222,35, 0.0)");
-				edgeGradient.addColorStop(1, "rgba(255,222,35, 1.0)");
-				ctx.fillStyle = edgeGradient;
-				ctx.strokeStyle = edgeGradient;
-				ctx.lineWidth = 5;
-				ctx.save();
-				if (edge === "left") {
-					ctx.translate(widthPx, 0);
-					ctx.scale(-1, 1);
-				}
-				ctx.beginPath();
-				ctx.roundRect(0, 0, widthPx, heightPx, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				ctx.fill();
-				ctx.stroke();
-				ctx.restore();
-			} else this.cursor = "grab";
-			if (this.model.hasContentfulScripts) {
-				ctx.fillStyle = Wick.GUIElement.FRAME_SCRIPT_DOT_COLOR;
-				ctx.beginPath();
-				ctx.arc(this.gridCellWidth / 2, 0, Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS * 1.3, 0, Math.PI);
-				ctx.fill();
-			}
-			if (this.model.identifier) {
-				ctx.save();
-				ctx.beginPath();
-				ctx.rect(0, 0, this.model.length * this.gridCellWidth, this.gridCellHeight);
-				ctx.clip();
-				ctx.font = "12px Courier New";
-				ctx.fillStyle = "black";
-				ctx.fillText(this.model.identifier, 0, 12);
-				ctx.restore();
-			}
-			if (this.model.tweens.length === 0 && !this.model.sound) {
-				ctx.fillStyle = Wick.GUIElement.FRAME_CONTENT_DOT_COLOR;
-				if (this.model.contentful) ctx.strokeStyle = Wick.GUIElement.FRAME_CONTENT_DOT_COLOR;
-				else ctx.strokeStyle = "#aaa";
-				ctx.lineWidth = Wick.GUIElement.FRAME_CONTENT_DOT_STROKE_WIDTH;
-				var r = Wick.GUIElement.FRAME_CONTENT_DOT_RADIUS;
-				if (this.project.frameSizeMode === "small") r *= .75;
-				else if (this.project.frameSizeMode === "large") r *= 1.25;
-				ctx.beginPath();
-				ctx.arc(this.gridCellWidth / 2, this.gridCellHeight / 2, r, 0, 2 * Math.PI);
-				if (this.model.contentful) ctx.fill();
-				ctx.stroke();
-			} else if (this.model.sound) {
-				var framerate = this.model.project.framerate;
-				var sound = this.model.sound;
-				var waveform = sound.waveform;
-				var soundLengthMS = sound.duration * 1e3;
-				var frameLengthMS = 1 / framerate * this.model.length * 1e3;
-				var frameLengthPx = this.model.length * this.gridCellWidth;
-				var cropPx = frameLengthMS / soundLengthMS * 1200;
-				var pxPerMS = 1e3 / framerate / this.gridCellWidth;
-				var shiftSoundStart = -(this.model.soundStart * (1 / pxPerMS));
-				var volumeCropAmt = waveform.height / 2 * (1 - 1 / this.model.soundVolume);
-				ctx.drawImage(waveform, 0, volumeCropAmt, cropPx, waveform.height - volumeCropAmt * 2, shiftSoundStart, 0, frameLengthPx, this.gridCellHeight);
-			} else if (this.model.tweens.length > 0) this.model.tweens.forEach((tween) => {
-				ctx.save();
-				ctx.translate((tween.playheadPosition - 1) * this.gridCellWidth + this.gridCellWidth / 2, this.gridCellHeight / 2);
-				tween.guiElement.draw();
-				ctx.restore();
-			});
-			ctx.globalAlpha = 1;
-			if (this._ghost) this._ghost.draw();
-		}
-		onMouseDown(e) {
-			this._clickedEdge = this._mouseOverFrameEdge();
-			var playheadPosition = this.model.start + Math.floor(this.localMouse.x / this.gridCellWidth);
-			this.model.project.activeTimeline.playheadPosition = playheadPosition;
-			if (this.model.isSelected) {
-				if (e.shiftKey) this.model.project.selection.deselect(this.model);
-			} else {
-				if (!e.shiftKey) this.model.project.selection.clear();
-				this.model.project.selection.select(this.model);
-				this.model.parentLayer.activate();
-			}
-			this.projectWasModified();
-		}
-		onMouseDrag(e) {
-			if (!this._ghost) {
-				var edge = this._clickedEdge;
-				if (edge) this._ghost = new Wick.GUIElement.FrameEdgeGhost(this.model, edge);
-				else this._ghost = new Wick.GUIElement.FrameGhost(this.model);
-			}
-		}
-		onMouseUp(e) {
-			if (this._ghost) {
-				this._ghost.finish();
-				this._ghost = null;
-				this.projectWasModified();
-			}
-		}
-		get bounds() {
-			return {
-				x: -1,
-				y: 0,
-				width: this.model.length * this.gridCellWidth + 1,
-				height: this.gridCellHeight + 1
-			};
-		}
-		_mouseOverFrameEdge() {
-			var widthPx = this.model.length * this.gridCellWidth;
-			var handlePx = Wick.GUIElement.FRAME_HANDLE_WIDTH;
-			if (this.project.frameSizeMode === "small") handlePx *= .5;
-			if (this.project._isDragging || !this.mouseInBounds()) return null;
-			else if (this.localMouse.x < handlePx) return "left";
-			else if (this.localMouse.x > widthPx - handlePx) return "right";
-			else return null;
-		}
-	};
-	//#endregion
-	//#region src/gui/ActionButton.js
-	Wick.GUIElement.ActionButton = class extends Wick.GUIElement.Button {
-		constructor(model, args) {
-			super(model, args);
-			this.icon = args.icon;
-			this.width = args.width || Wick.GUIElement.ACTION_BUTTON_RADIUS;
-			this.height = args.height || Wick.GUIElement.ACTION_BUTTON_RADIUS;
-			this.toggled = args.toggled || false;
-		}
-		draw(isActive) {
-			super.draw();
-			var ctx = this.ctx;
-			if (isActive) this.cursor = "pointer";
-			else this.cursor = "default";
-			if (isActive && this.mouseState == "over" || this.toggled) {
-				ctx.fillStyle = Wick.GUIElement.FRAME_HOVERED_OVER;
-				ctx.beginPath();
-				ctx.roundRect(-this.width, -this.height, this.width * 2, this.height * 2, 3);
-				ctx.fill();
-			}
-			var w = this.width * .8;
-			var h = this.height * .8;
-			ctx.drawImage(Wick.GUIElement.Icons.getIcon(this.icon), -w, -h, w * 2, h * 2);
-		}
-		get bounds() {
-			return {
-				x: -this.width,
-				y: -this.height,
-				width: this.width * 2,
-				height: this.height * 2
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/BreadcrumbsButton.js
-	Wick.GUIElement.BreadcrumbsButton = class extends Wick.GUIElement.Button {
-		constructor(model) {
-			super(model, { clickFn: () => {
-				this.model.project.focus = model;
-				this.projectWasModified();
-			} });
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			ctx.font = "14px Nunito Sans";
-			var textContent = this.model.identifier || "Clip";
-			var textWidth = ctx.measureText(textContent).width;
-			var textX = Wick.GUIElement.BREADCRUMBS_PADDING;
-			var textY = Wick.GUIElement.BREADCRUMBS_HEIGHT / 2 + Wick.GUIElement.BREADCRUMBS_PADDING;
-			var buttonBodyColor = "red";
-			if (this.model === this.model.project.focus) buttonBodyColor = Wick.GUIElement.BREADCRUMBS_ACTIVE_BUTTON_FILL_COLOR;
-			else if (this.mouseState === "down") buttonBodyColor = Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR;
-			else if (this.mouseState === "over") buttonBodyColor = Wick.GUIElement.BREADCRUMBS_HOVER_BUTTON_FILL_COLOR;
-			else buttonBodyColor = Wick.GUIElement.BREADCRUMBS_INACTIVE_BUTTON_FILL_COLOR;
-			var buttonWidth = textWidth + Wick.GUIElement.BREADCRUMBS_PADDING * 2;
-			this.buttonWidth = buttonWidth;
-			ctx.fillStyle = buttonBodyColor;
-			ctx.beginPath();
-			ctx.roundRect(0, 0, buttonWidth, Wick.GUIElement.BREADCRUMBS_HEIGHT, Wick.GUIElement.FRAME_BORDER_RADIUS);
-			ctx.fill();
-			ctx.beginPath();
-			ctx.rect(0, Wick.GUIElement.BREADCRUMBS_HEIGHT / 2, buttonWidth, Wick.GUIElement.BREADCRUMBS_HEIGHT / 2);
-			ctx.fill();
-			if (this.model === this.model.project.focus) {
-				ctx.fillStyle = Wick.GUIElement.BREADCRUMBS_ACTIVE_BORDER_COLOR;
-				ctx.beginPath();
-				ctx.rect(0, Wick.GUIElement.BREADCRUMBS_HEIGHT - Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT, buttonWidth, Wick.GUIElement.BREADCRUMBS_HIGHLIGHT_HEIGHT);
-				ctx.fill();
-			}
-			ctx.fillStyle = "#BBBBBB";
-			ctx.fillText(textContent, textX, textY);
-		}
-		get bounds() {
-			return {
-				x: 0,
-				y: 0,
-				width: this.buttonWidth,
-				height: Wick.GUIElement.BREADCRUMBS_HEIGHT
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/LayerButton.js
-	Wick.GUIElement.LayerButton = class extends Wick.GUIElement.Button {
-		constructor(model, args) {
-			super(model, args);
-			this.toggledIcon = args.toggledIcon;
-			this.untoggledIcon = args.untoggledIcon;
-			this.toggledTooltip = args.toggledTooltip;
-			this.untoggledTooltip = args.untoggledTooltip;
-			this.isToggledFn = args.isToggledFn;
-		}
-		/**
-		* Draw this layer button.
-		* @param {string} icon - The name of the icon to draw.
-		* @param {boolean} isToggled - Should the button be toggled?
-		*/
-		draw(isToggled) {
-			super.draw();
-			var isToggled = this.isToggledFn && this.isToggledFn();
-			var ctx = this.ctx;
-			var icon = null;
-			if (isToggled) {
-				this.tooltip.label = this.toggledTooltip;
-				icon = this.toggledIcon;
-			} else {
-				this.tooltip.label = this.untoggledTooltip;
-				icon = this.untoggledIcon;
-			}
-			var fillColor;
-			if (this.mouseState == "down") fillColor = Wick.GUIElement.LAYER_BUTTON_MOUSEDOWN_COLOR;
-			else if (this.mouseState == "over") fillColor = Wick.GUIElement.LAYER_BUTTON_HOVER_COLOR;
-			else if (isToggled) fillColor = Wick.GUIElement.LAYER_BUTTON_TOGGLE_ACTIVE_COLOR;
-			else fillColor = Wick.GUIElement.LAYER_BUTTON_TOGGLE_INACTIVE_COLOR;
-			ctx.fillStyle = fillColor;
-			ctx.beginPath();
-			ctx.arc(0, 0, Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS, 0, 2 * Math.PI);
-			ctx.fill();
-			var r = Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS * .8;
-			ctx.globalAlpha = .5;
-			ctx.drawImage(Wick.GUIElement.Icons.getIcon(icon), -r, -r, r * 2, r * 2);
-			ctx.globalAlpha = 1;
-		}
-		get bounds() {
-			var r = Wick.GUIElement.LAYER_BUTTON_ICON_RADIUS;
-			return {
-				x: -r,
-				y: -r,
-				width: r * 2,
-				height: r * 2
-			};
-		}
-	};
-	//#endregion
-	//#region src/gui/FrameEdgeGhost.js
-	Wick.GUIElement.FrameEdgeGhost = class extends Wick.GUIElement.Ghost {
-		constructor(model, edge) {
-			super(model);
-			this._mainFrame = model;
-			this._frames = [];
-			if (edge === "left") this._frames = model.project.selection.getLeftmostFrames();
-			else if (edge === "right") this._frames = model.project.selection.getRightmostFrames();
-			this._edge = edge;
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			var mainFrame = this._mainFrame;
-			var start = mainFrame.start - this._mainFrame.start;
-			var row = mainFrame.parentLayer.index - this._mainFrame.parentLayer.index;
-			this.moveCols = Math.round(this._mouseDiff.x / this.gridCellWidth);
-			var movePx = this._mouseDiff.x;
-			this._frames.forEach((frame) => {
-				var length = frame.length;
-				if (this._edge === "right") this.moveCols = Math.max(-length + 1, this.moveCols);
-				else if (this._edge === "left") this.moveCols = Math.min(length - 1, this.moveCols);
-				if (this._edge === "right") movePx = Math.max(movePx, this.moveCols * this.gridCellWidth);
-				else if (this._edge === "left") movePx = Math.min(movePx, this.moveCols * this.gridCellWidth);
-			});
-			this._frames.forEach((frame) => {
-				var x = start * this.gridCellWidth;
-				var y = row * this.gridCellHeight;
-				var width = frame.length * this.gridCellWidth;
-				var height = this.gridCellHeight;
-				var gridDiffX = frame.start - mainFrame.start;
-				var gridDiffY = frame.parentLayer.index - mainFrame.parentLayer.index;
-				ctx.save();
-				ctx.translate(gridDiffX * this.gridCellWidth, gridDiffY * this.gridCellHeight);
-				ctx.save();
-				ctx.globalAlpha = .4;
-				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
-				ctx.beginPath();
-				if (this._edge === "right") ctx.roundRect(x, y, width + movePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				else if (this._edge === "left") ctx.roundRect(x + movePx, y, width - movePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				ctx.fill();
-				ctx.restore();
-				ctx.strokeStyle = "#00ff00";
-				ctx.setLineDash([5, 5]);
-				ctx.lineWidth = 3;
-				ctx.beginPath();
-				if (this._edge === "right") ctx.roundRect(x, y, width + this.moveCols * this.gridCellWidth, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				else if (this._edge === "left") {
-					var gridMovePx = this.moveCols * this.gridCellWidth;
-					ctx.roundRect(x + gridMovePx, y, width - gridMovePx, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				}
-				ctx.save();
-				ctx.globalAlpha = .8;
-				ctx.stroke();
-				ctx.restore();
-				ctx.restore();
-			});
-		}
-		finish() {
-			this._frames.forEach((frame) => {
-				frame._originalLayer = frame.parentLayer;
-				frame.remove();
-				if (this._edge === "right") frame.end += this.moveCols;
-				else if (this._edge === "left") frame.start += this.moveCols;
-			});
-			this._frames.forEach((frame) => {
-				frame._originalLayer.addFrame(frame);
-				delete frame._originalLayer;
-			});
-		}
-	};
-	//#endregion
-	//#region src/gui/FrameGhost.js
-	Wick.GUIElement.FrameGhost = class extends Wick.GUIElement.Ghost {
-		constructor(model) {
-			super(model);
-			this._mainFrame = model;
-			this._frames = model.project.selection.getSelectedObjects("Frame");
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			this._frames.forEach((frame) => {
-				var start = frame.start - this._mainFrame.start;
-				var length = frame.length;
-				var row = frame.parentLayer.index - this._mainFrame.parentLayer.index;
-				var x = start * this.gridCellWidth;
-				var y = row * this.gridCellHeight;
-				var width = length * this.gridCellWidth;
-				var height = this.gridCellHeight;
-				ctx.save();
-				ctx.translate(this._mouseDiff.x, this._mouseDiff.y);
-				ctx.globalAlpha = .4;
-				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
-				ctx.beginPath();
-				ctx.roundRect(x, y, width, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				ctx.fill();
-				ctx.restore();
-				ctx.save();
-				ctx.translate(this.moveCols * this.gridCellWidth, this.moveRows * this.gridCellHeight);
-				if (frame.parentLayer.index + this.moveRows > frame.parentTimeline.layers.length - 1) {
-					ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_NOT_ALLOWED_COLOR;
-					ctx.strokeStyle = "#ff0000";
-				} else {
-					ctx.fillStyle = "rgba(0,0,0,0)";
-					ctx.strokeStyle = "#00ff00";
-				}
-				ctx.setLineDash([5, 5]);
-				ctx.lineWidth = 3;
-				ctx.beginPath();
-				ctx.roundRect(x, y, width, height, Wick.GUIElement.FRAME_BORDER_RADIUS);
-				ctx.globalAlpha = .8;
-				ctx.fill();
-				ctx.stroke();
-				ctx.restore();
-			});
-		}
-		finish() {
-			var timeline = this.model.parentTimeline;
-			timeline.playheadPosition += this.moveCols;
-			timeline.deferFrameGapResolve();
-			this._frames.forEach((frame) => {
-				frame._originalLayerIndex = frame.parentLayer.index;
-				frame.remove();
-			});
-			this._frames.forEach((frame) => {
-				frame.start += this.moveCols;
-				frame.end += this.moveCols;
-			});
-			this._frames.forEach((frame) => {
-				var layer = timeline.layers[frame._originalLayerIndex + this.moveRows];
-				delete frame._originalLayerIndex;
-				if (layer) layer.addFrame(frame);
-			});
-			timeline.resolveFrameGaps(this._frames);
-		}
-	};
-	//#endregion
-	//#region src/gui/SelectionBox.js
-	Wick.GUIElement.SelectionBox = class extends Wick.GUIElement.Ghost {
-		constructor(model) {
-			super(model);
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			this.gridStart = {
-				x: Math.floor(this._mouseStart.x / this.gridCellWidth),
-				y: Math.floor(this._mouseStart.y / this.gridCellHeight)
-			};
-			this.gridEnd = {
-				x: Math.floor(this._mouseEnd.x / this.gridCellWidth),
-				y: Math.floor(this._mouseEnd.y / this.gridCellHeight)
-			};
-			if (this.gridStart.x > this.gridEnd.x) {
-				var temp = this.gridEnd.x;
-				this.gridEnd.x = this.gridStart.x;
-				this.gridStart.x = temp;
-			}
-			if (this.gridStart.y > this.gridEnd.y) {
-				var temp = this.gridEnd.y;
-				this.gridEnd.y = this.gridStart.y;
-				this.gridStart.y = temp;
-			}
-			ctx.strokeStyle = "rgba(66, 111, 200, 1.0)";
-			ctx.fillStyle = "rgba(66, 111, 200, 0.4)";
-			ctx.globalAlpha = 1;
-			ctx.setLineDash([5, 5]);
-			ctx.beginPath();
-			ctx.roundRect(this.gridStart.x * this.gridCellWidth, this.gridStart.y * this.gridCellHeight, (this.gridEnd.x - this.gridStart.x + 1) * this.gridCellWidth, (this.gridEnd.y - this.gridStart.y + 1) * this.gridCellHeight, Wick.GUIElement.FRAME_BORDER_RADIUS);
-			ctx.stroke();
-			ctx.fill();
-		}
-		finish() {
-			var playheadRangeStart = this.gridStart.x + 1;
-			var playheadRangeEnd = this.gridEnd.x + 1;
-			var layerRangeStart = this.gridStart.y;
-			var layerRangeEnd = this.gridEnd.y;
-			this.model.getAllFrames().filter((frame) => {
-				return frame.inRange(playheadRangeStart, playheadRangeEnd) && frame.parentLayer.index >= layerRangeStart && frame.parentLayer.index <= layerRangeEnd;
-			}).forEach((frame) => {
-				frame.project.selection.select(frame);
-			});
-		}
-	};
-	//#endregion
-	//#region src/gui/TweenGhost.js
-	Wick.GUIElement.TweenGhost = class extends Wick.GUIElement.Ghost {
-		constructor(model) {
-			super(model);
-			this._mainTween = model;
-			this._tweens = model.project.selection.getSelectedObjects("Tween");
-		}
-		draw() {
-			super.draw();
-			var ctx = this.ctx;
-			this.moveCols = Math.round(this._mouseDiff.x / this.gridCellWidth);
-			this.moveRows = Math.round(this._mouseDiff.y / this.gridCellHeight);
-			this._tweens.forEach((tween) => {
-				var relativePlayhead = tween.playheadPosition - this._mainTween.playheadPosition;
-				relativePlayhead += tween.parentFrame.start - this._mainTween.parentFrame.start;
-				var relativeLayer = tween.parentLayer.index - this._mainTween.parentLayer.index;
-				var x = relativePlayhead * this.gridCellWidth;
-				var y = relativeLayer * this.gridCellHeight;
-				ctx.save();
-				ctx.translate(x, y);
-				ctx.save();
-				ctx.globalAlpha = .3;
-				ctx.translate(this._mouseDiff.x, 0);
-				ctx.rotate(Math.PI / 4);
-				var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
-				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
-				ctx.beginPath();
-				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-				ctx.fill();
-				ctx.restore();
-				ctx.save();
-				ctx.strokeStyle = "#00ff00";
-				ctx.setLineDash([3, 3]);
-				ctx.translate(this.moveCols * this.gridCellWidth, 0);
-				ctx.rotate(Math.PI / 4);
-				var r = Wick.GUIElement.TWEEN_DIAMOND_RADIUS;
-				ctx.fillStyle = Wick.GUIElement.FRAME_GHOST_COLOR;
-				ctx.beginPath();
-				ctx.roundRect(-r, -r, r * 2, r * 2, 3);
-				ctx.stroke();
-				ctx.restore();
-				ctx.restore();
-			});
-		}
-		finish() {
-			var timeline = this._mainTween.project.activeTimeline;
-			timeline.playheadPosition += this.moveCols;
-			this._tweens.forEach((tween) => {
-				tween._originalFrame = tween.parentFrame;
-				tween.remove();
-			});
-			this._tweens.forEach((tween) => {
-				tween.playheadPosition += this.moveCols;
-			});
-			this._tweens.forEach((tween) => {
-				tween._originalFrame.addTween(tween);
-				delete tween._originalFrame;
-			});
 		}
 	};
 	//#endregion
@@ -33379,7 +32949,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 		}
 		/**
 		* Create a wick file from the project.
-		* @param {Wick.Clip} clip - the clip to create a wickobject file from
+		* @param {Wick.Project} clip - the clip to create a wickobject file from
 		* @param {string} format - Can be 'blob' or 'dataurl'.
 		*/
 		static toWickObjectFile(clip, format, callback) {
@@ -33710,6 +33280,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 	};
 	//#endregion
 	//#region src/tools/Tool.js
+	const invert = require_invert_min();
 	Wick.Tool = class {
 		static get DOUBLE_CLICK_TIME() {
 			return 300;
@@ -33989,6 +33560,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 	//#region src/tools/Brush.js
 	const convertRange$1 = require_convert_range();
 	const Croquis$1 = require_croquis();
+	const potrace$1 = require_potrace();
 	Wick.Tools.Brush = class extends Wick.Tool {
 		static get CROQUIS_WAIT_AMT_MS() {
 			return 30;
@@ -34284,7 +33856,7 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				if (strokeBounds.x < 0) strokeBounds.x = 0;
 				if (strokeBounds.y < 0) strokeBounds.y = 0;
 				croppedCanvasCtx.drawImage(canvas, strokeBounds.x, strokeBounds.y, strokeBounds.width, strokeBounds.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
-				var svg = potrace.fromImage(croppedCanvas).toSVG(1 / this.POTRACE_RESOLUTION / this.paper.view.zoom);
+				var svg = potrace$1.fromImage(croppedCanvas).toSVG(1 / this.POTRACE_RESOLUTION / this.paper.view.zoom);
 				var potracePath = this.paper.project.importSVG(svg);
 				potracePath.fillColor = this.getSetting("fillColor").rgba;
 				potracePath.position.x += this.paper.view.bounds.x;
@@ -35767,188 +35339,6 @@ while (n === a[++i] && n === a[++i] && n === a[++i] && n === a[++i] && n === a[+
 				} catch (_) {}
 				this.path = null;
 			}
-		}
-	};
-	//#endregion
-	//#region src/tools/Shape.js
-	Wick.Tools.Shape = class extends Wick.Tool {
-		constructor() {
-			super();
-			this.name = "shape";
-			this.SELECTION_TOLERANCE = 6;
-			this.CLOSE_NODE_RADIUS = 5;
-			this.CLOSE_NODE_STROKE_COLOR = "rgba(100,150,255,1.0)";
-			this.CLOSE_NODE_FILL_COLOR = "#ffffff";
-			this.path = null;
-			this.currentSegment = null;
-			this._targetFrame = null;
-			this.hitResult = new this.paper.HitResult();
-			this.previewStroke = new this.paper.Path({ insert: false });
-			this.previewStroke.data.wickType = "gui";
-			this.previewStroke.visible = false;
-			this.closeNodeIndicator = new this.paper.Item({ insert: false });
-			this._isInProgress = false;
-		}
-		get doubleClickEnabled() {
-			return true;
-		}
-		get cursor() {
-			return "crosshair";
-		}
-		get isDrawingTool() {
-			return true;
-		}
-		onActivate() {}
-		onDeactivate() {
-			if (this.path) {
-				var self = this;
-				setTimeout(function() {
-					self._finishPath();
-				}, 0);
-			}
-		}
-		onMouseMove(e) {
-			super.onMouseMove(e);
-			if (this.path && !this.path.layer) this.paper.project.activeLayer.addChild(this.path);
-			this.hitResult = this._updateHitResult(e);
-			this.previewStroke.visible = false;
-			this.closeNodeIndicator.remove();
-			if (this.path && this.currentSegment) {
-				var closing = this._hitIsOtherEndpoint();
-				if (!this._hitIsCurrentSegmentHandle()) {
-					if (!this.previewStroke.layer) this.paper.project.activeLayer.addChild(this.previewStroke);
-					this.previewStroke.strokeColor = this.getSetting("strokeColor").rgba;
-					this.previewStroke.strokeWidth = 1 / this.paper.view.zoom;
-					this.previewStroke.dashArray = [4 / this.paper.view.zoom, 4 / this.paper.view.zoom];
-					var startSegment = this.currentSegment.clone();
-					this.previewStroke.removeSegments();
-					this.previewStroke.add(startSegment);
-					this.previewStroke.add(closing ? this.hitResult.segment.point : e.point);
-					this.previewStroke.visible = true;
-				}
-				if (closing) {
-					this.closeNodeIndicator = new this.paper.Path.Circle(this.hitResult.segment.point, this.CLOSE_NODE_RADIUS / this.paper.view.zoom);
-					this.closeNodeIndicator.strokeColor = this.CLOSE_NODE_STROKE_COLOR;
-					this.closeNodeIndicator.strokeWidth = 2 / this.paper.view.zoom;
-					this.closeNodeIndicator.fillColor = this.CLOSE_NODE_FILL_COLOR;
-					this.closeNodeIndicator.data.wickType = "gui";
-					this.paper.project.activeLayer.addChild(this.closeNodeIndicator);
-				}
-			}
-		}
-		onMouseDown(e) {
-			this.previewStroke.visible = false;
-			this.closeNodeIndicator.remove();
-			this.hitResult = this._updateHitResult(e);
-			if (this.path && this.currentSegment && this._hitIsOtherEndpoint()) {
-				this.path.closePath();
-				this.path.fillColor = this.getSetting("fillColor").rgba;
-				this._finishPath();
-				return;
-			}
-			if (!this.path) {
-				this.path = new this.paper.Path({
-					strokeColor: this.getSetting("strokeColor").rgba,
-					strokeWidth: this.getSetting("strokeWidth"),
-					strokeCap: "round",
-					strokeJoin: "round"
-				});
-				this.paper.project.activeLayer.addChild(this.path);
-				this.currentSegment = this.path.add(e.point);
-				this._isInProgress = true;
-				this._targetFrame = this.project.activeFrame;
-			} else if (this._hitIsCurrentSegmentHandle()) {} else this.currentSegment = this.path.add(e.point);
-		}
-		onMouseDrag(e) {
-			if (!this.currentSegment) return;
-			this.currentSegment.handleOut.x += e.delta.x;
-			this.currentSegment.handleOut.y += e.delta.y;
-			this.currentSegment.handleIn.x -= e.delta.x;
-			this.currentSegment.handleIn.y -= e.delta.y;
-		}
-		onMouseUp() {}
-		onDoubleClick(e) {
-			this.hitResult = this._updateHitResult(e);
-			if (this.path && this.currentSegment && this._hitIsCurrentSegmentOrItsHandle()) {
-				this.currentSegment.handleIn.x = 0;
-				this.currentSegment.handleIn.y = 0;
-				this.currentSegment.handleOut.x = 0;
-				this.currentSegment.handleOut.y = 0;
-				return;
-			}
-			this._finishPath();
-		}
-		onKeyDown(e) {
-			if (e.key === "escape") this.discard();
-			else if (e.key === "enter") this._finishPath();
-		}
-		/**
-		* Is a path currently being drawn by clicks that haven't been committed yet?
-		* Used by the undo to discard in-progress shapes instead of
-		* corrupting them when the paper item backing them isn't part of the
-		* Wick object/history model yet.
-		* @type {boolean}
-		*/
-		isInProgress() {
-			return this._isInProgress;
-		}
-		/**
-		* Discards the path currently being drawn without committing it.
-		*/
-		discard() {
-			this._cancelPath();
-		}
-		_hitIsCurrentSegmentHandle() {
-			return this.hitResult && this.hitResult.item === this.path && this.hitResult.segment === this.currentSegment && this.hitResult.type && this.hitResult.type.startsWith("handle");
-		}
-		_hitIsCurrentSegmentOrItsHandle() {
-			return this.hitResult && this.hitResult.item === this.path && this.hitResult.segment === this.currentSegment;
-		}
-		_hitIsOtherEndpoint() {
-			if (!this.hitResult || this.hitResult.item !== this.path || this.hitResult.type !== "segment") return false;
-			var segment = this.hitResult.segment;
-			return segment !== this.currentSegment && (segment === this.path.firstSegment || segment === this.path.lastSegment);
-		}
-		_updateHitResult(e) {
-			if (!this.path) return new this.paper.HitResult();
-			return this.path.hitTest(e.point, {
-				segments: true,
-				handles: true,
-				stroke: false,
-				fill: false,
-				curves: false,
-				tolerance: this.SELECTION_TOLERANCE / this.paper.view.zoom
-			}) || new this.paper.HitResult();
-		}
-		_finishPath() {
-			this.previewStroke.visible = false;
-			this.closeNodeIndicator.remove();
-			if (this.path) {
-				if (this.path.segments.length > 1) {
-					this.path.remove();
-					var targetFrame = this._targetFrame || this.project.activeFrame;
-					if (targetFrame) {
-						targetFrame.view.objectsLayer.addChild(this.path);
-						this.fireEvent({
-							eventName: "canvasModified",
-							actionName: "shape"
-						});
-					}
-				} else this.path.remove();
-			}
-			this.path = null;
-			this.currentSegment = null;
-			this._targetFrame = null;
-			this._isInProgress = false;
-		}
-		_cancelPath() {
-			this.previewStroke.visible = false;
-			this.closeNodeIndicator.remove();
-			if (this.path) this.path.remove();
-			this.path = null;
-			this.currentSegment = null;
-			this._targetFrame = null;
-			this._isInProgress = false;
 		}
 	};
 	//#endregion
