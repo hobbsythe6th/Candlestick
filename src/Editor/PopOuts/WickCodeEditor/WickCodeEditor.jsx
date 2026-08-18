@@ -23,7 +23,8 @@ import WickInput from 'Editor/Util/WickInput/WickInput';
 import { Rnd } from 'react-rnd';
 import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 import AddScriptPanel from './AddScriptPanel/AddScriptPanel';
-import { Console } from 'console-feed'
+import * as ConsoleFeed from 'console-feed'
+const Console = ConsoleFeed.Console
 
 // Import Ace Editor and themes.
 import AceEditor from 'react-ace';
