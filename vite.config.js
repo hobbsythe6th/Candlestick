@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   base: command === 'build' ? '/Candlestick/' : '/',
   plugins: [react()],
   resolve: {
@@ -11,6 +11,9 @@ export default defineConfig(({ command }) => ({
       "resources": path.resolve(__dirname, "src/resources"),
       "files": path.resolve(__dirname, "src/files")
     },
+  },
+  define: {
+    "process.env.NODE_ENV": JSON.stringify(mode === "production" ? "production" : "development"),
   },
   server: {
     port: 3000,
