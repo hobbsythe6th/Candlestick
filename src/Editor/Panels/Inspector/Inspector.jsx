@@ -137,8 +137,7 @@ class Inspector extends Component {
     Unhook(window.console);
   }
 
-  componentDidUpdate(prevProps,prevState) { // no need to pass in prevProps, react automatically inputs it
-
+  componentDidUpdate(_prevProps, _prevState) { // no need to pass in _prevProps, react automatically inputs it
     if(window.project.playing && this.consoleEndRef.current) {
       this.consoleEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -173,7 +172,7 @@ class Inspector extends Component {
 
   /**
    * Sets the value of the selection fillColor opacity.
-   * @param  {string} attribute Selection attribute to retrieve.
+   * @param {string} attribute - Selection attribute to retrieve.
    */
   setSelectionFillColorOpacity = (value) => {
     var color = this.getSelectionAttribute('fillColor');
@@ -461,6 +460,22 @@ componentWillUnmount() { this._mounted = false; }
           onChange={(val) => {this.setSelectionAttribute('identifier', val);}}
           placeholder="no_name"
           id="inspector-name" />
+      </div>
+    );
+  }
+
+  /**
+   * Renders an inspector row allowing viewing of a selection's uuid
+   */
+  renderUUID = () => {
+    return (
+      <div className="inspector-item">
+        <InspectorTextInput
+          tooltip="UUID"
+          val={this.getSelectionAttribute('uuid')}
+          readOnly={true}
+          placeholder="no_uuid"
+          id="inspector-uuid" />
       </div>
     );
   }
@@ -759,6 +774,7 @@ componentWillUnmount() { this._mounted = false; }
           {this.renderIdentifier()}
           {this.renderFrameLength()}
           {this.renderSoundContent()}
+          {this.renderUUID()}
         </div>
     );
   }
@@ -772,6 +788,7 @@ componentWillUnmount() { this._mounted = false; }
         {this.renderName()}
         {this.renderOpacity()}
         {this.renderLayerColor()}
+        {this.renderUUID()}
       </div>
     )
   }
@@ -800,6 +817,7 @@ componentWillUnmount() { this._mounted = false; }
       <div className="inspector-content">
         {this.renderTweenEasingType()}
         {this.renderTweenFullRotations()}
+        {this.renderUUID()}
       </div>
      );
   }
@@ -844,14 +862,14 @@ componentWillUnmount() { this._mounted = false; }
    * Renders the inspector view for all properties of a clip selection.
    */
   renderClip = () => {
-    return ( this.renderGroupContent() );
+    return (this.renderGroupContent());
   }
 
   /**
    * Renders the inspector view for all properties of a button selection.
    */
   renderButton = () => {
-    return ( this.renderGroupContent() );
+    return (this.renderGroupContent());
   }
 
   renderFontContent = () => {
@@ -873,6 +891,7 @@ componentWillUnmount() { this._mounted = false; }
       <div className="inspector-content">
         {this.renderSelectionTransformProperties()}
         {this.renderSelectionColor()}
+        {this.renderUUID()}
       </div>
     )
 
@@ -959,6 +978,7 @@ componentWillUnmount() { this._mounted = false; }
       <div className="inspector-content">
         {this.renderName()}
         {this.renderFilename()}
+        {this.renderUUID()}
         {this.renderAssetPreview()}
       </div>
     )
@@ -1097,7 +1117,7 @@ componentWillUnmount() { this._mounted = false; }
         <div className="inspector-body">
           {this.renderDisplay(selectionType)}
           {this.renderActions()}
-          {this.props.selectionIsScriptable() && this.renderScripts()}
+          {this.props.selectionIsScriptable() && this.renderUUID() && this.renderScripts()}
           {selectionType === 'clip' && this.renderAnimationSetting()}
         </div>
       </div>

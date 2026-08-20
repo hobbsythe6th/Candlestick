@@ -81,6 +81,7 @@ Wick.Selection = class extends Wick.Base {
      */
     get allAttributeNames() {
         return [
+            "uuid",
             "strokeWidth",
             "fillColor",
             "strokeColor",
