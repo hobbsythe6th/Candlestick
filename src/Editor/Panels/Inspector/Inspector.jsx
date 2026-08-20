@@ -131,8 +131,7 @@ class Inspector extends Component {
     Unhook(window.console);
   }
 
-  componentDidUpdate(prevProps,prevState) { // no need to pass in prevProps, react automatically inputs it
-
+  componentDidUpdate(_prevProps, _prevState) { // no need to pass in _prevProps, react automatically inputs it
     if(window.project.playing && this.consoleEndRef.current) {
       this.consoleEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -167,7 +166,7 @@ class Inspector extends Component {
 
   /**
    * Sets the value of the selection fillColor opacity.
-   * @param  {string} attribute Selection attribute to retrieve.
+   * @param {string} attribute - Selection attribute to retrieve.
    */
   setSelectionFillColorOpacity = (value) => {
     var color = this.getSelectionAttribute('fillColor');
@@ -430,6 +429,22 @@ class Inspector extends Component {
           onChange={(val) => {this.setSelectionAttribute('identifier', val);}}
           placeholder="no_name"
           id="inspector-name" />
+      </div>
+    );
+  }
+
+  /**
+   * Renders an inspector row allowing viewing of a selection's uuid
+   */
+  renderUUID = () => {
+    return (
+      <div className="inspector-item">
+        <InspectorTextInput
+          tooltip="UUID"
+          val={this.getSelectionAttribute('uuid')}
+          readOnly={true}
+          placeholder="no_uuid"
+          id="inspector-uuid" />
       </div>
     );
   }
@@ -728,6 +743,7 @@ class Inspector extends Component {
           {this.renderIdentifier()}
           {this.renderFrameLength()}
           {this.renderSoundContent()}
+          {this.renderUUID()}
         </div>
     );
   }
@@ -740,6 +756,7 @@ class Inspector extends Component {
       <div className="inspector-content">
         {this.renderName()}
         {this.renderOpacity()}
+        {this.renderUUID()}
       </div>
     )
   }
@@ -768,6 +785,7 @@ class Inspector extends Component {
       <div className="inspector-content">
         {this.renderTweenEasingType()}
         {this.renderTweenFullRotations()}
+        {this.renderUUID()}
       </div>
      );
   }
@@ -812,14 +830,14 @@ class Inspector extends Component {
    * Renders the inspector view for all properties of a clip selection.
    */
   renderClip = () => {
-    return ( this.renderGroupContent() );
+    return (this.renderGroupContent());
   }
 
   /**
    * Renders the inspector view for all properties of a button selection.
    */
   renderButton = () => {
-    return ( this.renderGroupContent() );
+    return (this.renderGroupContent());
   }
 
   renderFontContent = () => {
@@ -841,6 +859,7 @@ class Inspector extends Component {
       <div className="inspector-content">
         {this.renderSelectionTransformProperties()}
         {this.renderSelectionColor()}
+        {this.renderUUID()}
       </div>
     )
 
@@ -927,6 +946,7 @@ class Inspector extends Component {
       <div className="inspector-content">
         {this.renderName()}
         {this.renderFilename()}
+        {this.renderUUID()}
         {this.renderAssetPreview()}
       </div>
     )
@@ -1054,7 +1074,7 @@ class Inspector extends Component {
         <div className="inspector-body">
           {this.renderDisplay(selectionType)}
           {this.renderActions()}
-          {this.props.selectionIsScriptable() && this.renderScripts()}
+          {this.props.selectionIsScriptable() && this.renderUUID() && this.renderScripts()}
           {selectionType === 'clip' && this.renderAnimationSetting()}
         </div>
       </div>
