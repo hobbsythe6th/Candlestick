@@ -29,16 +29,17 @@ import nightImageShort from 'resources/splash-screens/cool_field3.png'; //'resou
 
 import coolField from 'resources/splash-screens/cool_field3.png'
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 class WelcomeModal extends Component {
     constructor() {
         super();
         this.forumPost = "https://url.candlestickers.app/updates";
         this.updates = [
-            "Revamped Gradient System",
-            "PDF Import and Export",
-            "Various Bug/Crash Fixes"
+            "Updated MP4 Exporter",
+            // "PDF Import and Export",
+            // "Pasting Images from Clipboard",
+            // "Various Bug/Crash Fixes"
         ]
 
         /*let t1 = ["Guy de Bree", "Dimp", "Hyun's Dojo"]

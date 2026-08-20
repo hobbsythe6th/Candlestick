@@ -17,6 +17,8 @@
  * along with Wick Engine.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const localforage = require('localforage');
+
 Wick.ToolSettings = class {
     static get DEFAULT_SETTINGS () {
         return [{
@@ -259,18 +261,9 @@ Wick.ToolSettings = class {
     loadSettingsFromLocalstorage () {
         Wick.ToolSettings.DEFAULT_SETTINGS.forEach(setting => {
             // Get stored tool setting if it exists.
-            localforage.getItem(this.getStorageKey(name)).then( (value) => {
-                if (value) {
-                    this._settings[args.name] = {
-                        type: args.type,
-                        name: args.name,
-                        value: type === 'color' ? new window.Wick.Color(value) : value,
-                        default: args.default,
-                        min: args.min,
-                        max: args.max,
-                        step: args.step,
-                        options: args.options,
-                    };
+            localforage.getItem(this.getStorageKey(setting.name)).then( (value) => {
+                if (value !== null && value !== undefined) {
+                    this._settings[setting.name].value = setting.type === 'color' ? new window.Wick.Color(value) : value;
                 }
             });
         });

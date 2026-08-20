@@ -17,6 +17,7 @@
  * along with Paper.js-drawing-tools.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+const potrace = require('../../../lib/potrace.cjs')
 /*
     paper-potrace.js
     Adds a potrace() method to paper Items that runs potrace on a rasterized
@@ -34,6 +35,8 @@ paper.Path.inject({
 
         var finalRasterResolution = paper.view.resolution*args.resolution/window.devicePixelRatio;
         var raster = this.rasterize(finalRasterResolution);
+        // Fixes issues with browser zoom
+        var zoomFactor = args.resolution * raster.bounds.width / raster.width;
         raster.remove();
         var rasterDataURL = raster.toDataURL();
 
@@ -51,6 +54,7 @@ paper.Path.inject({
             potracePath.remove();
             potracePath.closed = true;
             potracePath.children[0].closed = true;
+            potracePath.children[0].scale(zoomFactor);
             args.done(potracePath.children[0]);
         }
         img.src = rasterDataURL;

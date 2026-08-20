@@ -23,23 +23,26 @@ import WickInput from 'Editor/Util/WickInput/WickInput';
 import { Rnd } from 'react-rnd';
 import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 import AddScriptPanel from './AddScriptPanel/AddScriptPanel';
-import { Console } from 'console-feed'
+import Console from 'console-feed/lib/Component/index.js'
 
 // Import Ace Editor and themes.
 import AceEditor from 'react-ace';
-import 'brace/mode/javascript';
-import 'brace/ext/searchbox';
+import ace from 'ace-builds';
+import 'ace-builds/src-noconflict/mode-javascript';
+import 'ace-builds/src-noconflict/ext-searchbox';
 
-import 'brace/theme/monokai';
-import 'brace/theme/cobalt';
-import 'brace/theme/dracula';
-import 'brace/theme/eclipse';
-import 'brace/theme/github';
+import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-cobalt';
+import 'ace-builds/src-noconflict/theme-dracula';
+import 'ace-builds/src-noconflict/theme-eclipse';
+import 'ace-builds/src-noconflict/theme-github';
 
 import 'Editor/styles/PopOuts/_wickcodeeditor.css';
 
 import capitalize from 'Editor/Util/DataFunctions/capitalize';
 import ToolIcon from '../../Util/ToolIcon/ToolIcon';
+
+ace.config.set('basePath', import.meta.env.VITE_PUBLIC_URL + 'ace-workers/');
 
 const editorThemes = [
   {
@@ -63,7 +66,7 @@ const editorThemes = [
     label: 'Github',
   }]
 
-let classNames = require('classnames');
+import classNames from 'classnames';
 let thValue = 'monokai';
 export default function WickCodeEditor(props) {
 
@@ -79,6 +82,7 @@ export default function WickCodeEditor(props) {
     if ((list.length === 0 || missing) && props.scriptToEdit !== 'add') {
       props.editScript('add'); // updates parent state: scriptToEdit + opens editor
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.script, props.scriptToEdit]);
 
   const editorThemeSelectRef = useRef();

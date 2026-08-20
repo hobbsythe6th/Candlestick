@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Paper.js-drawing-tools.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+const potrace = require('../../../lib/potrace.cjs');
 /*
     paper-hole.js
     Adds hole() to the paper Layer class which finds the shape of the hole
@@ -80,6 +80,8 @@
 
         var rasterResolution = paper.view.resolution * RASTER_BASE_RESOLUTION / window.devicePixelRatio;
         var layerPathsRaster = layerGroup.rasterize(rasterResolution, {insert:false});
+        // Fixes issues with browser zoom
+        var zoomFactor = RASTER_BASE_RESOLUTION * layerPathsRaster.bounds.width / layerPathsRaster.width;
 
         var rasterCanvas = layerPathsRaster.canvas;
         var rasterCtx = rasterCanvas.getContext('2d');
@@ -98,8 +100,8 @@
         layerPathsImageData = rasterCtx.getImageData(0, 0, layerPathsRaster.width, layerPathsRaster.height);
 
         var rasterPosition = layerPathsRaster.bounds.topLeft;
-        var x = (floodFillX - rasterPosition.x) * RASTER_BASE_RESOLUTION;
-        var y = (floodFillY - rasterPosition.y) * RASTER_BASE_RESOLUTION;
+        var x = (floodFillX - rasterPosition.x) * RASTER_BASE_RESOLUTION / zoomFactor;
+        var y = (floodFillY - rasterPosition.y) * RASTER_BASE_RESOLUTION / zoomFactor;
         x = Math.round(x);
         y = Math.round(y);
 
@@ -168,6 +170,8 @@
             }
 
             expandHole(resultHolePath);
+            // Fixes issues with browser zoom
+            resultHolePath.scale(zoomFactor, layerPathsRaster.bounds.topLeft);
             callback(resultHolePath);
         }
         floodFillProcessedImage.src = floodFillCanvas.toDataURL();

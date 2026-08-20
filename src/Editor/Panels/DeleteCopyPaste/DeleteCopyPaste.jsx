@@ -4,7 +4,7 @@ import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 import '../CanvasTransforms/_canvastransforms.scss';
 import './_deletecopypaste.scss';
 
-var classNames = require('classnames');
+import classNames from 'classnames';
 
 export default function DeleteCopyPaste (props) {
 
@@ -34,6 +34,7 @@ export default function DeleteCopyPaste (props) {
                 color="tool"
                 action={props.editorActions.paste.action}
                 icon="paste"
+                useClickEvent={true}
                 className={classNames("canvas-transform-button", "canvas-transform-item")}
                 buttonClassName={"canvas-transform-wick-button"}
                 iconClassName="canvas-transform-icon"
