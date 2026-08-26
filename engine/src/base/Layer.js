@@ -43,6 +43,7 @@ Wick.Layer = class extends Wick.Base {
         data.locked = this.locked;
         data.hidden = this.hidden;
         data.opacity = this.opacity;
+        data._maskUUID = this.view._maskUUID || null;
 
         return data;
     }
@@ -53,6 +54,7 @@ Wick.Layer = class extends Wick.Base {
         this.locked = data.locked;
         this.hidden = data.hidden;
         this.opacity = data.opacity;
+        this.view._maskUUID = data._maskUUID || null;
     }
 
     get classname () {
@@ -65,6 +67,18 @@ Wick.Layer = class extends Wick.Base {
      */
     get frames () {
         return this.getChildren('Frame');
+    }
+
+    /**
+     * The masking path or clip on this layer.
+     * @type {Wick.Path|Wick.Clip}
+     */
+    get mask(){
+        return this.view.mask;
+    }
+
+    set mask(mask){
+        this.view.addMask(mask);
     }
 
     /**

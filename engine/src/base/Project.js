@@ -1412,6 +1412,16 @@ orderDynamicFrames() {
             return;
         }
 
+        // Unmask any mask object before wrapping it, then reassign
+        var maskedLayers = [];
+        this.selection.getSelectedObjects('Canvas').forEach(object => {
+            var layer = object.parentLayer;
+            if (layer && layer.mask === object) {
+                maskedLayers.push(layer);
+                layer.mask = null;
+            }
+        });
+
         let clip;
 
         if (args.type === 'Button') {
@@ -1438,6 +1448,11 @@ orderDynamicFrames() {
 
         // Add the clip to the frame prior to adding objects.
         this.activeFrame.addClip(clip);
+
+        // The new clip takes over as the mask for any layer we unmasked above.
+        maskedLayers.forEach(layer => {
+            layer.mask = clip;
+        });
 
         // TODO add to asset library
         this.selection.clear();
@@ -1482,6 +1497,21 @@ orderDynamicFrames() {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Makes the selected object the layer mask.
+     */
+    makeSelectionAMask() {
+        let obj = this.selection.getSelectedObject();
+        obj.parentLayer.mask = obj;
+    }
+
+    /**
+     * Makes the selected object the layer mask.
+     */
+    clearSelectionMask() {
+        this.selection.getSelectedObject().view.clearMask();
     }
 
     /**
@@ -1852,6 +1882,9 @@ orderDynamicFrames() {
         }
 
         this.resetCache();
+
+        // refresh views
+        this.view.render();
 
         delete window._scriptOnErrorCallback;
     }

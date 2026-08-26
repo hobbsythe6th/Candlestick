@@ -97,6 +97,8 @@ class Inspector extends Component {
       'addToAssetLibraryAsWickobj': ["clip", "button"],
       'editTimeline': ["clip", "button"],
       'addAssetToCanvas': ["imageasset", "clipasset"],
+      'makeMask': ["path", "clip", "button"],
+      'clearMask': ["layer"],
       // 'alignX': [ "multipath"] // H.A.
     }
 
