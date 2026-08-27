@@ -385,7 +385,7 @@ Wick.Selection = class extends Wick.Base {
      * @type {number}
      */
     get numObjects() {
-        return this._selectedObjectsUUIDs.length;
+        return this._selectedObjectsUUIDs?.length || 0;
     }
 
     /**
@@ -913,6 +913,14 @@ Wick.Selection = class extends Wick.Base {
      */
     get src () {
         return this.numObjects === 1 && this.getSelectedObjects()[0].src;
+    }
+
+    /**
+     * The UUID of the selection. Read only.
+     * @type {string}
+     */
+    get uuid () {
+        return this.numObjects === 1 && this.getSelectedObjects()[0].uuid;
     }
 
     /**
