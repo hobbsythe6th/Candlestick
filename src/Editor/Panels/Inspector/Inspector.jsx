@@ -1080,7 +1080,14 @@ componentWillUnmount() { this._mounted = false; }
 
     Object.keys(this.actionRules).forEach(action => {
         let actionList = this.actionRules[action];
-        if (actionList.indexOf(selectionType) > -1) actions.push(action);
+        if (actionList.indexOf(selectionType) > -1) {
+          if(action === 'addToAssetLibraryAsWickobj') {
+            if (!this.props.selection[0].assetSourceUUID && !this.props.selection[0].asseted) {
+              actions.push(action);
+            }
+          }
+          else actions.push(action);
+        }
     });
 
     return(
