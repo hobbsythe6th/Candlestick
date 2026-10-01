@@ -170,8 +170,7 @@ class Editor extends EditorCore {
             codeError: null,
             popoutOutlinerSize: 250,
             outlinerPoppedOut: false,
-            inspectorSize: 250,
-            timelineSize: 175,
+            panelDocks: {}, // { [panelId]: { edge: 'top'|'bottom'|'left'|'right', size: px } }
             assetLibrarySize: 150,
             consoleLogs: [],
             warningModalInfo: {
@@ -269,9 +268,7 @@ class Editor extends EditorCore {
         this.resizeProps = {
             onStopResize: throttle(this.onStopResize, this.resizeThrottleAmount),
             onStopPopoutOutlinerResize: throttle(this.onStopPopoutOutlinerResize, this.resizeThrottleAmount),
-            onStopInspectorResize: throttle(this.onStopInspectorResize, this.resizeThrottleAmount),
             onStopAssetLibraryResize: throttle(this.onStopAssetLibraryResize, this.resizeThrottleAmount),
-            onStopTimelineResize: throttle(this.onStopTimelineResize, this.resizeThrottleAmount),
             onStopCodeEditorResize: throttle(this.onStopCodeEditorResize, this.resizeThrottleAmount),
             onResize: throttle(this.onResize, this.resizeThrottleAmount),
             onWindowResize: throttle(this.onWindowResize, this.windowResizeThrottleAmount),
@@ -634,18 +631,6 @@ class Editor extends EditorCore {
     }
 
     /**
-     * Called when the inspector is resized.
-     * @param  {DomElement} domElement DOM element containing the inspector
-     * @param  {React.Component} component  React component of the inspector.
-     */
-    onStopInspectorResize = ({ domElement, component }) => {
-        if (!domElement) return
-        this.setState({
-            inspectorSize: this.getSizeHorizontal(domElement)
-        });
-    }
-
-    /**
      * Called when the asset library is resized.
      * @param  {DomElement} domElement DOM element containing the asset library
      * @param  {React.Component} component  React component of the asset library
@@ -654,20 +639,6 @@ class Editor extends EditorCore {
         if (!domElement) return
         this.setState({
             assetLibrarySize: this.getSizeVertical(domElement)
-        });
-    }
-
-    /**
-     * Called when the timeline is resized.
-     * @param  {DomElement} domElement DOM element containing the timeline
-     * @param  {React.Component} component  React component of the timeline.
-     */
-    onStopTimelineResize = ({ domElement, component }) => {
-        if (!domElement) return
-        var size = this.getSizeVertical(domElement);
-
-        this.setState({
-            timelineSize: size
         });
     }
 
@@ -1098,6 +1069,74 @@ class Editor extends EditorCore {
         }
     }
 
+    /**
+     * Called by a PanelWrapper when it docks to an edge of the window.
+     */
+    setPanelDock = (id, dock) => {
+        this.setState(prev => {
+            const panelDocks = { ...prev.panelDocks };
+            if (dock) panelDocks[id] = dock;
+            else delete panelDocks[id]; // panel removed
+            return { panelDocks };
+        });
+    }
+
+    /**
+     * Total size (px) taken up by panels docked to the given edge.
+     */
+    getDockInset = (edge, excludeIds = []) => {
+        return Object.entries(this.state.panelDocks)
+            .filter(([id, d]) => d.edge === edge && !excludeIds.includes(id))
+            .reduce((sum, [, d]) => sum + d.size, 0);
+    }
+
+    /**
+     * True when the mouse is over the timeline's breadcrumbs strip (drawn by the engine on a canvas, so it is
+     * the top BREADCRUMBS_HEIGHT px of #animation-timeline), past the breadcrumb buttons packed at its left.
+     * Used as the timeline panel's drag handle.
+     */
+    isOverBreadcrumbsStrip = (e) => {
+        const rect = document.getElementById('animation-timeline').getBoundingClientRect();
+
+        return e.clientY >= rect.top
+            && e.clientY < rect.top + window.Wick.GUIElement.BREADCRUMBS_HEIGHT
+            && e.clientX - rect.left > 300; // leaves the breadcrumb buttons clickable
+    }
+
+    /**
+     * Space taken at an edge by the panels that stack outside the given panel (earlier in this order),
+     * so panels docked to the same edge sit next to each other instead of on top of each other.
+     */
+    panelStackOrder = ['menu-bar', 'timeline', 'toolbox']
+
+    getStackInset = (edge, id) => {
+        const outer = this.panelStackOrder.slice(0, this.panelStackOrder.indexOf(id));
+        return Object.entries(this.state.panelDocks)
+            .filter(([otherId, d]) => d.edge === edge && outer.includes(otherId))
+            .reduce((sum, [, d]) => sum + d.size, 0);
+    }
+
+    /**
+     * Space taken at an edge by the outermost panel only (the first in the stack order, i.e. the menu bar).
+     * Full-height panels like the sidebar respect just this, so they run beside the other docked panels.
+     */
+    getOutermostInset = (edge) => this.getStackInset(edge, this.panelStackOrder[1])
+
+    /**
+     * Style for the main editor area: leaves room for every docked panel, on whichever edge it is on.
+     */
+    getBodyInsetStyle = () => {
+        if (Object.keys(this.state.panelDocks).length === 0) return undefined;
+        const top = this.getDockInset('top'), bottom = this.getDockInset('bottom');
+        const left = this.getDockInset('left'), right = this.getDockInset('right');
+        return {
+            top: top,
+            left: left,
+            height: `calc(100% - ${top + bottom}px)`,
+            width: `calc(100% - ${left + right}px)`,
+        };
+    }
+
     setConsoleLogs = (logs) => {
         this.setState({
             consoleLogs: logs,
@@ -1118,7 +1157,7 @@ class Editor extends EditorCore {
             <DndProvider backend={HTML5Backend}>
                 <EditorWrapper editor={this}>
                     {/* Menu Bar */}
-                    <PanelWrapper x={0} y={-24} yOffset={24}>
+                    <PanelWrapper x={0} y={-24} yOffset={24} id="menu-bar" snapTo={['top/bottom']} onDock={this.setPanelDock}>
                     <div id="menu-bar-container" style={{ width: '100vw' }}>
                         {/* Header */}
                         <DockedPanel showOverlay={this.state.previewPlaying}>
@@ -1142,44 +1181,55 @@ class Editor extends EditorCore {
                     {/* Main Editor Panel */}
 
                     <div id="editor-body">
-                        <div className={classNames({ "mobile-editor-body": (renderSize === "small") })} id="flexible-container">
+                        <div className={classNames({ "mobile-editor-body": (renderSize === "small") })} id="flexible-container" style={this.getBodyInsetStyle()}>
                             {/*App*/}
                             <ReflexContainer windowResizeAware={true} orientation="vertical">
                                 {/* Middle Panel */}
                                 <ReflexElement {...this.resizeProps}>
                                     {/*Toolbox*/}
-                                    <div className={classNames("toolbox-container", { 'toolbox-container-medium': renderSize === 'medium' }, { 'toolbox-container-small': renderSize === 'small' })}>
-                                        <DockedPanel showOverlay={this.state.previewPlaying}>
-                                            <Toolbox
-                                                project={this.state.project}
-                                                getActiveToolName={() => this.getActiveTool()?.name}
-                                                activeToolName={this.getActiveTool()?.name}
-                                                setActiveTool={this.setActiveTool}
-                                                getToolSetting={this.getToolSetting}
-                                                setToolSetting={this.setToolSetting}
-                                                previewPlaying={this.state.previewPlaying}
-                                                editorActions={this.actionMapInterface.editorActions}
-                                                getToolSettingRestrictions={this.getToolSettingRestrictions}
-                                                showCanvasActions={this.state.showCanvasActions}
-                                                showBooleanCanvasActions={this.state.showBooleanCanvasActions}
-                                                showLayersCanvasActions={this.state.showLayersCanvasActions}
-                                                showAlignmentCanvasActions={this.state.showAlignmentCanvasActions}
-                                                showBrushModes={this.state.showBrushModes}
-                                                toggleCanvasActions={this.toggleCanvasActions}
-                                                toggleBooleanCanvasActions={this.toggleBooleanCanvasActions}
-                                                toggleLayersCanvasActions={this.toggleLayersCanvasActions}
-                                                toggleAlignmentCanvasActions={this.toggleAlignmentCanvasActions}
-                                                toggleBrushModes={this.toggleBrushModes}
-                                                colorPickerType={this.state.colorPickerType}
-                                                changeColorPickerType={this.changeColorPickerType}
-                                                updateLastColors={this.updateLastColors}
-                                                lastColorsUsed={this.state.lastColorsUsed}
-                                                keyMap={this.getKeyMap()}
-                                                renderSize={renderSize}
-                                            />
-                                        </DockedPanel>
-                                    </div>
-                                    <div className={classNames("editor-canvas-timeline-panel", { 'editor-canvas-timeline-panel-medium': renderSize === 'medium' }, { 'editor-canvas-timeline-panel-small': renderSize === 'small' })}>
+                                    <PanelWrapper
+                                        id="toolbox"
+                                        x={0} y={0}
+                                        xOffset={this.getDockInset('left')}
+                                        yOffset={this.getStackInset('top', 'toolbox')}
+                                        width={`calc(100vw - ${this.getDockInset('left') + this.getDockInset('right')}px)`}
+                                        bottomInset={this.getStackInset('bottom', 'toolbox')}
+                                        initialEdge="top"
+                                        snapTo={['top/bottom']}
+                                        onDock={this.setPanelDock}>
+                                        <div className={classNames("toolbox-container", { 'toolbox-container-medium': renderSize === 'medium' }, { 'toolbox-container-small': renderSize === 'small' })}>
+                                            <DockedPanel showOverlay={this.state.previewPlaying}>
+                                                <Toolbox
+                                                    project={this.state.project}
+                                                    getActiveToolName={() => this.getActiveTool()?.name}
+                                                    activeToolName={this.getActiveTool()?.name}
+                                                    setActiveTool={this.setActiveTool}
+                                                    getToolSetting={this.getToolSetting}
+                                                    setToolSetting={this.setToolSetting}
+                                                    previewPlaying={this.state.previewPlaying}
+                                                    editorActions={this.actionMapInterface.editorActions}
+                                                    getToolSettingRestrictions={this.getToolSettingRestrictions}
+                                                    showCanvasActions={this.state.showCanvasActions}
+                                                    showBooleanCanvasActions={this.state.showBooleanCanvasActions}
+                                                    showLayersCanvasActions={this.state.showLayersCanvasActions}
+                                                    showAlignmentCanvasActions={this.state.showAlignmentCanvasActions}
+                                                    showBrushModes={this.state.showBrushModes}
+                                                    toggleCanvasActions={this.toggleCanvasActions}
+                                                    toggleBooleanCanvasActions={this.toggleBooleanCanvasActions}
+                                                    toggleLayersCanvasActions={this.toggleLayersCanvasActions}
+                                                    toggleAlignmentCanvasActions={this.toggleAlignmentCanvasActions}
+                                                    toggleBrushModes={this.toggleBrushModes}
+                                                    colorPickerType={this.state.colorPickerType}
+                                                    changeColorPickerType={this.changeColorPickerType}
+                                                    updateLastColors={this.updateLastColors}
+                                                    lastColorsUsed={this.state.lastColorsUsed}
+                                                    keyMap={this.getKeyMap()}
+                                                    renderSize={renderSize}
+                                                />
+                                            </DockedPanel>
+                                        </div>
+                                    </PanelWrapper>
+                                    <div className={classNames("editor-canvas-timeline-panel", { 'editor-canvas-timeline-panel-medium': renderSize === 'medium' }, { 'editor-canvas-timeline-panel-small': renderSize === 'small' })} style={{ height: '100%' }}>
                                         <ReflexContainer windowResizeAware={true} orientation="horizontal">
                                             {/* Canvas and Popout Outliner */}
                                             <ReflexElement>
@@ -1257,16 +1307,22 @@ class Editor extends EditorCore {
                                                         </ReflexElement>}
                                                 </ReflexContainer>
                                             </ReflexElement>
+                                        </ReflexContainer>
 
-                                            {(renderSize === "small") && <ReflexSplitter {...this.resizeProps} className="mobile-reflex-splitter" />}
-                                            {!(renderSize === "small") && <ReflexSplitter {...this.resizeProps} />}
-
-                                            {/*Timeline*/}
-                                            <ReflexElement
-                                                minSize={100}
-                                                size={this.state.timelineSize}
-                                                onResize={this.resizeProps.onResize}
-                                                onStopResize={this.resizeProps.onStopTimelineResize}>
+                                        {/*Timeline*/}
+                                        <PanelWrapper
+                                            id="timeline"
+                                            x={0} y={0}
+                                            xOffset={this.getDockInset('left')}
+                                            yOffset={this.getStackInset('top', 'timeline')}
+                                            width={`calc(100vw - ${this.getDockInset('left') + this.getDockInset('right')}px)`}
+                                            height={175}
+                                            bottomInset={this.getStackInset('bottom', 'timeline')}
+                                            initialEdge="bottom"
+                                            canStartDrag={this.isOverBreadcrumbsStrip}
+                                            resizable minHeight={100} maxHeight={500}
+                                            snapTo={['top/bottom']}
+                                            onDock={this.setPanelDock}>
                                                 <DockedPanel showOverlay={this.state.previewPlaying}>
                                                     {renderSize === "small"
                                                         && <MobileContainer
@@ -1328,102 +1384,104 @@ class Editor extends EditorCore {
                                                             dragSoundOntoTimeline={this.dragSoundOntoTimeline}
                                                         />}
                                                 </DockedPanel>
-                                            </ReflexElement>
-                                        </ReflexContainer>
+                                        </PanelWrapper>
                                     </div>
                                 </ReflexElement>
+                            </ReflexContainer>
 
-                                {/* Right Sidebar */}
-                                {!(renderSize === "small") && <ReflexSplitter {...this.resizeProps} />}
-                                {!(renderSize === "small") &&
-
-                                    <ReflexElement
-                                        size={250}
-                                        maxSize={300} minSize={200}
-                                        onResize={this.resizeProps.onResize}
-                                        onStopResize={this.resizeProps.onStopInspectorResize}>
-                                        <ReflexContainer windowResizeAware={true} orientation="horizontal">
-                                            {/* Inspector */}
-                                            <ReflexElement {...this.resizeProps}>
-                                                <DockedPanel showOverlay={false /*this.state.previewPlaying*/}>
-                                                    <Inspector
-                                                        getToolSetting={this.getToolSetting}
-                                                        setToolSetting={this.setToolSetting}
-                                                        getSelectionType={this.getSelectionType}
-                                                        getAllSoundAssets={this.getAllSoundAssets}
-                                                        getAllSelectionAttributes={this.getAllSelectionAttributes}
-                                                        setSelectionAttribute={this.setSelectionAttribute}
-                                                        editorActions={this.actionMapInterface.editorActions}
-                                                        selectionIsScriptable={this.selectionIsScriptable}
-                                                        script={this.getSelectedObjectScript()}
-                                                        scriptInfoInterface={this.scriptInfoInterface}
-                                                        deleteScript={this.deleteScript}
-                                                        editScript={this.editScript}
-                                                        fontInfoInterface={this.fontInfoInterface}
-                                                        project={this.project}
-                                                        importFileAsAsset={this.importFileAsAsset}
-                                                        colorPickerType={this.state.colorPickerType}
-                                                        changeColorPickerType={this.changeColorPickerType}
-                                                        updateLastColors={this.updateLastColors}
-                                                        lastColorsUsed={this.state.lastColorsUsed}
-                                                        getClipAnimationTypes={this.getClipAnimationTypes}
-                                                    />
-                                                </DockedPanel>
-                                            </ReflexElement>
-
-
-                                            {/* Outliner */}
-                                            {renderSize === 'medium' && <ReflexSplitter {...this.resizeProps} />}
-                                            {renderSize === 'medium' && <ReflexElement
-                                                minSize={100}>
-                                                <DockedPanel showOverlay={this.state.previewPlaying}>
-                                                    <Outliner
-                                                        project={this.project}
-                                                        selectObjects={this.selectObjects}
-                                                        deselectObjects={this.deselectObjects}
-                                                        clearSelection={this.clearSelection}
-                                                        editScript={this.editScript}
-                                                        setFocusObject={this.setFocusObject}
-                                                        setActiveLayerIndex={this.setActiveLayerIndex}
-                                                        moveSelection={this.moveSelection}
-                                                        toggleHidden={this.toggleHidden}
-                                                        toggleLocked={this.toggleLocked}
-                                                    />
-                                                </DockedPanel>
-                                            </ReflexElement>}
+                            {/* Sidebar */}
+                            {!(renderSize === "small") &&
+                                        <PanelWrapper
+                                            id="sidebar"
+                                            x={0} y={0}
+                                            yOffset={this.getOutermostInset('top')}
+                                            width={250} height={`calc(100vh - ${this.getOutermostInset('top') + this.getOutermostInset('bottom')}px)`}
+                                            initialEdge="right"
+                                            dragHandle=".inspector-title-container"
+                                            resizable minWidth={200} maxWidth={600}
+                                            snapTo={['left/right']}
+                                            onDock={this.setPanelDock}>
+                                            <ReflexContainer windowResizeAware={true} orientation="horizontal">
+                                                {/* Inspector */}
+                                                <ReflexElement {...this.resizeProps}>
+                                                    <DockedPanel showOverlay={false /*this.state.previewPlaying*/}>
+                                                        <Inspector
+                                                            getToolSetting={this.getToolSetting}
+                                                            setToolSetting={this.setToolSetting}
+                                                            getSelectionType={this.getSelectionType}
+                                                            getAllSoundAssets={this.getAllSoundAssets}
+                                                            getAllSelectionAttributes={this.getAllSelectionAttributes}
+                                                            setSelectionAttribute={this.setSelectionAttribute}
+                                                            editorActions={this.actionMapInterface.editorActions}
+                                                            selectionIsScriptable={this.selectionIsScriptable}
+                                                            script={this.getSelectedObjectScript()}
+                                                            scriptInfoInterface={this.scriptInfoInterface}
+                                                            deleteScript={this.deleteScript}
+                                                            editScript={this.editScript}
+                                                            fontInfoInterface={this.fontInfoInterface}
+                                                            project={this.project}
+                                                            importFileAsAsset={this.importFileAsAsset}
+                                                            colorPickerType={this.state.colorPickerType}
+                                                            changeColorPickerType={this.changeColorPickerType}
+                                                            updateLastColors={this.updateLastColors}
+                                                            lastColorsUsed={this.state.lastColorsUsed}
+                                                            getClipAnimationTypes={this.getClipAnimationTypes}
+                                                        />
+                                                    </DockedPanel>
+                                                </ReflexElement>
 
 
-
-                                            {window.enableAssetLibrary && <ReflexSplitter {...this.resizeProps} />}
-                                            {/* Asset Library */}
-                                            {window.enableAssetLibrary &&
-                                                <ReflexElement
-                                                    minSize={100}
-                                                    size={300}
-                                                    onResize={this.resizeProps.onResize}
-                                                    onStopResize={this.resizeProps.onStopAssetLibraryResize}>
+                                                {/* Outliner */}
+                                                {renderSize === 'medium' && <ReflexSplitter {...this.resizeProps} />}
+                                                {renderSize === 'medium' && <ReflexElement
+                                                    minSize={100}>
                                                     <DockedPanel showOverlay={this.state.previewPlaying}>
-                                                        <AssetLibrary
-                                                            projectData={this.state.project}
-                                                            assets={this.project?.getAssets()}
-                                                            openModal={this.openModal}
-                                                            openImportAssetFileDialog={this.openImportAssetFileDialog}
+                                                        <Outliner
+                                                            project={this.project}
                                                             selectObjects={this.selectObjects}
+                                                            deselectObjects={this.deselectObjects}
                                                             clearSelection={this.clearSelection}
-                                                            isObjectSelected={this.isObjectSelected}
-                                                            createAssets={this.createAssets}
-                                                            importProjectAsWickFile={this.importProjectAsWickFile}
-                                                            createImageFromAsset={this.createImageFromAsset}
-                                                            toast={this.toast}
-                                                            deleteSelectedObjects={this.deleteSelectedObjects}
-                                                            addSoundToActiveFrame={this.addSoundToActiveFrame}
+                                                            editScript={this.editScript}
+                                                            setFocusObject={this.setFocusObject}
+                                                            setActiveLayerIndex={this.setActiveLayerIndex}
+                                                            moveSelection={this.moveSelection}
+                                                            toggleHidden={this.toggleHidden}
+                                                            toggleLocked={this.toggleLocked}
                                                         />
                                                     </DockedPanel>
                                                 </ReflexElement>}
-                                        </ReflexContainer>
-                                    </ReflexElement>
-                                }
-                            </ReflexContainer>
+
+
+
+                                                {window.enableAssetLibrary && <ReflexSplitter {...this.resizeProps} />}
+                                                {/* Asset Library */}
+                                                {window.enableAssetLibrary &&
+                                                    <ReflexElement
+                                                        minSize={100}
+                                                        size={300}
+                                                        onResize={this.resizeProps.onResize}
+                                                        onStopResize={this.resizeProps.onStopAssetLibraryResize}>
+                                                        <DockedPanel showOverlay={this.state.previewPlaying}>
+                                                            <AssetLibrary
+                                                                projectData={this.state.project}
+                                                                assets={this.project?.getAssets()}
+                                                                openModal={this.openModal}
+                                                                openImportAssetFileDialog={this.openImportAssetFileDialog}
+                                                                selectObjects={this.selectObjects}
+                                                                clearSelection={this.clearSelection}
+                                                                isObjectSelected={this.isObjectSelected}
+                                                                createAssets={this.createAssets}
+                                                                importProjectAsWickFile={this.importProjectAsWickFile}
+                                                                createImageFromAsset={this.createImageFromAsset}
+                                                                toast={this.toast}
+                                                                deleteSelectedObjects={this.deleteSelectedObjects}
+                                                                addSoundToActiveFrame={this.addSoundToActiveFrame}
+                                                            />
+                                                        </DockedPanel>
+                                                    </ReflexElement>}
+                                            </ReflexContainer>
+                                        </PanelWrapper>
+                            }
                         </div>
                         {this.state.codeEditorOpen &&
                             <WickCodeEditor
