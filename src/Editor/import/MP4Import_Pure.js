@@ -19,7 +19,6 @@ async function extractAudioWavFromMp4(file) {
     audioBuf = await audioCtx.decodeAudioData(arrayBuf.slice(0)) // Safari needs a copy
   } catch (e) {
     // no audio, save us all precious time
-    audioCtx.close()
     return null
   }
 
@@ -73,7 +72,6 @@ async function extractAudioWavFromMp4(file) {
     }
   }
 
-  audioCtx.close()
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
@@ -81,16 +79,14 @@ async function extractFramesFromMp4(file, { fps = DEFAULT_FPS, maxFrames = Infin
   const url = URL.createObjectURL(file)
   const video = document.createElement('video')
   video.src = url
-  // NOTE: do NOT set crossOrigin on blob URLs — blob URLs are same-origin by definition
-  // else WebKitGTK (Linux/Tauri) treats the blob as a CORS fetch, which breaks seeking
+  video.crossOrigin = 'anonymous'
   video.muted = true
   video.playsInline = true
 
   // Load da metadata stuff
   await new Promise((res, rej) => {
-    const timer = setTimeout(() => rej(new Error('Video metadata load timed out — the file may use an unsupported codec')), 15000)
-    video.addEventListener('loadedmetadata', () => { clearTimeout(timer); res() }, { once: true })
-    video.addEventListener('error', () => { clearTimeout(timer); rej(new Error('Video metadata load failed')) }, { once: true })
+    video.addEventListener('loadedmetadata', () => res(), { once: true })
+    video.addEventListener('error', () => rej(new Error('Video metadata load failed')), { once: true })
   })
 
   const duration = video.duration
@@ -109,11 +105,10 @@ async function extractFramesFromMp4(file, { fps = DEFAULT_FPS, maxFrames = Infin
   let frameIndex = 0
   while (t <= duration && frameIndex < maxFrames) {
     video.currentTime = t
-    // Wait for seek — timeout guards against WebKitGTK/GStreamer silently dropping seeked events -H.A.
+    // Wait for seek
     await new Promise((res, rej) => {
-      const timer = setTimeout(() => { cleanup(); rej(new Error('Seek timed out — the video may use an unsupported codec on this platform')) }, 10000)
-      const onSeeked = () => { clearTimeout(timer); res(); cleanup() }
-      const onError = () => { clearTimeout(timer); rej(new Error('Seek failed')); cleanup() }
+      const onSeeked = () => { res(); cleanup() }
+      const onError = () => { rej(new Error('Seek failed')); cleanup() }
       const cleanup = () => {
         video.removeEventListener('seeked', onSeeked)
         video.removeEventListener('error', onError)
@@ -134,7 +129,6 @@ async function extractFramesFromMp4(file, { fps = DEFAULT_FPS, maxFrames = Infin
   }
 
   URL.revokeObjectURL(url)
-  if (!frames.length) throw new Error('No frames could be extracted — the video may use an unsupported codec on this platform')
   return { frames, width: w, height: h, duration, fps }
 }
 

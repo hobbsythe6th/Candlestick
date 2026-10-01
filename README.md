@@ -28,10 +28,22 @@ If nothing returns you can download it with [this command](<https://brew.sh/>)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-### 2. Node Version Manager
+### 2. Python
+You may need Python 3.10 to be able to run some of the packages that come with Candlestick.
+First check if you already have Python
+```
+python3 --version
+```
+If nothing returns, then run
+```
+brew install python@3.10
+```
+Then run the version command at the end as a check. If you would like to install Python without Homebrew, [you can download it from their site here](<https://www.python.org/>), and for more detailed steps [check out this article.](<https://www.dataquest.io/blog/installing-python-on-mac/>)
+
+### 3. Node Version Manager
 <sup>(nvm = Node Version Manager)</sup>
 
-nvm is a CLI library that helps you manage the Node versions you have installed on your device. You should be able to [install Node versions directly from online](<https://nodejs.org/en/download>).
+nvm is a CLI library that helps you manage the Node versions you have installed on your device. You should be able to [install Node versions directly from online](<https://nodejs.org/en/download>), but as we're going for a specific older version and to be more organized, we recommend installing nvm. 
 Run a quick nvm check to see if you have it installed—
 ```
 nvm ls
@@ -48,15 +60,34 @@ which downloads the nvm code to an nvm directory on your system. Try running `nv
 
 <sup>If you're on Windows, please see [nvm-windows](https://github.com/coreybutler/nvm-windows).</sup>
 
-### 3. Installing Node
-Wick Editor uses the active version of Node, 24.
+### 4. Installing Node v14
+Wick Editor is a software that hasn't been updated in ~5 years before we picked it back up with our fork.
+For that reason though, it requires an older version of Node. 
 
-Ensure you're on the correct Node version using `nvm`: 
+Try first running this command to install Node v14: 
 ```
-nvm install 24
+nvm install 14
 ```
+There's a chance this works, and if it does you may move on to the next step.
+If it doesn't work, and you're on a Mac device with an M-series chip, the issue is likely because Node v14 doesn't have ARM64 support, so you'll likely need to install [Rosetta 2](<https://github.com/nodejs/node/issues/52306#issuecomment-2031073649>) to work around this issue.
+```
+/usr/sbin/softwareupdate --install-rosetta --agree-to-license
+```
+Then use it to change the arch
+```
+arch -x86_64 zsh
+```
+Then re-run nvm install.
+```
+nvm install 14
+```
+<sup>For anyone on Windows, you won't need this step</sup>
 
-### 4. Final step, setup and run
+Things usually get resolved after this. If you still have an error, let us know what it says.
+
+**Side Note:** When nvm installs v14, it uses it by default. You can run `nvm ls` to check that it is, if you don't see an arrow next to version `14._._` then run `nvm use 14` and re-check.
+
+### 5. Final step, setup and run
 You need to navigate to your project file... if you don't know how to navigate through the terminal then you may use [this online video tutorial](<https://www.youtube.com/watch?v=5XgBd6rjuDQ>) to learn how. It's simple but takes a minute to explain.
 
 If you haven't downloaded our repository yet then do that by either downloading the zip, or using `git clone`
@@ -70,6 +101,13 @@ If you have the repository set up, then navigate to the directory and run the fo
 ```
 npm install
 ```
+<sup>(If at any point you switched terminals, please make sure you're still using npm v14 before running the last command, `npm install`. To ensure you're using npm v14, you may run `nvm use 14`, if you have nvm set up successfully)</sup>
+
+You may see a few warnings, like ummmm... a little over 300... due to the outdated packages... but don't worry about em' 😅 As long as things download successfully, it's fine.
+
+<sup>Programming rule #1, if things work, don't touch it... don't worry though those are things we're slowly fixing</sup>
+
+If the terminal says something like `found 0 vulnerabilities` after only 7 lines of loading or such, then there's a change you're in the wrong directory.
 
 Once you have everything setup, all you need to do to test your app is... first build the engine:
 ```
@@ -81,13 +119,12 @@ Then create a production build of the project:
 ```
 npm run build
 ```
-<sup>^ This command is not always needed while testing, you'll need it most prior to deploying your code because it's basically just an optimisation command you don't need to use much</sup>
+<sup>^ This command is not always needed while testing, you'll need it most prior to deploying your code</sup>
 
 And lastly, to run your project in development:
 ```
 npm start
 ```
-<sup>While working on the engine it's easier to test by running npm run engine-quickrun</sup>
 
 If it worked, you should see something like this in the terminal.
 ```
@@ -119,10 +156,10 @@ Wick Editor was created by Luca Damasco and Zach Rispoli. See more credits on th
 Candlestick was created and is maintained by [Hamzah Alani](https://forum.wickeditor.com/u/hamzah_alani/summary), [Baron](https://forum.wickeditor.com/u/baronawc/summary), and [Jovanny Rodriguez](https://forum.wickeditor.com/u/jovanny/summary).
 
 Active contributors:
-- [StickmanRed](https://forum.wickeditor.com/u/stickmanred/summary) also found at (https://github.com/StickmanRed)
+- [StickmanRed](https://forum.wickeditor.com/u/stickmanred/summary)
 
 Additional, indirect contributors:
-- [pumpkinhead](https://forum.wickeditor.com/u/pumpkinhead/summary) also found at [pkhead](https://github.com/pkhead)
+- [pumpkinhead](https://forum.wickeditor.com/u/pumpkinhead/summary)
 - [SomeoneElse](https://forum.wickeditor.com/u/someoneelse/summary)
 
 ___

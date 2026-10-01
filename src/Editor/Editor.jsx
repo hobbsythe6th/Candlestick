@@ -31,10 +31,11 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import 'react-reflex/styles.css'
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex'
+import { throttle } from 'underscore';
 import localForage from 'localforage';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
-import { useResizeDetector } from 'react-resize-detector';
+import { SizeMe } from 'react-sizeme';
 
 import HotKeyInterface from './hotKeyMap';
 import ActionMapInterface from './actionMap';
@@ -62,17 +63,6 @@ import EditorWrapper from './EditorWrapper';
 
 import { readFile } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core';
-
-function throttle(fn, wait) {
-  let lastCall = 0;
-  return function(...args) {
-    const now = Date.now();
-    if (now - lastCall >= wait) {
-      lastCall = now;
-      return fn.apply(this, args);
-    }
-  };
-}
 
 // app wick, for handling directly opening files from finder/ file explorer
 async function loadPathIntoEditor(editorThis, filePath) {
@@ -149,7 +139,6 @@ function ResizeTrigger({ onResize, children }) {
 class Editor extends EditorCore {
     constructor() {
         super();
-
         // Set path for engine dependencies
         window.Wick.resourcepath = 'corelibs/wick-engine/';
 
@@ -258,7 +247,7 @@ class Editor extends EditorCore {
 
         // Wick file input
         this.openAssetFileFromClient = window.createFileInput({
-            accept: window.Wick?.FileAsset?.getValidExtensions().join(', '),
+            accept: window.Wick.FileAsset.getValidExtensions().join(', '),
             onChange: this.handleAssetFileImport,
             multiple: true,
         });
@@ -288,12 +277,8 @@ class Editor extends EditorCore {
         this.builtinPreviews = {};
     }
 
-    componentDidMount = async () => {
+    UNSAFE_componentWillMount = () => {
         document.title = `Candlestick ${this.editorVersion}`;
-
-        // Read the global Wick namespace after the loader completes
-        this.Wick = window.Wick;
-
         // Initialize "live" engine state
         this.project = new window.Wick.Project();
         this.attachErrorHandlers();
@@ -330,6 +315,8 @@ class Editor extends EditorCore {
             }
         );
 
+
+
         // Setup the initial project state
         this.setState({
             ...this.state,
@@ -348,42 +335,22 @@ class Editor extends EditorCore {
             (event || window.event).returnValue = confirmationMessage; //Gecko + IE
             return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
         };
+    }
 
+
+    componentDidMount = () => {
         console.log("Project Mounted");
         this.hidePreloader();
         this.onWindowResize();
-        // onWindowResize() call above. second resize after a short delay to lets WebKit complete its paint before we recalculate panel sizes
-        // THIS IS IMPORTANT for safari & mac builts -H.A.
-        setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
         if (!this.tryToParseProjectURL()) {
             this.showAutosavedProjects();
         }
 
         this.watchForHover();
 
-        // Track mouse position to use whn pasting images 👀
-        this._lastMouseX = 0;
-        this._lastMouseY = 0;
-        this._mouseMoveHandler = (e) => {
-            this._lastMouseX = e.clientX;
-            this._lastMouseY = e.clientY;
-        };
-        document.addEventListener('mousemove', this._mouseMoveHandler);
-
-        // Paste event listener — fires because we no longer call e.preventDefault() on the
-        // Cmd+V keydown for 'paste'. This gives us clipboardData with real File objects
-        // (original filenames, Finder file copies, Discord/Figma images, etc.)
-        this._pasteHandler = (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            e.preventDefault();
-            this._handlePasteEvent(e);
-        };
-        document.addEventListener('paste', this._pasteHandler);
 
         // check to see if we're in the app
         if (window.__TAURI__) {
-            // Force a window resize event shortly after app launches.
-            // This is a hacky fix to make sure the MacOS tauri app doesn't render the UI with a width/height of zero.
 
             window.alert = (text) => window.editor.toast(text);
 
@@ -404,13 +371,8 @@ class Editor extends EditorCore {
                 }
             }, 200) // small delay
         }
-    }
 
-    // apparently need this for cleanup -H.A.
-    componentWillUnmount = () => {
-        document.removeEventListener('mousemove', this._mouseMoveHandler);
-        document.removeEventListener('paste', this._pasteHandler);
-        window.removeEventListener('resize', this.resizeProps.onWindowResize);
+
     }
 
     componentDidUpdate = (prevProps, prevState) => {
@@ -470,6 +432,10 @@ class Editor extends EditorCore {
         enableHover()
     }
 
+
+
+    //
+
     hidePreloader = () => {
         let preloader = window.document.getElementById('preloader');
         setTimeout(() => {
@@ -479,7 +445,7 @@ class Editor extends EditorCore {
                 preloader.style.display = 'none';
                 preloader.remove();
             }, 500);
-            this.project?.view?.render()
+            this.project.view.render()
         }, 2000); // Wait two seconds to allow editor to set up... TODO: Should connect this to load events.
     }
 
@@ -526,7 +492,7 @@ class Editor extends EditorCore {
         });
 
         // re-render project to avoid incorrect pan
-        this.project?.view.render();
+        this.project.view.render();
         this.recenterCanvas();
     }
 
@@ -581,8 +547,8 @@ class Editor extends EditorCore {
     }
 
     onResize = (e) => {
-        this.project?.view?.resize();
-        this.project?.guiElement?.draw();
+        this.project.view.resize();
+        this.project.guiElement.draw();
     }
 
     onStopResize = ({ domElement, component }) => {
@@ -831,8 +797,8 @@ class Editor extends EditorCore {
         }
 
         // Render engine
-        this.project?.view.render();
-        this.project?.guiElement.draw();
+        this.project.view.render();
+        this.project.guiElement.draw();
 
         // Force react to render
         // TODO: Determine a non-hack way to do this.
@@ -941,7 +907,7 @@ class Editor extends EditorCore {
     getRenderSize = () => {
         if (window.innerWidth > 1200) {
             return "large";
-        } else if (window.innerWidth > 800) {
+        } else if (window.innerWidth > 850) {
             return "medium";
         } else {
             return "small";
@@ -1142,6 +1108,20 @@ class Editor extends EditorCore {
         };
     }
 
+    /**
+     * Returns a string representing the render size elements should use in the editor.
+     * @returns {String} "large", "medium" or "small" depending on the width of the window.
+     */
+    getRenderSize = () => {
+        if (window.innerWidth > 1200) {
+            return "large";
+        } else if (window.innerWidth > 800) {
+            return "medium";
+        } else {
+            return "small";
+        }
+    }
+
     setConsoleLogs = (logs) => {
         this.setState({
             consoleLogs: logs,
@@ -1149,9 +1129,6 @@ class Editor extends EditorCore {
     }
 
     render = () => {
-        if (!this.project || !this.project.view) {
-            return <div className="editor-loading">Loading editor…</div>;
-        }
         // Create some references to the project and editor to make debugging in the console easier:
         window.project = this.project;
         window.editor = this;
@@ -1169,7 +1146,7 @@ class Editor extends EditorCore {
                             <MenuBar
                                 renderSize={renderSize}
                                 openModal={this.openModal}
-                                projectName={this.project?.name}
+                                projectName={this.project.name}
                                 openProjectFileDialog={this.openProjectFileDialog}
                                 openNewProjectConfirmation={this.openNewProjectConfirmation}
                                 exportProjectAsWickFile={this.exportProjectAsWickFile}
@@ -1242,8 +1219,9 @@ class Editor extends EditorCore {
                                                     {/*Canvas*/}
                                                     <ReflexElement {...this.resizeProps}>
                                                         <DockedPanel>
-                                                            <ResizeTrigger onResize={() => this.project.view.render()}>
-                                                                <Canvas
+                                                            <SizeMe>{({ size }) => {
+                                                                this.project.view.render();
+                                                                return (<Canvas
                                                                     editor={this}
                                                                     project={this.project}
                                                                     projectDidChange={this.projectDidChange}
@@ -1255,18 +1233,18 @@ class Editor extends EditorCore {
                                                                     onEyedropperPickedColor={this.onEyedropperPickedColor}
                                                                     createAssets={this.createAssets}
                                                                     importProjectAsWickFile={this.importProjectAsWickFile}
-                                                                    openProjectFile={(file) => this.handleWickFileLoad({ target: { files: [file] } })}
                                                                     onRef={ref => this.canvasComponent = ref}
-                                                                />
-                                                            </ResizeTrigger>
+                                                                />);
+                                                            }}
+                                                            </SizeMe>
 
                                                             <CanvasTransforms
-                                                                onionSkinEnabled={this.project?.onionSkinEnabled}
+                                                                onionSkinEnabled={this.project.onionSkinEnabled}
                                                                 toggleOnionSkin={this.toggleOnionSkin}
                                                                 zoomIn={this.zoomIn}
                                                                 zoomOut={this.zoomOut}
                                                                 recenterCanvas={this.recenterCanvas}
-                                                                activeToolName={this.getActiveTool()?.name}
+                                                                activeToolName={this.getActiveTool().name}
                                                                 setActiveTool={this.setActiveTool}
                                                                 previewPlaying={this.state.previewPlaying}
                                                                 togglePreviewPlaying={this.togglePreviewPlaying}

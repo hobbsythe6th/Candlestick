@@ -1,4 +1,4 @@
-import * as pdfjsLib from "pdfjs-dist";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.js";
 
 const BASE = (process.env.PUBLIC_URL && process.env.PUBLIC_URL !== "/") ? process.env.PUBLIC_URL : "";
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${BASE}/pdf.worker.min.mjs`;

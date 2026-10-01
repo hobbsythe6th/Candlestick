@@ -14,9 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with Wick.  If not, see <http://www.gnu.org/licenses/>. */
-
-const JSZip = require('jszip');
-
+    
 WickProject.Exporter = (function () {
 
     var projectExporter = { };
@@ -116,7 +114,7 @@ WickProject.Exporter = (function () {
                 
                 var blob1 = new Blob([byteArray], {type: "application/octet-stream"});
 
-                saveAs(blob1, wickProject.name+".wick");
+                saveAs(blob1, wickProject.name+'-'+timeStamp()+".wick");
             });
             return;
         }
@@ -124,7 +122,7 @@ WickProject.Exporter = (function () {
         if(args && args.json) {
             wickProject.getAsJSON(function(JSONProject) {
                 var blob = new Blob([JSONProject], {type: "text/plain;charset=utf-8"});
-                saveAs(blob, wickProject.name+'.json');
+                saveAs(blob, wickProject.name+'-'+timeStamp()+'.json');
             }, '\t');
             return;
         }
@@ -135,7 +133,7 @@ WickProject.Exporter = (function () {
                 var zip = new JSZip();
                 zip.file("index.html", fileOut);
                 zip.generateAsync({type:"blob"}).then(function(content) {
-                    saveAs(content, filename+".zip");
+                    saveAs(content, filename+'-'+timeStamp()+".zip");
                 });
             } else {
                 if(args && args.asNewWindow) {
@@ -143,7 +141,7 @@ WickProject.Exporter = (function () {
                     x.document.open().write(fileOut);
                 } else {
                     var blob = new Blob([fileOut], {type: "text/plain;charset=utf-8"});
-                    saveAs(blob, filename+".html");
+                    saveAs(blob, filename+'-'+timeStamp()+".html");
                 }
             }
         });

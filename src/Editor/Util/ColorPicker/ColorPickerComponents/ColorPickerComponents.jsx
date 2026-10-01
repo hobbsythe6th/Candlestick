@@ -34,7 +34,6 @@ function GradientControlStop (props) {
 export function GradientSlider (props) {
     return (
         <WickCustomSlider className="wick-color-picker-gradient-slider"
-            getHoverColor={props.getHoverColor}
             onMouseDownContainer={props.containerDown}
             onMouseDownPointer={props.controlStopDown}
             onMouseMove={props.onMouseMove}

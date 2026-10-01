@@ -22,7 +22,6 @@
     "core:webview:default",
     "core:app:default",
     "core:window:default",
-    "save:allow-saveToDownloads",
     "log:default",
     "core:menu:default",
     "core:tray:default",

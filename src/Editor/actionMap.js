@@ -176,7 +176,7 @@ class ActionMapInterface extends Object {
       paste: {
         icon: 'paste',
         tooltip: 'Paste',
-        action: this.editor.pasteWickClipboard,
+        action: this.editor.pasteFromClipboard,
         id: 'action-paste-from-clipboard',
       },
       delete: {

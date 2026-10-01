@@ -17,8 +17,8 @@
  * along with Wick Editor.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import { useDrag } from 'react-dnd';
+import React, { Component } from 'react';
+import { DragSource } from 'react-dnd';
 import './_asset.scss';
 import DragDropTypes from 'Editor/DragDropTypes.js';
 import ToolIcon from 'Editor/Util/ToolIcon/ToolIcon';
@@ -26,66 +26,99 @@ import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 
 var classNames = require('classnames');
 
-function Asset(props) {
-  const assetType = DragDropTypes.GET_ASSET_TYPE(props);
-  const [, drag] = useDrag(() => ({
-    type: assetType,
-    item: () => ({ uuid: props.asset.uuid }),
-  }), [assetType, props.asset.uuid]);
+const assetSource = {
+  beginDrag(props, monitor, component) {
+    // Return the data describing the dragged item
+    let info = {
+      uuid : props.asset.uuid,
+    }
 
-  function getIcon(classname) {
-    if (classname === "ImageAsset") return "image";
-    else if (classname === "SoundAsset") return "sound";
-    else if (classname === "ClipAsset") return "clip";
-    else if (classname === "ButtonAsset") return "button";
-    else if (classname === "FontAsset") return "font";
-    else if (classname === "SVGAsset") return "svg";
-    else return "asset";
+    return info;
+  },
+}
+
+/**
+ * Specifies which props to inject into your component.
+ */
+function collect(connect, monitor) {
+  return {
+    connectDragSource: connect.dragSource(),
   }
+}
 
-  function addToCanvas() {
-    let draggedItem = props.asset;
-    if (draggedItem.files && draggedItem.files.length > 0) {
-      if (draggedItem.files[0].name.endsWith('.wick')) {
-        var file = draggedItem.files[0];
-        props.importProjectAsWickFile(file);
-      } else {
-        props.createAssets(draggedItem.files, []);
-      }
-    } else {
-      props.createImageFromAsset(draggedItem.uuid, 0, 0, true);
+class Asset extends Component {
+  getIcon(classname) {
+    if (classname === "ImageAsset") {
+      return "image";
+    } else if (classname === "SoundAsset") {
+      return "sound";
+    } else if (classname === "ClipAsset") {
+      return "clip";
+    } else if (classname === "ButtonAsset") {
+      return "button";
+    } else if (classname === "FontAsset") {
+      return "font"
+    } else if (classname === "SVGAsset") {
+      return "svg"
+    }  else {
+      return "asset";
     }
   }
 
-  let icon = getIcon(props.asset.classname);
+  addToCanvas = () => {
+    let draggedItem = this.props.asset;
+    if(draggedItem.files && draggedItem.files.length > 0) {
+      // Dropped a file from native filesystem
+      if(draggedItem.files[0].name.endsWith('.wick')) {
+        // Wick Project (.wick file)
+        var file = draggedItem.files[0];
+        this.props.importProjectAsWickFile(file);
+      } else {
+        // Assets (images, sounds, etc)
+        this.props.createAssets(draggedItem.files, []);
+      }
+    } else {
+      // Dropped an asset from the asset library
+      this.props.createImageFromAsset(draggedItem.uuid, 0, 0, true);
+    }
+  }
 
-  return (
-    <div ref={drag} className={classNames("asset-item", {"asset-selected": props.isSelected})}>
-      <button
+  render() {
+    // These props are injected by React DnD, as defined by the `collect` function above:
+    const { connectDragSource } = this.props;
+
+    let icon = this.getIcon(this.props.asset.classname);
+
+    return connectDragSource (
+      <div 
+      className={classNames("asset-item", {"asset-selected": this.props.isSelected})}>
+      <button 
         className="select"
-        onClick={props.onClick}>
+        onClick={this.props.onClick}
+        >
         <div className="asset-name-text">
           <span><ToolIcon className="asset-icon" name={icon}/></span>
-          <span>{props.asset.name}</span>
+          <span>{this.props.asset.name}</span>
         </div>
       </button>
-      {props.isSelected &&
+      {this.props.isSelected &&
       <div className="asset-buttons-container">
-        {props.asset.classname === "SoundAsset" &&
-        <span className="asset-button add"><ActionButton classsName="add" color="green" text="Add" action={() => props.addSoundToActiveFrame(props.asset)}/></span>
+        {this.props.asset.classname === "SoundAsset" &&
+        <span className="asset-button add"><ActionButton classsName="add" color="green" text="Add" action={() => this.props.addSoundToActiveFrame(this.props.asset)}/></span>
         }
-        {props.asset.classname !== "SoundAsset" &&
-        <span className="asset-button add"><ActionButton classsName="add" color="green" text="Add" action={addToCanvas}/></span>
+        {this.props.asset.classname !== "SoundAsset" &&
+        <span className="asset-button add"><ActionButton classsName="add" color="green" text="Add" action={this.addToCanvas}/></span>
         }
-        <span className="asset-button delete"><ActionButton classsName="delete" color="red" icon="delete-black"
+        <span className="asset-button delete"><ActionButton classsName="delete" color="red" icon="delete-black" 
         action={() => {
-          props.clearSelection();
-          props.selectObjects([props.asset]);
-          props.deleteSelectedObjects();
+          this.props.clearSelection();
+          this.props.selectObjects([this.props.asset]);
+          this.props.deleteSelectedObjects();
         }}/></span>
       </div>}
-    </div>
-  );
+      </div>
+    )
+  }
 }
 
-export default Asset;
+export default DragSource(DragDropTypes.GET_ASSET_TYPE, assetSource, collect)(Asset)

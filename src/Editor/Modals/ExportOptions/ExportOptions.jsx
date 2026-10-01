@@ -407,7 +407,7 @@ class ExportOptions extends Component {
                   icon: "cancel",
                 },
                 {
-                  text: "Not interactive",
+                  text: "Not ineractive",
                   icon: "cancel"
                 },
               ]} />

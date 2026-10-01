@@ -32,7 +32,8 @@
  */
 
 import { saveAs } from 'file-saver';
-// import timeStamp from '../Editor/Util/DataFunctions/timestamp';
+import timeStamp from '../Editor/Util/DataFunctions/timestamp';
+
 export default function initializeDefaultFileHandlers() {
 
   if (!window.saveFileFromWick) {
@@ -45,7 +46,7 @@ export default function initializeDefaultFileHandlers() {
      * @param {function} failureCallback Callback to be called if save is unsuccessful.
      */
     window.saveFileFromWick = (file, name, extension, successCallback, failureCallback) => {
-      const filename = name + extension; // name + timeStamp() + extension; // --HA
+      const filename = name + timeStamp() + extension; // name + timeStamp() + extension; // --HA
       saveAs(file, filename);
       successCallback && successCallback() // Unfortunately, we can't check for success or failure from  browser...
     }
@@ -101,11 +102,7 @@ export default function initializeDefaultFileHandlers() {
       input.type = 'file';
       input.style.display = 'none';
       let isIOS = navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPhone/i);
-      let isAndroid = navigator.userAgent.match(/Android/i);
-      // iOS: skip accept entirely (broken for custom extensions)
-      // Android: use */* so .wick files are visible
-      if (args.accept && !isIOS)
-        input.accept = isAndroid ? '*/*' : args.accept;
+      args.accept && !isIOS && (input.accept = args.accept);
       args.multiple && (input.multiple = "multiple");
       document.body.appendChild(input);
       input.addEventListener('change', onChange);

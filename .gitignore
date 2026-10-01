@@ -10,12 +10,10 @@
 
 # production
 /build
-/dist
-/public/corelibs/wick-engine/
+/build-ios/WebViewExample/local_html
+/build-electron
 /engine/dist/
-
-# package-lock
-package-lock.json*
+/public/corelibs/wick-engine/
 
 # misc
 .DS_Store
@@ -24,16 +22,10 @@ package-lock.json*
 .env.test.local
 .env.production.local
 .env
-CLAUDE.md
-AGENTS.md
 
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # docs
-engine/docs/*
-engine/dist/*
-src-tauri/binaries/*
-src-tauri/gen/*
-*.keystore
+/engine/docs/

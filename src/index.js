@@ -23,16 +23,9 @@ import './index.css';
 import Editor from './Editor/Editor';
 import * as serviceWorker from './serviceWorker';
 import initializeDefaultFileHandlers from './files/filehandler';
-import { initAndroidPlatform } from './tauri-android';
-
-// Android-specific overrides must run before the default file handlers,
-// so filehandler.js sees window.saveFileFromWick already set and wraps it.
-initAndroidPlatform();
 
 // Creates file handlers in the window.
 initializeDefaultFileHandlers();
-
-window.CandlestickVersion = '1.0.3';
 
 ReactDOM.render(<Editor />, document.getElementById('root'));
 
