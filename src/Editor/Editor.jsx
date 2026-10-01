@@ -135,6 +135,11 @@ async function loadPathIntoEditor(editorThis, filePath) {
     }
 }
 
+
+import { version } from '../../package.json';
+
+import classNames from 'classnames';
+
 // Watches for container resize and calls onResize, replacing react-sizeme
 function ResizeTrigger({ onResize, children }) {
     const { ref } = useResizeDetector({ onResize });

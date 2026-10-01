@@ -23,7 +23,7 @@ import ActionButton from 'Editor/Util/ActionButton/ActionButton';
 
 import './_toolbutton.scss';
 
-import classNames from 'classnames';
+import classNames from "classnames";
 
 class ToolButton extends Component {
   constructor (props) {

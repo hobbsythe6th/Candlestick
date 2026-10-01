@@ -1,3 +1,5 @@
+import React from 'react';
+
 import './_savedprojectitem.scss';
 
 import classNames from 'classnames';
