@@ -67,7 +67,7 @@ const editorThemes = [
     label: 'Github',
   }]
 
-import classNames from 'classnames';
+let classNames = require('classnames');
 let thValue = 'monokai';
 export default function WickCodeEditor(props) {
 
