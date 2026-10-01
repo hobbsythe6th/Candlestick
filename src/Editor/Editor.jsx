@@ -23,7 +23,7 @@ import './_editor.scss';
 import './styles/default_theme.css';
 import './styles/default_styles.css';
 
-import packageJSON from '../../package.json';
+import version from '../../package.json';
 import classNames from 'classnames';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -151,7 +151,7 @@ class Editor extends EditorCore {
         // "Live" editor states
         this.project = null;
         this.paper = null;
-        this.editorVersion = packageJSON.version + '';
+        this.editorVersion = version + '';
 
         // GUI state
         this.state = {
