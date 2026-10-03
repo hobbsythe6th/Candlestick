@@ -28,11 +28,10 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import 'react-reflex/styles.css'
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex'
-import { throttle } from 'underscore';
 import localForage from 'localforage';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
-import { SizeMe } from 'react-sizeme';
+import { useResizeDetector } from 'react-resize-detector';
 
 import HotKeyInterface from './hotKeyMap';
 import ActionMapInterface from './actionMap';
@@ -41,6 +40,7 @@ import FontInfoInterface from './fontInfo';
 import EditorCore from './EditorCore';
 
 import DockedPanel from './Panels/DockedPanel/DockedPanel';
+import PanelWrapper from './Panels/PanelWrapper/PanelWrapper';
 import Canvas from './Panels/Canvas/Canvas';
 import Inspector from './Panels/Inspector/Inspector';
 import MenuBar from './Panels/MenuBar/MenuBar';
@@ -60,6 +60,17 @@ import EditorWrapper from './EditorWrapper';
 import { readFile } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core';
 
+function throttle(fn, wait) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= wait) {
+      lastCall = now;
+      return fn.apply(this, args);
+    }
+  };
+}
+
 // app wick, for handling directly opening files from finder/ file explorer
 async function loadPathIntoEditor(editorThis, filePath) {
     try {
@@ -67,17 +78,28 @@ async function loadPathIntoEditor(editorThis, filePath) {
         const name = filePath.split('/').pop();
 
         // .WICK/ PROJECT FILE
+        const VIDEO_MIME = {
+            '.mp4': 'video/mp4', '.m4v': 'video/x-m4v',
+            '.mov': 'video/quicktime',
+            '.webm': 'video/webm',
+            '.ogv': 'video/ogg', '.ogg': 'video/ogg',
+            '.avi': 'video/x-msvideo',
+            '.mkv': 'video/x-matroska',
+            '.3gp': 'video/3gpp',
+            '.wmv': 'video/x-ms-wmv',
+        }
+        const videoExt = Object.keys(VIDEO_MIME).find(ext => name.endsWith(ext))
+
         if (
             name.endsWith('.wick') ||
-            name.endsWith('.mov') ||
-            name.endsWith('.mp4')
+            videoExt
         ) {
 
 
             const bytes = await readFile(filePath, { encoding: null })
             const blob = new Blob([bytes])
             const file = new File([blob], name, {
-                type: (name.endsWith('.wick') && 'application/zip') || (name.endsWith('.pdf') && 'application/pdf') || 'video/mp4'
+                type: (name.endsWith('.wick') && 'application/zip') || (videoExt && VIDEO_MIME[videoExt]) || 'video/mp4'
             });
 
 
@@ -106,6 +128,7 @@ async function loadPathIntoEditor(editorThis, filePath) {
                 else if (name.endsWith('.png')) mimeType = 'image/png'
                 else if (name.endsWith('.jpeg') || name.endsWith('.jpg')) mimeType = 'image/jpeg'
                 else if (name.endsWith('.gif')) mimeType = 'image/gif'
+                else if (name.endsWith('.webp')) mimeType = 'image/webp'
 
                 const blob = new Blob([bytes], { type: mimeType })
                 const file = new File([blob], name, { type: mimeType })
@@ -125,6 +148,12 @@ async function loadPathIntoEditor(editorThis, filePath) {
 const { version } = require('../../package.json');
 
 var classNames = require('classnames');
+
+// Watches for container resize and calls onResize, replacing react-sizeme
+function ResizeTrigger({ onResize, children }) {
+    const { ref } = useResizeDetector({ onResize });
+    return <div ref={ref} style={{ width: '100%', height: '100%' }}>{children}</div>;
+}
 
 class Editor extends EditorCore {
     constructor() {
@@ -154,8 +183,7 @@ class Editor extends EditorCore {
             codeError: null,
             popoutOutlinerSize: 250,
             outlinerPoppedOut: false,
-            inspectorSize: 250,
-            timelineSize: 175,
+            panelDocks: {}, // { [panelId]: { edge: 'top'|'bottom'|'left'|'right', size: px } }
             assetLibrarySize: 150,
             consoleLogs: [],
             warningModalInfo: {
@@ -232,13 +260,13 @@ class Editor extends EditorCore {
 
         // Wick Project File Input
         this.openProjectFileFromClient = window.createFileInput({
-            accept: '.zip, .wick, .mp4, .pdf',
+            accept: '.zip, .wick, video/*, .pdf',
             onChange: this.handleWickFileLoad,
         });
 
         // Wick file input
         this.openAssetFileFromClient = window.createFileInput({
-            accept: window.Wick.FileAsset.getValidExtensions().join(', '),
+            accept: window.Wick.FileAsset.getValidExtensions().join(', ') + ', video/*',
             onChange: this.handleAssetFileImport,
             multiple: true,
         });
@@ -253,9 +281,7 @@ class Editor extends EditorCore {
         this.resizeProps = {
             onStopResize: throttle(this.onStopResize, this.resizeThrottleAmount),
             onStopPopoutOutlinerResize: throttle(this.onStopPopoutOutlinerResize, this.resizeThrottleAmount),
-            onStopInspectorResize: throttle(this.onStopInspectorResize, this.resizeThrottleAmount),
             onStopAssetLibraryResize: throttle(this.onStopAssetLibraryResize, this.resizeThrottleAmount),
-            onStopTimelineResize: throttle(this.onStopTimelineResize, this.resizeThrottleAmount),
             onStopCodeEditorResize: throttle(this.onStopCodeEditorResize, this.resizeThrottleAmount),
             onResize: throttle(this.onResize, this.resizeThrottleAmount),
             onWindowResize: throttle(this.onWindowResize, this.windowResizeThrottleAmount),
@@ -335,6 +361,9 @@ class Editor extends EditorCore {
         console.log("Project Mounted");
         this.hidePreloader();
         this.onWindowResize();
+        // onWindowResize() call above. second resize after a short delay to lets WebKit complete its paint before we recalculate panel sizes
+        // THIS IS IMPORTANT for safari & mac builts -H.A.
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
         if (!this.tryToParseProjectURL()) {
             this.showAutosavedProjects();
         }
@@ -490,7 +519,33 @@ class Editor extends EditorCore {
      * Resets the editor in preparation for a project load.
      */
     resetEditorForLoad = () => {
-
+        // Re-apply saved frame size so HIDE_CONTENT_DOTS and cell dims are correct after every project load
+        if (window.Wick && window.Wick.GUIElement) {
+            const G = window.Wick.GUIElement;
+            const stored = localStorage.getItem('wickEditorFrameSizeValue');
+            if (stored !== null) {
+                const v = parseInt(stored);
+                const XSW = 8, XSH = 16;
+                let w, h;
+                if (v <= 50) {
+                    const t = v / 50;
+                    w = Math.round(XSW + t * (G.GRID_SMALL_CELL_WIDTH - XSW));
+                    const ht = Math.max(v, 25) / 50;
+                    h = Math.round(XSH + ht * (G.GRID_SMALL_CELL_HEIGHT - XSH));
+                } else if (v <= 100) {
+                    const t = (v - 50) / 50;
+                    w = Math.round(G.GRID_SMALL_CELL_WIDTH + t * (G.GRID_NORMAL_CELL_WIDTH - G.GRID_SMALL_CELL_WIDTH));
+                    h = Math.round(G.GRID_SMALL_CELL_HEIGHT + t * (G.GRID_NORMAL_CELL_HEIGHT - G.GRID_SMALL_CELL_HEIGHT));
+                } else {
+                    const t = (v - 100) / 50;
+                    w = Math.round(G.GRID_NORMAL_CELL_WIDTH + t * (G.GRID_LARGE_CELL_WIDTH - G.GRID_NORMAL_CELL_WIDTH));
+                    h = Math.round(G.GRID_NORMAL_CELL_HEIGHT + t * (G.GRID_LARGE_CELL_HEIGHT - G.GRID_NORMAL_CELL_HEIGHT));
+                }
+                G.GRID_DEFAULT_CELL_WIDTH = w;
+                G.GRID_DEFAULT_CELL_HEIGHT = Math.max(h, 30);
+                G.HIDE_CONTENT_DOTS = v < 15;
+            }
+        }
     }
 
     /**
@@ -624,18 +679,6 @@ class Editor extends EditorCore {
     }
 
     /**
-     * Called when the inspector is resized.
-     * @param  {DomElement} domElement DOM element containing the inspector
-     * @param  {React.Component} component  React component of the inspector.
-     */
-    onStopInspectorResize = ({ domElement, component }) => {
-        if (!domElement) return
-        this.setState({
-            inspectorSize: this.getSizeHorizontal(domElement)
-        });
-    }
-
-    /**
      * Called when the asset library is resized.
      * @param  {DomElement} domElement DOM element containing the asset library
      * @param  {React.Component} component  React component of the asset library
@@ -644,20 +687,6 @@ class Editor extends EditorCore {
         if (!domElement) return
         this.setState({
             assetLibrarySize: this.getSizeVertical(domElement)
-        });
-    }
-
-    /**
-     * Called when the timeline is resized.
-     * @param  {DomElement} domElement DOM element containing the timeline
-     * @param  {React.Component} component  React component of the timeline.
-     */
-    onStopTimelineResize = ({ domElement, component }) => {
-        if (!domElement) return
-        var size = this.getSizeVertical(domElement);
-
-        this.setState({
-            timelineSize: size
         });
     }
 
@@ -1088,6 +1117,80 @@ class Editor extends EditorCore {
         }
     }
 
+    /**
+     * Called by a PanelWrapper when it docks to an edge of the window.
+     */
+    setPanelDock = (id, dock) => {
+        this.setState(prev => {
+            const current = prev.panelDocks[id];
+
+            // returning null skips the re-render of this very large component when nothing actually changed
+            if (!dock && !current) return null;
+            if (dock && current && current.edge === dock.edge && current.size === dock.size) return null;
+
+            const panelDocks = { ...prev.panelDocks };
+            if (dock) panelDocks[id] = dock;
+            else delete panelDocks[id]; // panel removed
+            return { panelDocks };
+        });
+    }
+
+    /**
+     * Total size (px) taken up by panels docked to the given edge.
+     */
+    getDockInset = (edge, excludeIds = []) => {
+        return Object.entries(this.state.panelDocks)
+            .filter(([id, d]) => d.edge === edge && !excludeIds.includes(id))
+            .reduce((sum, [, d]) => sum + d.size, 0);
+    }
+
+    /**
+     * True when the mouse is over the timeline's breadcrumbs strip (drawn by the engine on a canvas, so it is
+     * the top BREADCRUMBS_HEIGHT px of #animation-timeline), past the breadcrumb buttons packed at its left.
+     * Used as the timeline panel's drag handle.
+     */
+    isOverBreadcrumbsStrip = (e) => {
+        const rect = document.getElementById('animation-timeline').getBoundingClientRect();
+
+        return e.clientY >= rect.top
+            && e.clientY < rect.top + window.Wick.GUIElement.BREADCRUMBS_HEIGHT
+            && e.clientX - rect.left > 300; // leaves the breadcrumb buttons clickable
+    }
+
+    /**
+     * Space taken at an edge by the panels that stack outside the given panel (earlier in this order),
+     * so panels docked to the same edge sit next to each other instead of on top of each other.
+     */
+    panelStackOrder = ['menu-bar', 'timeline', 'toolbox']
+
+    getStackInset = (edge, id) => {
+        const outer = this.panelStackOrder.slice(0, this.panelStackOrder.indexOf(id));
+        return Object.entries(this.state.panelDocks)
+            .filter(([otherId, d]) => d.edge === edge && outer.includes(otherId))
+            .reduce((sum, [, d]) => sum + d.size, 0);
+    }
+
+    /**
+     * Space taken at an edge by the outermost panel only (the first in the stack order, i.e. the menu bar).
+     * Full-height panels like the sidebar respect just this, so they run beside the other docked panels.
+     */
+    getOutermostInset = (edge) => this.getStackInset(edge, this.panelStackOrder[1])
+
+    /**
+     * Style for the main editor area: leaves room for every docked panel, on whichever edge it is on.
+     */
+    getBodyInsetStyle = () => {
+        if (Object.keys(this.state.panelDocks).length === 0) return undefined;
+        const top = this.getDockInset('top'), bottom = this.getDockInset('bottom');
+        const left = this.getDockInset('left'), right = this.getDockInset('right');
+        return {
+            top: top,
+            left: left,
+            height: `calc(100% - ${top + bottom}px)`,
+            width: `calc(100% - ${left + right}px)`,
+        };
+    }
+
     setConsoleLogs = (logs) => {
         this.setState({
             consoleLogs: logs,
@@ -1105,8 +1208,8 @@ class Editor extends EditorCore {
             <DndProvider backend={HTML5Backend}>
                 <EditorWrapper editor={this}>
                     {/* Menu Bar */}
-
-                    <div id="menu-bar-container">
+                    <PanelWrapper x={0} y={-24} yOffset={24} id="menu-bar" snapTo={['top/bottom']} onDock={this.setPanelDock}>
+                    <div id="menu-bar-container" style={{ width: '100vw' }}>
                         {/* Header */}
                         <DockedPanel showOverlay={this.state.previewPlaying}>
                             <MenuBar
@@ -1124,16 +1227,27 @@ class Editor extends EditorCore {
                             />
                         </DockedPanel>
                     </div>
+                    </PanelWrapper>
 
                     {/* Main Editor Panel */}
 
                     <div id="editor-body">
-                        <div className={classNames({ "mobile-editor-body": (renderSize === "small") })} id="flexible-container">
+                        <div className={classNames({ "mobile-editor-body": (renderSize === "small") })} id="flexible-container" style={this.getBodyInsetStyle()}>
                             {/*App*/}
                             <ReflexContainer windowResizeAware={true} orientation="vertical">
                                 {/* Middle Panel */}
                                 <ReflexElement {...this.resizeProps}>
                                     {/*Toolbox*/}
+                                    <PanelWrapper
+                                        id="toolbox"
+                                        x={0} y={0}
+                                        xOffset={this.getDockInset('left')}
+                                        yOffset={this.getStackInset('top', 'toolbox')}
+                                        width={`calc(100vw - ${this.getDockInset('left') + this.getDockInset('right')}px)`}
+                                        bottomInset={this.getStackInset('bottom', 'toolbox')}
+                                        initialEdge="top"
+                                        snapTo={['top/bottom']}
+                                        onDock={this.setPanelDock}>
                                     <div className={classNames("toolbox-container", { 'toolbox-container-medium': renderSize === 'medium' }, { 'toolbox-container-small': renderSize === 'small' })}>
                                         <DockedPanel showOverlay={this.state.previewPlaying}>
                                             <Toolbox
@@ -1165,7 +1279,8 @@ class Editor extends EditorCore {
                                             />
                                         </DockedPanel>
                                     </div>
-                                    <div className={classNames("editor-canvas-timeline-panel", { 'editor-canvas-timeline-panel-medium': renderSize === 'medium' }, { 'editor-canvas-timeline-panel-small': renderSize === 'small' })}>
+                                    </PanelWrapper>
+                                    <div className={classNames("editor-canvas-timeline-panel", { 'editor-canvas-timeline-panel-medium': renderSize === 'medium' }, { 'editor-canvas-timeline-panel-small': renderSize === 'small' })} style={{ height: '100%' }}>
                                         <ReflexContainer windowResizeAware={true} orientation="horizontal">
                                             {/* Canvas and Popout Outliner */}
                                             <ReflexElement>
@@ -1173,9 +1288,8 @@ class Editor extends EditorCore {
                                                     {/*Canvas*/}
                                                     <ReflexElement {...this.resizeProps}>
                                                         <DockedPanel>
-                                                            <SizeMe>{({ size }) => {
-                                                                this.project.view.render();
-                                                                return (<Canvas
+                                                            <ResizeTrigger onResize={() => this.project.view.render()}>
+                                                                <Canvas
                                                                     editor={this}
                                                                     project={this.project}
                                                                     projectDidChange={this.projectDidChange}
@@ -1189,9 +1303,8 @@ class Editor extends EditorCore {
                                                                     importProjectAsWickFile={this.importProjectAsWickFile}
                                                                     openProjectFile={(file) => this.handleWickFileLoad({ target: { files: [file] } })}
                                                                     onRef={ref => this.canvasComponent = ref}
-                                                                />);
-                                                            }}
-                                                            </SizeMe>
+                                                                />
+                                                            </ResizeTrigger>
 
                                                             <CanvasTransforms
                                                                 onionSkinEnabled={this.project.onionSkinEnabled}
@@ -1244,16 +1357,22 @@ class Editor extends EditorCore {
                                                         </ReflexElement>}
                                                 </ReflexContainer>
                                             </ReflexElement>
+                                        </ReflexContainer>
 
-                                            {(renderSize === "small") && <ReflexSplitter {...this.resizeProps} className="mobile-reflex-splitter" />}
-                                            {!(renderSize === "small") && <ReflexSplitter {...this.resizeProps} />}
-
-                                            {/*Timeline*/}
-                                            <ReflexElement
-                                                minSize={100}
-                                                size={this.state.timelineSize}
-                                                onResize={this.resizeProps.onResize}
-                                                onStopResize={this.resizeProps.onStopTimelineResize}>
+                                        {/*Timeline*/}
+                                        <PanelWrapper
+                                            id="timeline"
+                                            x={0} y={0}
+                                            xOffset={this.getDockInset('left')}
+                                            yOffset={this.getStackInset('top', 'timeline')}
+                                            width={`calc(100vw - ${this.getDockInset('left') + this.getDockInset('right')}px)`}
+                                            height={175}
+                                            bottomInset={this.getStackInset('bottom', 'timeline')}
+                                            initialEdge="bottom"
+                                            canStartDrag={this.isOverBreadcrumbsStrip}
+                                            resizable minHeight={100} maxHeight={500}
+                                            snapTo={['top/bottom']}
+                                            onDock={this.setPanelDock}>
                                                 <DockedPanel showOverlay={this.state.previewPlaying}>
                                                     {renderSize === "small"
                                                         && <MobileContainer
@@ -1315,21 +1434,24 @@ class Editor extends EditorCore {
                                                             dragSoundOntoTimeline={this.dragSoundOntoTimeline}
                                                         />}
                                                 </DockedPanel>
-                                            </ReflexElement>
-                                        </ReflexContainer>
+                                        </PanelWrapper>
                                     </div>
                                 </ReflexElement>
+                            </ReflexContainer>
 
-                                {/* Right Sidebar */}
-                                {!(renderSize === "small") && <ReflexSplitter {...this.resizeProps} />}
-                                {!(renderSize === "small") &&
-
-                                    <ReflexElement
-                                        size={250}
-                                        maxSize={300} minSize={200}
-                                        onResize={this.resizeProps.onResize}
-                                        onStopResize={this.resizeProps.onStopInspectorResize}>
-                                        <ReflexContainer windowResizeAware={true} orientation="horizontal">
+                            {/* Sidebar */}
+                            {!(renderSize === "small") &&
+                                        <PanelWrapper
+                                            id="sidebar"
+                                            x={0} y={0}
+                                            yOffset={this.getOutermostInset('top')}
+                                            width={250} height={`calc(100vh - ${this.getOutermostInset('top') + this.getOutermostInset('bottom')}px)`}
+                                            initialEdge="right"
+                                            dragHandle=".inspector-title-container"
+                                            resizable minWidth={200} maxWidth={600}
+                                            snapTo={['left/right']}
+                                            onDock={this.setPanelDock}>
+                                            <ReflexContainer windowResizeAware={true} orientation="horizontal">
                                             {/* Inspector */}
                                             <ReflexElement {...this.resizeProps}>
                                                 <DockedPanel showOverlay={false /*this.state.previewPlaying*/}>
@@ -1408,9 +1530,8 @@ class Editor extends EditorCore {
                                                     </DockedPanel>
                                                 </ReflexElement>}
                                         </ReflexContainer>
-                                    </ReflexElement>
-                                }
-                            </ReflexContainer>
+                                        </PanelWrapper>
+                            }
                         </div>
                         {this.state.codeEditorOpen &&
                             <WickCodeEditor

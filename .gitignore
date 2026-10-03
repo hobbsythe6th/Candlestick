@@ -12,7 +12,11 @@
 /build
 /dist
 /public/corelibs/wick-engine/
+/public/corelibs/ffmpeg/
 /engine/dist/
+
+# package-lock
+package-lock.json
 
 # misc
 .DS_Store
@@ -31,4 +35,7 @@ yarn-error.log*
 
 pnpm-lock.yaml # for users of pnpm
 engine/docs/*
+engine/dist/*
 src-tauri/binaries/*
+src-tauri/gen/*
+*.keystore
