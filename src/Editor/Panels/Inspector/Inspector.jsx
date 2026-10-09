@@ -634,6 +634,23 @@ componentWillUnmount() { this._mounted = false; }
   }
 
   /**
+   * Renders an inspector row allowing viewing and editing of the selection's pivot x y position.
+   */
+  renderPivot = () => {
+    var { x, y } = this.getSelectionAttribute('relativePivot');
+    return (
+      <InspectorDualNumericInput
+        tooltip1="Pivot X"
+        tooltip2="Pivot Y"
+        val1={x}
+        val2={y}
+        onChange1={(val) => this.setSelectionAttribute('relativePivot', {x: val, y})}
+        onChange2={(val) => this.setSelectionAttribute('relativePivot', {x, y: val})}
+        id="inspector-pivot" />
+    )
+  }
+
+  /**
    * Renders an inspector row allowing viewing and editing of the selection's opacity.
    */
   renderOpacity = () => {
@@ -664,6 +681,7 @@ componentWillUnmount() { this._mounted = false; }
             {this.renderScale()}
             {this.renderRotation()}
             {this.renderShear()}
+            {this.renderPivot()}
             {this.renderOpacity()}
           </>
         )}
