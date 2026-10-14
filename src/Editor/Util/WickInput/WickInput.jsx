@@ -227,7 +227,9 @@ class WickInput extends Component {
         }, 
         control: (provided, state) => {
           return {};
-        }
+        },
+        // Must sit above PanelWrapper's stacking contexts (panels 10, dragged panel 902).
+        menuPortal: (provided) => ({ ...provided, zIndex: 903 }),
         }}
         isSearchable={false}
       />
