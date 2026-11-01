@@ -358,6 +358,7 @@ class Editor extends EditorCore {
         };
 
         console.log("Project Mounted");
+        this.project.WickPM.install();
         this.hidePreloader();
         this.onWindowResize();
         // onWindowResize() call above. second resize after a short delay to lets WebKit complete its paint before we recalculate panel sizes
