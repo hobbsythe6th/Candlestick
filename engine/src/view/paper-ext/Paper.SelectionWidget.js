@@ -307,6 +307,7 @@ class SelectionWidget {
         } else if (item.data.handleType === 'scale') {
             if (item.data.handleEdge.includes('Center')) {
                 this.currentTransformation = 'scale-edge';
+                this._strokeBoundingBox = this._calculateStrokeBoundingBox();
             }
             else {
                 this.currentTransformation = 'scale-corner';
@@ -340,6 +341,7 @@ class SelectionWidget {
 
         this._ghost.matrix.reset();
         this._ghost.rotate(-this.boxRotation, this.pivot).shear(-this.boxShear, 0, this.pivot);
+        let unrotatedBounds = this._ghost.bounds.clone();
         if (modifiers.center) {
             this._truePivot = this.pivot;
         } else if (this.currentTransformation === 'scale-edge') {
@@ -370,6 +372,17 @@ class SelectionWidget {
             if (modifiers.constrain) {
                 var direction = new paper.Point({ length: 1, angle: Math.round(initialDelta.angle / 45) * 45 });
                 initialDelta = initialDelta.project(direction);
+            } else if (modifiers.center) {
+                let { topLeft, bottomLeft, bottomRight, topRight, topCenter, leftCenter, bottomCenter, rightCenter, center } = unrotatedBounds;
+                let snapPoints = [topLeft, bottomLeft, bottomRight, topRight, topCenter, leftCenter, bottomCenter, rightCenter, center];
+                let matrix = (new paper.Matrix()).translate(this.pivot).rotate(this.boxRotation).shear(this.boxShear, 0).translate(-this.pivot.x, -this.pivot.y);
+                for (let snapPoint of snapPoints) {
+                    snapPoint = matrix.transform(snapPoint);
+                    if (snapPoint.getDistance(e.point) <= SelectionWidget.PIVOT_SNAP_THRESHOLD / paper.view.zoom) {
+                        initialDelta = snapPoint.subtract(item.position);
+                        break;
+                    }
+                }
             }
             item.translate(initialDelta);
             this._newPivot = item.position;
@@ -395,6 +408,10 @@ class SelectionWidget {
                 distCorner = cornerLocal.subtract(unrotatedPivot),
                 distMovedCorner = distCorner.add(deltaLocal);
             var scaleFactor = distMovedCorner.divide(distCorner);
+            
+            if (Math.abs(distCorner.x) < 1e-4) scaleFactor.x = modifiers.constrain ? Number.MIN_VALUE : 1;
+            if (Math.abs(distCorner.y) < 1e-4) scaleFactor.y = modifiers.constrain ? Number.MIN_VALUE : 1;
+            
             if (modifiers.constrain) {
                 if (Math.abs(scaleFactor.x) < Math.abs(scaleFactor.y)) {
                     scaleFactor.x = Math.sign(scaleFactor.x) * Math.abs(scaleFactor.y);
@@ -411,23 +428,32 @@ class SelectionWidget {
                 edgeLocal = this._shearPoint(item.position.rotate(-this.boxRotation, this.pivot), -this.boxShear, 0, this.pivot),
                 distEdge = edgeLocal.subtract(unrotatedPivot),
                 distMovedEdge = distEdge.add(deltaLocal);
+            var scaleFactor = distMovedEdge.divide(distEdge);
+            var shearFactor = deltaLocal.divide(distEdge.y, distEdge.x);
             this._ghost.data.transform.reset();
+
+            if (Math.abs(distEdge.x) < 1e-4) {
+                var distOpposite = this._strokeBoundingBox[topLeft ? 'right' : 'left'] - this._strokeBoundingBox.center.x + this._ghost.bounds.center.x - unrotatedPivot.x;
+                var distCenter = edgeLocal.x - this._ghost.bounds.center.x;
+                scaleFactor.x = (distOpposite + deltaLocal.x) / distOpposite;
+                shearFactor.y = (Math.abs(distCenter) < 1e-4) ? 0 : deltaLocal.y / distCenter;
+            }
+            if (Math.abs(distEdge.y) < 1e-4) {
+                var distOpposite = this._strokeBoundingBox[topLeft ? 'bottom' : 'top'] - this._strokeBoundingBox.center.y + this._ghost.bounds.center.y - unrotatedPivot.y;
+                var distCenter = edgeLocal.y - this._ghost.bounds.center.y;
+                scaleFactor.y = (distOpposite + deltaLocal.y) / distOpposite;
+                shearFactor.x = (Math.abs(distCenter) < 1e-4) ? 0 : deltaLocal.x / distCenter;
+            }
+            
             if (!modifiers.skew || (modifiers.skew && e.modifiers.shift)) {
-                var scaleFactor = distMovedEdge.divide(distEdge);
                 if (vertical) scaleFactor.x = 1;
                 else scaleFactor.y = 1;
                 
                 this._ghost.data.transform.scale(scaleFactor);
             }
             if (modifiers.skew) {
-                var shearFactor = deltaLocal.divide(this._ghost.bounds.height, this._ghost.bounds.width);
-                if (vertical) {
-                    shearFactor.y = 0;
-                    shearFactor.x *= this._ghost.bounds.height / distEdge.y;
-                } else {
-                    shearFactor.x = 0;
-                    shearFactor.y *= this._ghost.bounds.width / distEdge.x;
-                }
+                if (vertical) shearFactor.y = 0;
+                else shearFactor.x = 0;
 
                 this._ghost.data.transform.shear(shearFactor);
             }
@@ -724,6 +750,27 @@ class SelectionWidget {
         var bounds = null;
         items.forEach(item => {
             bounds = bounds ? bounds.unite(item.bounds) : item.bounds;
+        });
+        return bounds || new paper.Rectangle();
+    }
+
+    _calculateStrokeBoundingBox() {
+        if (this._itemsInSelection.length === 0) {
+            return new paper.Rectangle();
+        }
+
+        var center = this._calculateBoundingBoxOfItems(this._itemsInSelection).center;
+
+        var itemsForBoundsCalc = this._itemsInSelection.map(item => {
+            var clone = item.clone();
+            clone.rotate(-this.boxRotation, center).shear(-this.boxShear, 0, center);
+            clone.remove();
+            return clone;
+        });
+
+        var bounds = null;
+        itemsForBoundsCalc.forEach(item => {
+            bounds = bounds ? bounds.unite(item.strokeBounds) : item.strokeBounds;
         });
         return bounds || new paper.Rectangle();
     }
@@ -1137,13 +1184,14 @@ class SelectionWidget {
 SelectionWidget.BOX_STROKE_WIDTH = 1;
 SelectionWidget.BOX_STROKE_COLOR = 'rgba(100,150,255,1.0)';
 SelectionWidget.HANDLE_RADIUS = 5;
-SelectionWidget.HANDLE_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH
-SelectionWidget.HANDLE_STROKE_COLOR = SelectionWidget.BOX_STROKE_COLOR
+SelectionWidget.HANDLE_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
+SelectionWidget.HANDLE_STROKE_COLOR = SelectionWidget.BOX_STROKE_COLOR;
 SelectionWidget.HANDLE_FILL_COLOR = 'rgba(255,255,255,0.3)';
 SelectionWidget.PIVOT_STROKE_WIDTH = SelectionWidget.BOX_STROKE_WIDTH;
 SelectionWidget.PIVOT_FILL_COLOR = 'rgba(255,255,255,0.5)';
 SelectionWidget.PIVOT_STROKE_COLOR = 'rgba(0,0,0,1)';
-SelectionWidget.PIVOT_RADIUS = SelectionWidget.HANDLE_RADIUS
+SelectionWidget.PIVOT_RADIUS = SelectionWidget.HANDLE_RADIUS;
+SelectionWidget.PIVOT_SNAP_THRESHOLD = SelectionWidget.PIVOT_RADIUS;
 SelectionWidget.ROTATION_HOTSPOT_RADIUS = 20;
 SelectionWidget.ROTATION_HOTSPOT_FILLCOLOR = 'rgba(100,150,255,0.5)';
 SelectionWidget.GHOST_STROKE_COLOR = 'rgba(0, 0, 0, 1.0)';

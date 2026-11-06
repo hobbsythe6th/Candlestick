@@ -88,8 +88,9 @@ Wick.Clip = class extends Wick.Tickable {
     _deserialize(data) {
         super._deserialize(data);
 
-        this.transformation = new Wick.Transformation(data.transformation);
-        this.pivot = data.pivot;
+        // Set _transformation directly: fixes dragged out-of-bounds tweens being removed on undo
+        this._transformation = new Wick.Transformation(data.transformation);
+        this._pivot = data.pivot;
         this._timeline = data.timeline;
         this._animationType = data.animationType || 'loop';
         this._singleFrameNumber = data.singleFrameNumber || 1;
@@ -414,15 +415,18 @@ Wick.Clip = class extends Wick.Tickable {
         var leftovers = [];
 
         this.timeline.activeFrames.forEach(frame => {
-            frame.clips.forEach(clip => {
-                clip.transformation.x += this.transformation.x;
-                clip.transformation.y += this.transformation.y;
+            frame.clips.forEach(originalClip => {
+                // Keep original objects in case of undo
+                const clip = originalClip.copy();
+                clip.transformation.x += this.transformation.x - this.pivot[0];
+                clip.transformation.y += this.transformation.y - this.pivot[1];
                 this.parentTimeline.activeFrame.addClip(clip);
                 leftovers.push(clip);
             });
-            frame.paths.forEach(path => {
-                path.x += this.transformation.x;
-                path.y += this.transformation.y;
+            frame.paths.forEach(originalPath => {
+                const path = originalPath.copy();
+                path.x += this.transformation.x - this.pivot[0];
+                path.y += this.transformation.y - this.pivot[1];
                 this.parentTimeline.activeFrame.addPath(path);
                 leftovers.push(path);
             });
