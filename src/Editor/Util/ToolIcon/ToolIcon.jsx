@@ -203,6 +203,8 @@ import iconCodeBack from 'resources/code-icons/back.svg';
 // Support Us
 import iconRedHeart from 'resources/support-us-icons/red-heart.svg';
 
+import classNames from 'classnames';
+
 const icons = {
   "brush":iconBrush,
   "cursor":iconCursor,
@@ -358,8 +360,6 @@ const icons = {
   "add-dark": iconAddDark,
   "upload-dark": iconUploadDark
 }
-
-var classNames = require('classnames');
 
 class ToolIcon extends Component {
   getSource() {
