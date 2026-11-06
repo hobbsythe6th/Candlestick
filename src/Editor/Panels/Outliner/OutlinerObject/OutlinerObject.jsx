@@ -33,7 +33,7 @@ let icons = {layer: layerIcon, frame: frameIcon, path: pathIcon, button: buttonI
 let images = {layer: layerImage, frame: frameImage, path: pathImage, button: buttonImage, 
   clip: clipImage, text: textImage, image: imageImage};
 
-import classNames from 'classnames';
+var classNames = require("classnames");
 
 export const OutlinerObject = ({clearSelection, selectObjects, 
   editScript, playhead, depth, maxDepth, display, highlighted, 
@@ -59,7 +59,7 @@ export const OutlinerObject = ({clearSelection, selectObjects,
         }
       }
 
-      return { uuid: data.uuid };
+      return { type: DragDropTypes.GET_OUTLINER_SOURCE({data}), uuid: data.uuid };
     },
     end: () => {
       setDragging(false);

@@ -359,7 +359,7 @@ const icons = {
   "upload-dark": iconUploadDark
 }
 
-import classNames from 'classnames';
+var classNames = require('classnames');
 
 class ToolIcon extends Component {
   getSource() {

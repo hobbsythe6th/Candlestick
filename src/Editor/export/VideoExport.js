@@ -1,6 +1,6 @@
 import AudioExport from './AudioExport'
 
-import * as b64toBuff from 'base64-arraybuffer'
+var b64toBuff = require('base64-arraybuffer')
 
 var ENABLE_LOGGING = false
 var EXPORT_IMAGE_START = 10
@@ -168,8 +168,8 @@ class VideoExport {
 
     let command = [
       '-r', '' + project.framerate,
-      '-s', dimensions.width + 'x' + dimensions.height,
       ...inputs,
+      '-s', dimensions.width + 'x' + dimensions.height,
       '-pix_fmt', 'yuv420p',
       '-q:v', '10',
       '-strict', '-2',

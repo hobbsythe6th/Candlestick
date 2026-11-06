@@ -28,7 +28,7 @@ import './_welcomemessage.scss';
 import splash from 'resources/splash-screens/cs_fireball.png';
 import mobileSplash from 'resources/splash-screens/cs_fireball.png';
 
-import classNames from 'classnames';
+var classNames = require('classnames');
 
 class WelcomeModal extends Component {
     constructor() {
@@ -39,9 +39,9 @@ class WelcomeModal extends Component {
             "Movable Pivot",
             "Improved Frame Resizing",
             "Autosaved Settings",
-            "Improved MP4 Export",
+            "Improved Video Import/Export",
             "Fixed Vcam",
-            "Minor Bug Fixes"
+            "Other Changes and Fixes"
         ]
 
         /*let t1 = ["Guy de Bree", "Dimp", "Hyun's Dojo"]
