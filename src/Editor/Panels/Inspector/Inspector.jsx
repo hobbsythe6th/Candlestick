@@ -1188,13 +1188,5 @@ class Inspector extends Component {
     )
   }
 }
-const origSetState = Inspector.prototype.setState;
-Inspector.prototype.setState = function(...args) {
-  if (!this._mounted) {
-    console.warn('setState after unmount', args);
-    console.trace();
-  }
-  return origSetState.apply(this, args);
-};
 
 export default Inspector
