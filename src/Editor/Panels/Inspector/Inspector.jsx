@@ -36,10 +36,10 @@ import InspectorImagePreview from './InspectorPreview/InspectorPreviewTypes/Insp
 import InspectorSoundPreview from './InspectorPreview/InspectorPreviewTypes/InspectorSoundPreview';
 import InspectorScriptWindow from './InspectorScriptWindow/InspectorScriptWindow';
 import InspectorCheckbox from './InspectorRow/InspectorRowTypes/InspectorCheckbox';
+import InspectorEaseEditor from './InspectorEaseEditor/InspectorEaseEditor';
 
-import Console from 'console-feed/lib/Component/index.js';
-import Hook from 'console-feed/lib/Hook/index.js';
-import Unhook from 'console-feed/lib/Unhook/index.js';
+import { Console, Hook, Unhook } from 'console-feed';
+// import { useEffect, useState } from 'react';
 
 window.EditorGradientColorSwapState = false;
 
@@ -63,7 +63,6 @@ class Inspector extends Component {
       }));
     };
 
-    
     /**
      * Which render function should be used for each selection type?
      */
@@ -209,8 +208,7 @@ class Inspector extends Component {
       this.setSelectionAttribute('fillColor', color);
     }
   }
-componentDidMount() { this._mounted = true; }
-componentWillUnmount() { this._mounted = false; }
+
   /**
    * Updates the value of a selection attribute for the selected item in the editor.
    * @param {string} attribute Name of the attribute to update.
@@ -789,7 +787,7 @@ componentWillUnmount() { this._mounted = false; }
       optionLabels.push({label: option, value: option});
     })
     return (
-      <div className="inspector-item">
+      <div className="inspector-item" key={this.props.project.selection.getSelectedObjects()[0].uuid}>
         <InspectorSelector
           tooltip="Easing Type"
           type="select"
@@ -797,6 +795,10 @@ componentWillUnmount() { this._mounted = false; }
           value={this.getSelectionAttribute('easingType')}
           isSearchable={true}
           onChange={(val) => {this.setSelectionAttribute('easingType', val.value)}} />
+          <InspectorEaseEditor
+          tween={this.props.project.selection.getSelectedObjects()[0]}
+          setSelectionAttribute={this.setSelectionAttribute}
+        />
       </div>
     );
   }
@@ -1052,7 +1054,7 @@ componentWillUnmount() { this._mounted = false; }
   renderUnknown = () => {
     // if(!window.project.playing)
       // this.state.logs = []; // <-- note: mutate state directly, DO NOT USE setState()
-    const logsForRender = window.project?.playing ? this.state.logs : [];
+    const logsForRender = window.project.playing ? this.state.logs : [];
     // scroll reference
     this.consoleEndRef = React.createRef();
 
@@ -1060,7 +1062,7 @@ componentWillUnmount() { this._mounted = false; }
       <div>
         <div className="inspector-content">
           {/* Code for displaying console - H.A. */}
-          {window.project?.playing && (
+          {window.project.playing && (
         <div style={{ width: '110%', height: 'auto', overflowY: 'scroll', backgroundColor: '#242424' }}>
           <Console logs={logsForRender} variant="dark" />
           <div ref={this.consoleEndRef} />
