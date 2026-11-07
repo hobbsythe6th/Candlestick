@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Wick Engine.  If not, see <https://www.gnu.org/licenses/>.
  */
+require('lerp');
 
 /**
  * Class representing a tween.
