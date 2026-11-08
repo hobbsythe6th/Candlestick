@@ -33,7 +33,7 @@ Wick.Tween = class extends Wick.Base {
             'in-circle', 'out-circle', 'in-out-circle',
             'in-back', 'out-back', 'in-out-back',
             'in-bounce', 'out-bounce', 'in-out-bounce', 'custom'];
-    }
+    };
 
     /**
      * Build an easing function from a bezier path.
