@@ -158,7 +158,7 @@ class ActionMapInterface extends Object {
         id: 'action-break-apart',
       },
       exportSelectionAsWickobj: {
-        //icon: 'export-dark',
+        icon: 'exportWickobj',
         tooltip: 'Export as .wickobj file',
         action: this.editor.exportSelectedClip,
         id: 'action-export-selection-as-wickobj',
