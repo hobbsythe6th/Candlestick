@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(({ command, mode }) => ({
-  base: command === 'build' ? '/Candlestick/' : '/',
+  base: command === 'build' ? '/Candlestick/' : process.env.PUBLIC_URL? process.env.PUBLIC_URL : '/',
   plugins: [react()],
   resolve: {
     alias: {
