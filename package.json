@@ -63,6 +63,7 @@
     "build-engine": "cd engine && npm run build-engine",
     "engine-quickrun": "npm run build-engine && npm start",
     "test": "vitest",
+    "preview": "vite preview",
     "engine-tests": "cd engine && npx http-server",
     "predeploy": "npm run build",
     "prerelease-deploy": "npm run build && shx cp -r build/* ../wick-editor-prerelease/ && cd ../wick-editor-prerelease && shx rm CNAME && echo 'test.candlestickers.app/' > CNAME && git add . && git commit -m 'update prerelease build' && git push --force",
