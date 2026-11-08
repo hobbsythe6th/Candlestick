@@ -36,13 +36,12 @@ class ErrorBoundary extends React.Component {
     if(this.props.processError) {
       this.props.processError(error, errorInfo)
     }
+    console.log('componentStack: ', errorInfo.componentStack);
   }
 
   render() {
     if(this.state.hasError) {
-      console.log("error234", this.state.hasError);
       const ErrorComponent = this.props.fallback;
-
       return <ErrorComponent />;
     }
 
