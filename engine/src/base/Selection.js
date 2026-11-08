@@ -118,7 +118,6 @@ Wick.Selection = class extends Wick.Base {
             "animationType",
             "singleFrameNumber",
             "isSynced",
-            "easeCurve",
         ];
     }
 
@@ -759,14 +758,40 @@ Wick.Selection = class extends Wick.Base {
      * @type {object|null}
      */
     get easeCurve () {
-        var tween = this.getSelectedObjects('Tween')[0];
-        return tween ? tween.easeCurve : null;
+        return this._getSingleAttribute('easeCurve');
     }
 
     set easeCurve (easeCurve) {
-        // Each tween gets its own copy so they never share one object
         this.getSelectedObjects('Tween').forEach(tween => {
-            tween.easeCurve = Wick.Tween._copyEaseCurve(easeCurve);
+            if (easeCurve && this.project.eases.has(tween.easeName)) {
+                this.project.saveEase(tween.easeName, easeCurve);
+            } else {
+                tween.easeCurve = Wick.Tween._copyEaseCurve(easeCurve);
+                tween.easeName = null;
+            }
+        });
+    }
+
+    /**
+     * The name of the saved ease the selected tweens use (see Wick.Project.eases).
+     * Null if there are no selected tweens or the first one doesn't use a saved ease.
+     * @type {string|null}
+     */
+    get easeName () {
+        return this._getSingleAttribute('easeName');
+    }
+
+    /**
+     * Makes the selected tweens use a saved ease. They get a copy of its curve, and from then on change with it.
+     * @param {string} name - The name of the saved ease.
+     */
+    applyEase (name) {
+        var curve = this.project.eases.get(name);
+        if (!curve) return;
+
+        this.getSelectedObjects('Tween').forEach(tween => {
+            tween.easeCurve = Wick.Tween._copyEaseCurve(curve);
+            tween.easeName = name;
         });
     }
 

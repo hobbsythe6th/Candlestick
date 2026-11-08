@@ -37,6 +37,7 @@ import InspectorSoundPreview from './InspectorPreview/InspectorPreviewTypes/Insp
 import InspectorScriptWindow from './InspectorScriptWindow/InspectorScriptWindow';
 import InspectorCheckbox from './InspectorRow/InspectorRowTypes/InspectorCheckbox';
 import InspectorEaseEditor from './InspectorEaseEditor/InspectorEaseEditor';
+import InspectorEaseLibrary from './InspectorEaseLibrary/InspectorEaseLibrary';
 
 import Console from 'console-feed/lib/Component/index';
 import { Hook , Unhook } from 'console-feed';
@@ -800,6 +801,14 @@ class Inspector extends Component {
           tween={this.props.project.selection.getSelectedObjects()[0]}
           setSelectionAttribute={this.setSelectionAttribute}
         />
+        <InspectorEaseLibrary
+          project={this.props.project}
+          easeName={this.props.project.selection.easeName}
+          easeCurve={this.props.project.selection.easeCurve}
+          applyEase={this.props.applyEase}
+          saveEase={this.props.saveEase}
+          renameEase={this.props.renameEase}
+          deleteEase={this.props.deleteEase} />
       </div>
     );
   }

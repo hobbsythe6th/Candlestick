@@ -19,6 +19,8 @@
 const lerp = require('lerp');
 const TWEEN = require('@tweenjs/tween.js');
 
+const bezierEases = new WeakMap();
+
 /**
  * Class representing a tween.
  */
@@ -40,7 +42,7 @@ Wick.Tween = class extends Wick.Base {
      * @param {object} curve - {points: [{x, y, inX, inY, outX, outY}, ...]}, from (0,0) to (1,1) with x always increasing.
      * @returns {function} A function that takes the time (0-1) and returns the progress (0-1).
      */
-    static _bezierEase (curve) {
+    static _buildBezierEase (curve) {
         var points = curve && curve.points;
         var valid = Array.isArray(points) && points.length >= 2 && points.every((point, i) => {
             return point && Number.isFinite(point.x) && Number.isFinite(point.y) && (i === 0 || point.x > points[i - 1].x);
@@ -77,6 +79,13 @@ Wick.Tween = class extends Wick.Base {
         };
     }
 
+    static _bezierEase (curve) {
+        if(!curve || typeof curve !== 'object') return Wick.Tween._buildBezierEase(curve);
+
+        if(!bezierEases.has(curve)) bezierEases.set(curve, Wick.Tween._buildBezierEase(curve));
+        return bezierEases.get(curve);
+    }
+
     /**
      * Copy an ease curve so no two tweens share an object. Anything without a list of points becomes null.
      * @param {object} curve - The ease curve.
@@ -110,6 +119,7 @@ Wick.Tween = class extends Wick.Base {
         this.fullRotations = args.fullRotations === undefined ? 0 : args.fullRotations;
         this.easingType = args.easingType || 'none';
         this.easeCurve = args.easeCurve || null;
+        this.easeName = args.easeName || null;
 
         this._originalLayerIndex = -1;
     }
@@ -162,6 +172,7 @@ Wick.Tween = class extends Wick.Base {
         data.fullRotations = this.fullRotations;
         data.easingType = this.easingType;
         data.easeCurve = Wick.Tween._copyEaseCurve(this.easeCurve);
+        data.easeName = this.easeName;
 
         data.originalLayerIndex = this.layerIndex !== -1 ? this.layerIndex : this._originalLayerIndex;
 
@@ -176,6 +187,7 @@ Wick.Tween = class extends Wick.Base {
         this.fullRotations = data.fullRotations;
         this.easingType = data.easingType;
         this.easeCurve = Wick.Tween._copyEaseCurve(data.easeCurve);
+        this.easeName = data.easeName || null;
 
         this._originalLayerIndex = data.originalLayerIndex;
     }
