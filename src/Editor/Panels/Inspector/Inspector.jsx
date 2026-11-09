@@ -106,6 +106,7 @@ class Inspector extends Component {
       'addAssetToCanvas': ["imageasset", "clipasset"],
       'makeMask': ["path", "clip", "button"],
       'clearMask': ["layer"],
+      'exportFrameAsImage':["frame"],
       // 'alignX': [ "multipath"] // H.A.
     }
 
